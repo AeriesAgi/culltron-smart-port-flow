@@ -1,0 +1,53 @@
+@using SmartPort.Application.Interfaces
+@model EmissionsSummaryDto
+@{ ViewData["Title"] = "Idling & Emissions"; var topTrips = ViewBag.TopTrips as IEnumerable<EmissionTripRowDto> ?? []; }
+
+<div class="sp-page-header">
+    <div>
+        <div class="sp-agent-badge"><span>🌿</span> Sustainability</div>
+        <h1>Idling &amp; Emissions Impact</h1>
+        <p style="color:var(--sp-text-muted)">Estimated fuel waste and CO₂ from truck idling. All figures are synthetic estimates.</p>
+    </div>
+    <a asp-action="ExportEmissionsCsv" asp-controller="Reports" class="sp-btn sp-btn--outline">⬇ Export CSV</a>
+</div>
+
+<div class="sp-alert sp-alert--info" style="margin-bottom:1.25rem">
+    <i data-feather="info"></i> Calculations use synthetic assumptions: <strong>3.0 L/hr idling</strong> · <strong>R24.00/L diesel</strong> · <strong>2.68 kg CO₂/L</strong>. For demonstration purposes only.
+</div>
+
+<div class="sp-kpi-grid">
+    <div class="sp-kpi-card"><div class="sp-kpi-card__icon sp-kpi-card__icon--orange"><i data-feather="clock"></i></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.TotalIdlingMinutes.ToString("N0")</div><div class="sp-kpi-card__label">Total Idling Minutes</div><div class="sp-kpi-card__sub">@Model.TotalEstimatesCount trip estimates</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__icon sp-kpi-card__icon--red"><i data-feather="droplet"></i></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.TotalDieselLitres.ToString("N1") L</div><div class="sp-kpi-card__label">Est. Diesel Consumed</div><div class="sp-kpi-card__sub">R@Model.TotalFuelCost.ToString("N0") total fuel cost</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__icon sp-kpi-card__icon--green"><i data-feather="wind"></i></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.TotalCo2Kg.ToString("N1") kg</div><div class="sp-kpi-card__label">Est. CO₂ Emissions</div><div class="sp-kpi-card__sub">From idling only — synthetic estimate</div></div></div>
+    <div class="sp-kpi-card sp-kpi-card--warn"><div class="sp-kpi-card__icon sp-kpi-card__icon--yellow"><i data-feather="alert-circle"></i></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.AvoidableIdlingCount</div><div class="sp-kpi-card__label">Avoidable Idling Events</div><div class="sp-kpi-card__sub">@Model.AvoidableDieselLitres.ToString("N1") L avoidable · R@Model.AvoidableFuelCost.ToString("N0")</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__icon sp-kpi-card__icon--teal"><i data-feather="trending-down"></i></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.AvoidableCo2Kg.ToString("N1") kg</div><div class="sp-kpi-card__label">Avoidable CO₂</div><div class="sp-kpi-card__sub">Could be prevented with optimised dispatch</div></div></div>
+</div>
+
+<div class="sp-card">
+    <div class="sp-card__header"><h3 class="sp-card__title">Top Idling Trips</h3><span class="sp-card__meta">Highest estimated idling time</span></div>
+    <table class="sp-table">
+        <thead><tr><th>Vehicle</th><th>Organisation</th><th>Route</th><th>Idling (min)</th><th>Diesel (L)</th><th>Fuel Cost</th><th>CO₂ (kg)</th><th>Avoidable</th><th>Date</th></tr></thead>
+        <tbody>
+            @foreach (var t in topTrips)
+            {
+                <tr class="@(t.AvoidableFlag ? "sp-table__row--warn" : "")">
+                    <td class="sp-table__mono"><a asp-action="Detail" asp-controller="Dispatch" asp-route-id="@t.TripId">@t.VehicleRegistration</a></td>
+                    <td>@t.OrganisationName</td>
+                    <td>@t.RouteName</td>
+                    <td class="@(t.IdlingMinutes > 60 ? "sp-table__cell--danger" : "")"><strong>@t.IdlingMinutes.ToString("F0")</strong></td>
+                    <td>@t.DieselLitres.ToString("F2")</td>
+                    <td>R@t.FuelCost.ToString("F2")</td>
+                    <td>@t.Co2Kg.ToString("F2")</td>
+                    <td>@if (t.AvoidableFlag) { <span class="sp-badge sp-badge--warning">⚠ Avoidable</span> } else { <span>—</span> }</td>
+                    <td class="sp-table__mono">@t.TripDate.ToString("dd MMM HH:mm")</td>
+                </tr>
+            }
+            @if (!topTrips.Any()) { <tr><td colspan="9" class="sp-table__empty">No emission estimates recorded yet. Use the Dispatch module to generate estimates.</td></tr> }
+        </tbody>
+    </table>
+</div>

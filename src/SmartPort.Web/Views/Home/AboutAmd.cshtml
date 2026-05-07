@@ -1,0 +1,110 @@
+@{ ViewData["Title"] = "AMD Developer Cloud — GPU Acceleration"; }
+
+<div class="sp-page-header">
+    <div>
+        <div class="sp-agent-badge" style="background:rgba(237,75,42,.12);border-color:rgba(237,75,42,.25);color:#fb923c">⚡ AMD Developer Cloud</div>
+        <h1>GPU Acceleration Pathway</h1>
+        <p>How AMD Developer Cloud GPUs would scale the Culltron SmartPort AI Agent to production.</p>
+    </div>
+</div>
+
+<div class="sp-alert sp-alert--info" style="margin-bottom:1.5rem">
+    <i>ℹ</i> The current MVP uses a deterministic Flow Intelligence Engine for reliable demo operation without external API dependencies. This page explains the GPU scaling roadmap for production deployment.
+</div>
+
+<!-- Current State -->
+<div class="sp-card" style="margin-bottom:1.25rem">
+    <div class="sp-card__header"><h3 class="sp-card__title">Current Demo Architecture</h3></div>
+    <div style="padding:1.25rem">
+        <div class="sp-modules-grid">
+            <div class="sp-module-card">
+                <div class="sp-module-card__icon">🧠</div>
+                <h3>Flow Intelligence Engine</h3>
+                <p>Rules-based congestion scoring and dispatch recommendations running on standard CPU. Deterministic, reliable, no external API calls.</p>
+            </div>
+            <div class="sp-module-card">
+                <div class="sp-module-card__icon">🔬</div>
+                <h3>Scenario Simulator</h3>
+                <p>Deterministic rule-based simulation of port congestion scenarios. Computes risk scores and impact estimates locally.</p>
+            </div>
+            <div class="sp-module-card">
+                <div class="sp-module-card__icon">🌿</div>
+                <h3>Emissions Engine</h3>
+                <p>Formula-based fuel waste and CO₂ estimation using configurable assumptions. No GPU required for current scale.</p>
+            </div>
+            <div class="sp-module-card">
+                <div class="sp-module-card__icon">🤖</div>
+                <h3>AI Agent (Fallback Mode)</h3>
+                <p>Deterministic question-answering engine using live operational data. Optional LLM enhancement layer when API key provided.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GPU Acceleration Use Cases -->
+<div class="sp-card" style="margin-bottom:1.25rem">
+    <div class="sp-card__header">
+        <h3 class="sp-card__title">AMD GPU Acceleration — Production Use Cases</h3>
+        <span class="sp-card__meta">ROCm · MI300X · Instinct Series</span>
+    </div>
+    <div style="padding:1.25rem;display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+        <div style="border:1px solid var(--sp-border);border-radius:var(--sp-radius);padding:1.25rem;border-left:4px solid #fb923c">
+            <div style="font-size:1.25rem;margin-bottom:.5rem">📈</div>
+            <h4 style="margin:0 0 .5rem;font-size:.9375rem">Time-Series Forecasting</h4>
+            <p style="font-size:.8125rem;color:var(--sp-text-muted);margin:0">AMD MI300X GPUs could run large-scale LSTM/Transformer models trained on historical vessel arrival, berth occupancy, and gate throughput data to predict congestion windows hours in advance.</p>
+            <div style="margin-top:.75rem;font-size:.75rem;color:#fb923c">Use case: Predict congestion 4–6 hours ahead · AMD ROCm + PyTorch</div>
+        </div>
+        <div style="border:1px solid var(--sp-border);border-radius:var(--sp-radius);padding:1.25rem;border-left:4px solid #fb923c">
+            <div style="font-size:1.25rem;margin-bottom:.5rem">🔍</div>
+            <h4 style="margin:0 0 .5rem;font-size:.9375rem">LLM Inference at Scale</h4>
+            <p style="font-size:.8125rem;color:var(--sp-text-muted);margin:0">Running open-source LLMs (Mistral, LLaMA, Falcon) on AMD GPU infrastructure for the AI Agent question-answering layer — eliminating dependency on OpenAI while maintaining response quality.</p>
+            <div style="margin-top:.75rem;font-size:.75rem;color:#fb923c">Use case: On-premise LLM inference · AMD ROCm + vLLM</div>
+        </div>
+        <div style="border:1px solid var(--sp-border);border-radius:var(--sp-radius);padding:1.25rem;border-left:4px solid #fb923c">
+            <div style="font-size:1.25rem;margin-bottom:.5rem">🔬</div>
+            <h4 style="margin:0 0 .5rem;font-size:.9375rem">Large-Scale Scenario Simulation</h4>
+            <p style="font-size:.8125rem;color:var(--sp-text-muted);margin:0">GPU-parallel Monte Carlo simulation of thousands of port flow scenarios simultaneously — enabling real-time digital twin modelling for the full Durban port corridor rather than individual vessel calls.</p>
+            <div style="margin-top:.75rem;font-size:.75rem;color:#fb923c">Use case: Digital twin port simulator · AMD ROCm + PyTorch</div>
+        </div>
+        <div style="border:1px solid var(--sp-border);border-radius:var(--sp-radius);padding:1.25rem;border-left:4px solid #fb923c">
+            <div style="font-size:1.25rem;margin-bottom:.5rem">🗺️</div>
+            <h4 style="margin:0 0 .5rem;font-size:.9375rem">Embedding &amp; RAG over Operational Logs</h4>
+            <p style="font-size:.8125rem;color:var(--sp-text-muted);margin:0">Generating vector embeddings over operational incident logs, vessel histories, and gate transaction records — enabling Retrieval-Augmented Generation for the AI Agent to answer complex historical queries.</p>
+            <div style="margin-top:.75rem;font-size:.75rem;color:#fb923c">Use case: Semantic search over port data · AMD ROCm + FAISS</div>
+        </div>
+        <div style="border:1px solid var(--sp-border);border-radius:var(--sp-radius);padding:1.25rem;border-left:4px solid #fb923c">
+            <div style="font-size:1.25rem;margin-bottom:.5rem">📊</div>
+            <h4 style="margin:0 0 .5rem;font-size:.9375rem">Synthetic Data Generation</h4>
+            <p style="font-size:.8125rem;color:var(--sp-text-muted);margin:0">Training generative models on anonymised port operational patterns to produce realistic synthetic datasets for model training and pilot validation — without requiring access to private port operator data.</p>
+            <div style="margin-top:.75rem;font-size:.75rem;color:#fb923c">Use case: Synthetic pilot data · AMD ROCm + Diffusers</div>
+        </div>
+        <div style="border:1px solid var(--sp-border);border-radius:var(--sp-radius);padding:1.25rem;border-left:4px solid #fb923c">
+            <div style="font-size:1.25rem;margin-bottom:.5rem">⚡</div>
+            <h4 style="margin:0 0 .5rem;font-size:.9375rem">Optimisation at Port Network Scale</h4>
+            <p style="font-size:.8125rem;color:var(--sp-text-muted);margin:0">GPU-accelerated combinatorial optimisation for real-time berth scheduling, truck appointment allocation, and crane resource optimisation across multiple terminals simultaneously.</p>
+            <div style="margin-top:.75rem;font-size:.75rem;color:#fb923c">Use case: Network-wide optimisation · AMD ROCm + OR-Tools</div>
+        </div>
+    </div>
+</div>
+
+<!-- Scaling Roadmap -->
+<div class="sp-card" style="margin-bottom:1.25rem">
+    <div class="sp-card__header"><h3 class="sp-card__title">Implementation Roadmap</h3></div>
+    <table class="sp-table">
+        <thead><tr><th>Phase</th><th>Capability</th><th>AMD Technology</th><th>Timeline</th><th>Dependencies</th></tr></thead>
+        <tbody>
+            <tr><td><span class="sp-badge sp-badge--success">Current</span></td><td>Deterministic Flow Intelligence Engine</td><td>CPU only — no GPU required</td><td>MVP ready</td><td>None</td></tr>
+            <tr><td><span class="sp-badge sp-badge--info">Phase 2</span></td><td>Open-source LLM inference for AI Agent</td><td>AMD ROCm + vLLM (Mistral 7B)</td><td>Month 3–6</td><td>AMD Developer Cloud credits</td></tr>
+            <tr><td><span class="sp-badge sp-badge--info">Phase 2</span></td><td>Time-series congestion forecasting</td><td>AMD MI300X + PyTorch/ROCm</td><td>Month 4–8</td><td>6 months of operational data</td></tr>
+            <tr><td><span class="sp-badge sp-badge--warning">Phase 3</span></td><td>Digital twin simulation at corridor scale</td><td>AMD GPU cluster + custom sim engine</td><td>Month 9–18</td><td>Port operator data partnership</td></tr>
+            <tr><td><span class="sp-badge sp-badge--warning">Phase 3</span></td><td>Embeddings + RAG over operational logs</td><td>AMD ROCm + FAISS/ChromaDB</td><td>Month 12–18</td><td>Anonymised operational history</td></tr>
+            <tr><td><span class="sp-badge sp-badge--muted">Phase 4</span></td><td>Production multi-terminal GPU inference</td><td>AMD Instinct Series — cloud hosted</td><td>Month 18+</td><td>Pilot completion + funding</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Honest statement -->
+<div class="sp-card" style="padding:1.25rem;border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04)">
+    <h4 style="margin:0 0 .75rem">Honest Current State</h4>
+    <p style="color:var(--sp-text-muted);font-size:.9375rem;margin:0">The current Culltron SmartPort AI Agent MVP runs entirely on CPU using a deterministic rules-based intelligence engine. This was a deliberate design choice to ensure 100% reliable demo operation without dependency on external APIs or GPU infrastructure. The AMD GPU acceleration capabilities described above represent the production scaling roadmap. AMD Developer Cloud credits would be used to begin Phase 2 LLM inference and forecasting model development following the pilot validation period.</p>
+</div>

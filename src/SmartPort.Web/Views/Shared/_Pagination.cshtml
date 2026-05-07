@@ -1,0 +1,21 @@
+@model dynamic
+@{
+    int totalPages  = (int)Model.TotalPages;
+    int currentPage = (int)Model.Page;
+    int totalCount  = (int)Model.TotalCount;
+    int pageSize    = (int)Model.PageSize;
+    if (totalPages <= 1) return;
+    int startItem = (currentPage - 1) * pageSize + 1;
+    int endItem   = Math.Min(currentPage * pageSize, totalCount);
+}
+<div class="sp-pagination">
+    <div class="sp-pagination__info">Showing @startItem–@endItem of @totalCount</div>
+    <div class="sp-pagination__controls">
+        @if ((bool)Model.HasPreviousPage)
+        { <a href="?page=@(currentPage - 1)" class="sp-pagination__btn">← Prev</a> }
+        @for (int p = Math.Max(1, currentPage - 2); p <= Math.Min(totalPages, currentPage + 2); p++)
+        { <a href="?page=@p" class="sp-pagination__btn @(p == currentPage ? "sp-pagination__btn--active" : "")">@p</a> }
+        @if ((bool)Model.HasNextPage)
+        { <a href="?page=@(currentPage + 1)" class="sp-pagination__btn">Next →</a> }
+    </div>
+</div>

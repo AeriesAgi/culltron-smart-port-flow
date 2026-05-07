@@ -1,0 +1,22 @@
+@using SmartPort.Application.Interfaces
+@model SaveOrganisationDto
+@{ ViewData["Title"] = "Register Organisation"; }
+<div class="sp-form-page">
+  <div class="sp-card sp-card--form">
+    <div class="sp-card__header"><h3 class="sp-card__title">Register New Organisation</h3></div>
+    <form asp-action="Create" asp-controller="Organisations" method="post">
+      @Html.AntiForgeryToken()
+      <div class="sp-form__grid sp-form__grid--2">
+        <div class="sp-form__group sp-form__group--full"><label class="sp-form__label">Organisation Name *</label><input asp-for="Name" class="sp-form__input" placeholder="e.g. Bayhead Freight Coordination"/><span asp-validation-for="Name" class="sp-form__error"></span></div>
+        <div class="sp-form__group"><label class="sp-form__label">Organisation Type *</label><select asp-for="OrganisationType" class="sp-form__select">@foreach(var t in Enum.GetValues<SmartPort.Domain.Enums.OrganisationType>()){<option value="@t">@t</option>}</select></div>
+        <div class="sp-form__group"><label class="sp-form__label">Registration Number</label><input asp-for="RegistrationNumber" class="sp-form__input" placeholder="e.g. 2018/123456/07"/></div>
+        <div class="sp-form__group"><label class="sp-form__label">Contact Person *</label><input asp-for="ContactPerson" class="sp-form__input" placeholder="Full name"/><span asp-validation-for="ContactPerson" class="sp-form__error"></span></div>
+        <div class="sp-form__group"><label class="sp-form__label">Contact Email *</label><input asp-for="ContactEmail" class="sp-form__input" type="email" placeholder="ops@company.co.za"/><span asp-validation-for="ContactEmail" class="sp-form__error"></span></div>
+        <div class="sp-form__group"><label class="sp-form__label">Contact Phone</label><input asp-for="ContactPhone" class="sp-form__input" placeholder="+27 31 000 0000"/></div>
+        <div class="sp-form__group sp-form__group--full"><label class="sp-form__label">Address</label><input asp-for="Address" class="sp-form__input" placeholder="Street address"/></div>
+        <div class="sp-form__group"><label class="sp-form__label">Province</label><select asp-for="Province" class="sp-form__select"><option>KwaZulu-Natal</option><option>Gauteng</option><option>Western Cape</option><option>Eastern Cape</option><option>Mpumalanga</option><option>Limpopo</option><option>North West</option><option>Free State</option><option>Northern Cape</option></select></div>
+      </div>
+      <div class="sp-form__footer"><a asp-action="Index" asp-controller="Organisations" class="sp-btn sp-btn--outline">Cancel</a><button type="submit" class="sp-btn sp-btn--primary">Register Organisation</button></div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,210 @@
+@using SmartPort.Infrastructure.Services
+@{
+    ViewData["Title"] = "Copilot Command Center";
+    var answer  = ViewBag.Answer  as AgentAnswer;
+    var context = ViewBag.Context as OperationalContext;
+    var suggested = ViewBag.SuggestedQuestions as List<AgentQuestion> ?? new();
+}
+
+<div class="sp-agent-page">
+
+  <!-- ── Header ── -->
+  <div class="sp-agent-header">
+    <div class="sp-agent-header__left">
+      <div class="sp-agent-badge"><span>🤖</span> Local Deterministic AI Copilot</div>
+      <h1 class="sp-agent-title">SmartPort AI Agent / Copilot Command Center</h1>
+      <p class="sp-agent-subtitle">Explainable berth, gate, yard, energy, emissions and truck-flow recommendations from live demo port conditions — no paid AI APIs or cloud secrets required.</p>
+    </div>
+    <div class="sp-agent-header__right">
+      @if (context != null)
+      {
+        <div class="sp-agent-status">
+          <span class="sp-agent-status__dot"></span>
+          <span>Live — @context.ActiveDisruptions disruption(s) · @context.VesselsInPort vessel(s) in port · @context.TrucksInQueue trucks queued</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="sp-alert sp-alert--info" style="margin-bottom:1.25rem">
+    <i data-feather="info"></i>
+    <span>All responses are based on <strong>synthetic operational data</strong> generated for demonstration purposes. No real port, vessel, or private operator data is used.</span>
+  </div>
+
+  @if (context != null)
+  {
+    var gateSeverity = context.TrucksInQueue > 14 ? "critical" : context.TrucksInQueue > 8 ? "high" : "watch";
+    var yardSeverity = context.YardOccupancyPct > 88 ? "critical" : context.YardOccupancyPct > 76 ? "high" : "watch";
+    var berthSeverity = context.BerthUtilisationPct > 88 || context.VesselsAtAnchor > 0 ? "high" : "watch";
+    var energySeverity = context.LoadSheddingActive ? "critical" : "watch";
+    <section class="sp-command-strip" aria-label="Copilot intelligence lanes">
+      <article class="sp-command-tile sp-command-tile--@gateSeverity">
+        <span class="sp-command-tile__signal"></span>
+        <div class="sp-command-tile__eyebrow">Gate Queue Intelligence</div>
+        <strong>@context.TrucksInQueue trucks queued</strong>
+        <p>Open overflow lanes and smooth appointment arrivals when queue depth exceeds the active gate plan.</p>
+      </article>
+      <article class="sp-command-tile sp-command-tile--@berthSeverity">
+        <span class="sp-command-tile__signal"></span>
+        <div class="sp-command-tile__eyebrow">Berth Intelligence</div>
+        <strong>@context.BerthUtilisationPct:F0% berth utilisation</strong>
+        <p>Prioritise delayed vessels and resolve anchor pressure before it cascades into yard congestion.</p>
+      </article>
+      <article class="sp-command-tile sp-command-tile--@yardSeverity">
+        <span class="sp-command-tile__signal"></span>
+        <div class="sp-command-tile__eyebrow">Yard Pressure Intelligence</div>
+        <strong>@context.YardOccupancyPct:F1% yard occupancy</strong>
+        <p>Escalate dwell alerts and pull cleared imports forward to recover premium ground slots.</p>
+      </article>
+      <article class="sp-command-tile sp-command-tile--@energySeverity">
+        <span class="sp-command-tile__signal"></span>
+        <div class="sp-command-tile__eyebrow">Energy + Emissions Layer</div>
+        <strong>@(context.LoadSheddingActive ? "Load-shedding active" : "Energy stable")</strong>
+        <p>@context.EstimatedCo2Today:F1 kg CO₂ estimated today from idling. Protect reefers and reduce avoidable waits.</p>
+      </article>
+    </section>
+  }
+
+  <div class="sp-agent-grid">
+
+    <!-- ── Ask Form ── -->
+    <div class="sp-agent-main">
+      <div class="sp-card">
+        <div class="sp-card__header">
+          <h3 class="sp-card__title">Ask the Agent</h3>
+          <span class="sp-card__meta">Local rules/scoring engine · explainable audit trail</span>
+        </div>
+        <div style="padding:1.25rem">
+          <form asp-action="Ask" asp-controller="Agent" method="post">
+            @Html.AntiForgeryToken()
+            <div class="sp-agent-input-row">
+              <input type="text" name="question" class="sp-form__input sp-form__input--lg sp-agent-input"
+                     placeholder="e.g. What is causing congestion today?"
+                     value="@answer?.Question" autofocus autocomplete="off" />
+              <button type="submit" class="sp-btn sp-btn--primary sp-btn--lg">
+                <i data-feather="send"></i> Ask
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── Answer ── -->
+      @if (answer != null)
+      {
+        var riskClass = answer.RiskLevel switch { "critical" => "danger", "high" => "high", "medium" => "warning", _ => "info" };
+        <div class="sp-card sp-agent-answer sp-agent-answer--@riskClass" style="margin-top:1.25rem">
+          <div class="sp-card__header">
+            <div>
+              <span class="sp-badge sp-badge--type">@answer.Category</span>
+              <span class="sp-badge sp-badge--@riskClass" style="margin-left:.375rem">@answer.RiskLevel.ToUpper()</span>
+              @if (answer.IsFromLlm) { <span class="sp-badge sp-badge--ai" style="margin-left:.375rem">LLM Enhanced</span> }
+            </div>
+            <span class="sp-card__meta">@answer.AnsweredAt SAST</span>
+          </div>
+          <div style="padding:1.25rem">
+            <div class="sp-agent-answer__question">
+              <i data-feather="message-circle" style="width:14px;height:14px;flex-shrink:0"></i>
+              @answer.Question
+            </div>
+            <div class="sp-agent-answer__text">
+              @foreach (var line in answer.Answer.Split('\n'))
+              {
+                if (line.StartsWith("**") && line.EndsWith("**"))
+                {
+                  <p><strong>@line.Trim('*')</strong></p>
+                }
+                else if (line.StartsWith("• "))
+                {
+                  <p style="padding-left:1rem">@line</p>
+                }
+                else if (!string.IsNullOrWhiteSpace(line))
+                {
+                  <p>@line</p>
+                }
+              }
+            </div>
+
+            @if (answer.RelatedActions.Any())
+            {
+              <div class="sp-agent-actions">
+                <div class="sp-agent-actions__title"><i data-feather="zap" style="width:14px;height:14px"></i> Recommended Actions</div>
+                <ul class="sp-agent-actions__list">
+                  @foreach (var a in answer.RelatedActions) { <li>@a</li> }
+                </ul>
+              </div>
+            }
+
+            @if (answer.DataPoints.Any())
+            {
+              <div class="sp-agent-datapoints">
+                @foreach (var d in answer.DataPoints)
+                { <span class="sp-agent-dp">@d</span> }
+              </div>
+            }
+
+            <div class="sp-agent-disclaimer">@answer.DataDisclaimer</div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- ── Sidebar ── -->
+    <div class="sp-agent-sidebar">
+
+      <!-- Suggested Questions -->
+      <div class="sp-card">
+        <div class="sp-card__header"><h3 class="sp-card__title">Suggested Copilot Prompts</h3></div>
+        <div style="padding:.75rem">
+          @foreach (var q in suggested)
+          {
+            <form asp-action="Ask" asp-controller="Agent" method="post" style="margin-bottom:.375rem">
+              @Html.AntiForgeryToken()
+              <input type="hidden" name="question" value="@q.Question" />
+              <button type="submit" class="sp-agent-suggestion">@q.Question</button>
+            </form>
+          }
+        </div>
+      </div>
+
+      <!-- Live Context -->
+      @if (context != null)
+      {
+        <div class="sp-card" style="margin-top:1rem">
+          <div class="sp-card__header"><h3 class="sp-card__title">Live Context</h3></div>
+          <div style="padding:.75rem 1.25rem">
+            <div class="sp-agent-ctx-item @(context.LoadSheddingActive ? "sp-agent-ctx-item--danger" : "")">
+              <span>⚡ Load-Shedding</span>
+              <span class="sp-badge sp-badge--@(context.LoadSheddingActive ? "danger" : "success")">@(context.LoadSheddingActive ? "ACTIVE" : "Clear")</span>
+            </div>
+            <div class="sp-agent-ctx-item @(context.RoadCongestionActive ? "sp-agent-ctx-item--warn" : "")">
+              <span>🚛 Road Congestion</span>
+              <span class="sp-badge sp-badge--@(context.RoadCongestionActive ? "warning" : "success")">@(context.RoadCongestionActive ? "ACTIVE" : "Clear")</span>
+            </div>
+            <div class="sp-agent-ctx-item @(context.GateDelayActive ? "sp-agent-ctx-item--warn" : "")">
+              <span>🚪 Gate Delay</span>
+              <span class="sp-badge sp-badge--@(context.GateDelayActive ? "warning" : "success")">@(context.GateDelayActive ? "ACTIVE" : "Clear")</span>
+            </div>
+            <div class="sp-agent-ctx-item"><span>⚓ Vessels In Port</span><strong>@context.VesselsInPort</strong></div>
+            <div class="sp-agent-ctx-item"><span>🟡 At Anchor</span><strong>@context.VesselsAtAnchor</strong></div>
+            <div class="sp-agent-ctx-item"><span>🅿️ Berth Util.</span><strong>@context.BerthUtilisationPct%</strong></div>
+            <div class="sp-agent-ctx-item"><span>🚛 Gate Queue</span><strong>@context.TrucksInQueue trucks</strong></div>
+            <div class="sp-agent-ctx-item"><span>📦 Yard Occupancy</span><strong>@context.YardOccupancyPct:F1%</strong></div>
+            <div class="sp-agent-ctx-item"><span>⚠️ Open Incidents</span><strong>@context.OpenIncidents</strong></div>
+            <div class="sp-agent-ctx-item"><span>🌿 CO₂ Today</span><strong>@context.EstimatedCo2Today:F1 kg</strong></div>
+          </div>
+        </div>
+
+        <!-- AMD Note -->
+        <div class="sp-card sp-card--amd" style="margin-top:1rem">
+          <div class="sp-card__header"><h3 class="sp-card__title">⚡ AMD Developer Cloud</h3></div>
+          <div style="padding:.875rem 1.25rem;font-size:.8125rem;color:var(--sp-text-muted);line-height:1.6">
+            <p>The current AI Agent uses a deterministic Flow Intelligence Engine for reliable demo operation.</p>
+            <p>AMD GPUs could accelerate: LLM inference, time-series forecasting, scenario simulation at scale, synthetic data generation, and digital twin port modelling.</p>
+            <a href="/about-amd" class="sp-btn sp-btn--outline sp-btn--sm" style="margin-top:.5rem">Learn More →</a>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

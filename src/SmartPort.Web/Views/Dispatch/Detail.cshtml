@@ -1,0 +1,158 @@
+@using SmartPort.Application.Interfaces
+@model DispatchTripDetailDto
+@{
+    ViewData["Title"] = $"Trip — {Model.VehicleRegistration}";
+    var sc = Model.Status switch {
+        SmartPort.Domain.Enums.TripStatus.Completed       => "success",
+        SmartPort.Domain.Enums.TripStatus.Delayed         => "danger",
+        SmartPort.Domain.Enums.TripStatus.Waiting         => "warning",
+        SmartPort.Domain.Enums.TripStatus.AtGate          => "info",
+        SmartPort.Domain.Enums.TripStatus.Dispatched      => "info",
+        SmartPort.Domain.Enums.TripStatus.RecommendedHold => "warning",
+        SmartPort.Domain.Enums.TripStatus.ReadyForDispatch => "success",
+        _ => "muted"
+    };
+}
+
+<div class="sp-detail-grid">
+  <!-- ── Left / Main ── -->
+  <div class="sp-detail-main">
+
+    <!-- Hero card -->
+    <div class="sp-card sp-card--sev-@(Model.LatestRiskLevel switch { SmartPort.Domain.Enums.FlowRiskLevel.Critical => "critical", SmartPort.Domain.Enums.FlowRiskLevel.High => "high", SmartPort.Domain.Enums.FlowRiskLevel.Medium => "medium", _ => "low" })">
+      <div class="sp-incident-hero">
+        <div style="display:flex;align-items:center;gap:.625rem;flex-wrap:wrap;margin-bottom:.5rem">
+          <span class="sp-badge sp-badge--@sc">@Model.Status</span>
+          <span class="sp-badge sp-badge--type">@Model.CargoType</span>
+          <span class="sp-badge sp-badge--@(Model.UrgencyLevel == SmartPort.Domain.Enums.TripUrgencyLevel.Critical ? "danger" : Model.UrgencyLevel == SmartPort.Domain.Enums.TripUrgencyLevel.High ? "high" : "type")">@Model.UrgencyLevel urgency</span>
+          @if (Model.LatestRiskLevel.HasValue) { <span class="sp-badge sp-badge--@(Model.LatestRiskLevel switch { SmartPort.Domain.Enums.FlowRiskLevel.Critical => "danger", SmartPort.Domain.Enums.FlowRiskLevel.High => "high", SmartPort.Domain.Enums.FlowRiskLevel.Medium => "warning", _ => "success"})">Risk: @Model.LatestRiskLevel @(Model.LatestRiskScore.HasValue ? $"({Model.LatestRiskScore}/100)" : "")</span> }
+          @if (Model.IsArrivalWindowMissed) { <span class="sp-badge sp-badge--danger">ARRIVAL WINDOW MISSED</span> }
+        </div>
+        <h2 class="sp-incident-hero__title" style="font-size:1.25rem">@Model.VehicleRegistration — @Model.RouteName</h2>
+        <div style="color:var(--sp-text-muted);font-size:.9375rem">@Model.Origin → @Model.Destination &nbsp;|&nbsp; @Model.OrganisationName</div>
+        @if (!string.IsNullOrEmpty(Model.CargoDescription)) { <p style="margin:.75rem 0 0;color:var(--sp-text-muted)">@Model.CargoDescription</p> }
+      </div>
+    </div>
+
+    <!-- Status update actions -->
+    <div class="sp-card sp-card--actions" style="margin-top:1rem">
+      <div style="font-size:.8125rem;color:var(--sp-text-muted);margin-bottom:.5rem;font-weight:600">Update Status</div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        @foreach (var s in new[] { SmartPort.Domain.Enums.TripStatus.ReadyForDispatch, SmartPort.Domain.Enums.TripStatus.Dispatched, SmartPort.Domain.Enums.TripStatus.Waiting, SmartPort.Domain.Enums.TripStatus.AtGate, SmartPort.Domain.Enums.TripStatus.Completed, SmartPort.Domain.Enums.TripStatus.Delayed, SmartPort.Domain.Enums.TripStatus.Cancelled })
+        {
+          if (s != Model.Status)
+          {
+            <form asp-action="UpdateStatus" asp-controller="Dispatch" asp-route-id="@Model.Id" method="post" style="display:inline">
+              @Html.AntiForgeryToken()
+              <input type="hidden" name="status" value="@s" />
+              <button type="submit" class="sp-btn sp-btn--xs sp-btn--outline">→ @s</button>
+            </form>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- AI Actions -->
+    <div class="sp-card" style="margin-top:1rem;padding:1rem 1.25rem;display:flex;gap:.75rem;flex-wrap:wrap;align-items:center">
+      <span style="font-size:.8125rem;font-weight:600;color:var(--sp-text-muted)">Flow Intelligence Actions:</span>
+      <form asp-action="GenerateRecommendation" asp-controller="Dispatch" asp-route-id="@Model.Id" method="post" style="display:inline">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">🧠 Generate Recommendation</button>
+      </form>
+      <form asp-action="CalculateEmissions" asp-controller="Dispatch" asp-route-id="@Model.Id" method="post" style="display:inline">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="sp-btn sp-btn--sm sp-btn--outline">🌿 Calculate Emissions</button>
+      </form>
+    </div>
+
+    <!-- Emission estimate -->
+    @if (Model.EmissionEstimate != null)
+    {
+      var em = Model.EmissionEstimate;
+      <div class="sp-card" style="margin-top:1rem">
+        <div class="sp-card__header">
+          <h3 class="sp-card__title">🌿 Emission Estimate</h3>
+          <span class="sp-card__meta">Synthetic estimate — indicative only</span>
+        </div>
+        <div class="sp-kpi-grid sp-kpi-grid--sm" style="padding:1rem 1.25rem">
+          <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@em.EstimatedIdlingMinutes.ToString("F0") min</div><div class="sp-kpi-card__label">Idling</div></div></div>
+          <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@em.EstimatedDieselLitres.ToString("F2") L</div><div class="sp-kpi-card__label">Diesel</div></div></div>
+          <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">R@em.EstimatedFuelCost.ToString("F2")</div><div class="sp-kpi-card__label">Fuel Cost</div></div></div>
+          <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@em.EstimatedCo2Kg.ToString("F2") kg</div><div class="sp-kpi-card__label">CO₂</div></div></div>
+        </div>
+        @if (em.AvoidableIdlingFlag)
+        { <div class="sp-alert sp-alert--warning" style="margin:.5rem 1.25rem"><i>⚠</i> This idling is flagged as avoidable with optimised dispatch timing.</div> }
+        <div style="padding:.5rem 1.25rem 1rem;font-size:.8125rem;color:var(--sp-text-subtle)">@em.Notes</div>
+      </div>
+    }
+
+    <!-- Recommendations -->
+    @if (Model.Recommendations.Any())
+    {
+      <div class="sp-card" style="margin-top:1rem">
+        <div class="sp-card__header"><h3 class="sp-card__title">Flow Recommendations</h3></div>
+        <div style="padding:.5rem 0">
+          @foreach (var r in Model.Recommendations.OrderByDescending(x => x.GeneratedAt))
+          {
+            var rc = r.RiskColourClass;
+            var sl = r.AcceptedByUser == null ? "Pending" : r.AcceptedByUser == true ? "Accepted" : "Dismissed";
+            var scc = r.AcceptedByUser == null ? "warning" : r.AcceptedByUser == true ? "success" : "muted";
+            <div style="padding:.75rem 1.25rem;border-bottom:1px solid rgba(45,63,87,.4)">
+              <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.375rem;flex-wrap:wrap">
+                <span class="sp-badge sp-badge--@rc">@r.RiskLevel</span>
+                <span class="sp-badge sp-badge--type">@r.RecommendationType</span>
+                <span class="sp-badge sp-badge--@scc">@sl</span>
+                <span style="font-size:.75rem;color:var(--sp-text-subtle)">@r.GeneratedAt.ToString("HH:mm dd MMM")</span>
+              </div>
+              <div style="font-weight:500;margin-bottom:.25rem">@r.RecommendationText</div>
+              <div style="font-size:.8125rem;color:var(--sp-text-muted)">@r.Reason</div>
+              @if (!string.IsNullOrEmpty(r.ExpectedBenefit)) { <div style="font-size:.8125rem;color:var(--sp-teal);margin-top:.25rem">→ @r.ExpectedBenefit</div> }
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ── Right / Sidebar ── -->
+  <div class="sp-detail-sidebar">
+    <div class="sp-card">
+      <div class="sp-card__header"><h3 class="sp-card__title">Trip Details</h3></div>
+      <dl class="sp-dl">
+        <dt>Vehicle</dt><dd class="sp-table__mono"><a asp-action="Detail" asp-controller="Fleet" asp-route-id="@Model.Id">@Model.VehicleRegistration</a></dd>
+        <dt>Driver</dt><dd>@(Model.DriverName ?? "—")</dd>
+        <dt>Organisation</dt><dd>@Model.OrganisationName</dd>
+        <dt>Route</dt><dd>@Model.RouteName</dd>
+        <dt>Origin</dt><dd>@Model.Origin</dd>
+        <dt>Destination</dt><dd>@Model.Destination</dd>
+        <dt>Cargo</dt><dd><span class="sp-badge sp-badge--type">@Model.CargoType</span></dd>
+        <dt>Urgency</dt><dd><span class="sp-badge sp-badge--@(Model.UrgencyLevel == SmartPort.Domain.Enums.TripUrgencyLevel.Critical ? "danger" : "type")">@Model.UrgencyLevel</span></dd>
+        <dt>Status</dt><dd><span class="sp-badge sp-badge--@sc">@Model.Status</span></dd>
+      </dl>
+    </div>
+    <div class="sp-card" style="margin-top:1rem">
+      <div class="sp-card__header"><h3 class="sp-card__title">Schedule</h3></div>
+      <dl class="sp-dl">
+        <dt>Planned Dispatch</dt><dd class="sp-table__mono">@Model.PlannedDispatchTime.ToString("dd MMM HH:mm")</dd>
+        <dt>Actual Dispatch</dt><dd class="sp-table__mono">@(Model.ActualDispatchTime?.ToString("dd MMM HH:mm") ?? "—")</dd>
+        <dt>Window Start</dt><dd class="sp-table__mono">@Model.PlannedArrivalWindowStart.ToString("dd MMM HH:mm")</dd>
+        <dt>Window End</dt><dd class="sp-table__mono @(Model.IsArrivalWindowMissed ? "sp-table__cell--danger" : "")">@Model.PlannedArrivalWindowEnd.ToString("dd MMM HH:mm")</dd>
+        <dt>Actual Arrival</dt><dd class="sp-table__mono">@(Model.ActualArrivalTime?.ToString("dd MMM HH:mm") ?? "—")</dd>
+        <dt>Gate In</dt><dd class="sp-table__mono">@(Model.GateInTime?.ToString("dd MMM HH:mm") ?? "—")</dd>
+        <dt>Gate Out</dt><dd class="sp-table__mono">@(Model.GateOutTime?.ToString("dd MMM HH:mm") ?? "—")</dd>
+        @if (Model.PortDwellMinutes.HasValue) { <dt>Port Dwell</dt><dd>@Model.PortDwellMinutes.Value.ToString("F0") min</dd> }
+      </dl>
+    </div>
+    @if (!string.IsNullOrEmpty(Model.Notes))
+    {
+      <div class="sp-card" style="margin-top:1rem">
+        <div class="sp-card__header"><h3 class="sp-card__title">Notes</h3></div>
+        <div style="padding:.875rem 1.25rem;font-size:.875rem;color:var(--sp-text-muted)">@Model.Notes</div>
+      </div>
+    }
+    <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:.5rem">
+      <a asp-action="Index" asp-controller="Dispatch" class="sp-btn sp-btn--outline sp-btn--full">← All Trips</a>
+      <a asp-action="Index" asp-controller="Flow" class="sp-btn sp-btn--outline sp-btn--full">🧠 Flow Intelligence</a>
+    </div>
+  </div>
+</div>

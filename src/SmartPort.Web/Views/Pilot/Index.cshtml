@@ -1,0 +1,141 @@
+@using SmartPort.Application.Interfaces
+@using SmartPort.Domain.Entities
+@model PilotComparisonResult
+@{
+    ViewData["Title"] = "Pilot Metrics";
+    var snapshots = ViewBag.AllSnapshots as IEnumerable<PilotMetricSnapshot> ?? [];
+    var baseline = Model.Baseline;
+    var current  = Model.Current;
+}
+
+<div class="sp-page-header">
+    <div>
+        <div class="sp-agent-badge"><span>📊</span> Pilot Performance</div>
+        <h1>Pilot Metrics Dashboard</h1>
+        <p style="color:var(--sp-text-muted)">Baseline vs current performance. All data is synthetic and generated for demonstration.</p>
+    </div>
+    @if (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager"))
+    {
+        <form asp-action="GenerateSnapshot" asp-controller="Pilot" method="post" style="display:flex;gap:.5rem;align-items:center">
+            @Html.AntiForgeryToken()
+            <input type="text" name="periodLabel" class="sp-form__input sp-form__input--sm" placeholder="Period label e.g. July Week 1" style="min-width:200px" />
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Save Snapshot</button>
+        </form>
+    }
+</div>
+
+<div class="sp-alert sp-alert--info" style="margin-bottom:1.25rem">
+    <i data-feather="info"></i> @Model.PeriodNote — Synthetic pilot data only.
+</div>
+
+<!-- Comparison Cards -->
+<div class="sp-kpi-grid" style="margin-bottom:1.5rem">
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--teal"><i data-feather="clock"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@current.AverageWaitingMinutes.ToString("F0") min</div>
+            <div class="sp-kpi-card__label">Avg Waiting Time</div>
+            @if (baseline != null)
+            {
+                var chg = Model.WaitingMinutesChangePercent;
+                <div class="sp-kpi-card__sub @(chg < 0 ? "sp-text-success" : "sp-text-danger")">
+                    Baseline: @baseline.AverageWaitingMinutes.ToString("F0") min · @(chg.HasValue ? $"{(chg > 0 ? "+" : "")}{chg:F1}%" : "—")
+                </div>
+            }
+        </div>
+    </div>
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--orange"><i data-feather="droplet"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">R@current.EstimatedFuelCost.ToString("N0")</div>
+            <div class="sp-kpi-card__label">Est. Fuel Cost</div>
+            @if (baseline != null)
+            {
+                var chg = Model.FuelCostChangePercent;
+                <div class="sp-kpi-card__sub @(chg < 0 ? "sp-text-success" : "sp-text-danger")">
+                    Baseline: R@baseline.EstimatedFuelCost.ToString("N0") · @(chg.HasValue ? $"{(chg > 0 ? "+" : "")}{chg:F1}%" : "—")
+                </div>
+            }
+        </div>
+    </div>
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--green"><i data-feather="wind"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@current.EstimatedCo2Kg.ToString("N1") kg</div>
+            <div class="sp-kpi-card__label">Est. CO₂</div>
+            @if (baseline != null)
+            {
+                var chg = Model.Co2ChangePercent;
+                <div class="sp-kpi-card__sub @(chg < 0 ? "sp-text-success" : "sp-text-danger")">
+                    Baseline: @baseline.EstimatedCo2Kg.ToString("N1") kg · @(chg.HasValue ? $"{(chg > 0 ? "+" : "")}{chg:F1}%" : "—")
+                </div>
+            }
+        </div>
+    </div>
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--blue"><i data-feather="check-circle"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@current.DispatchReliabilityPercent.ToString("F1")%</div>
+            <div class="sp-kpi-card__label">Dispatch Reliability</div>
+            @if (baseline != null)
+            {
+                var chg = Model.ReliabilityChangePoints;
+                <div class="sp-kpi-card__sub @(chg > 0 ? "sp-text-success" : "sp-text-danger")">
+                    Baseline: @baseline.DispatchReliabilityPercent.ToString("F1")% · @(chg.HasValue ? $"{(chg > 0 ? "+" : "")}{chg:F1} pts" : "—")
+                </div>
+            }
+        </div>
+    </div>
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--purple"><i data-feather="cpu"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@current.RecommendationsGenerated</div>
+            <div class="sp-kpi-card__label">Recommendations</div>
+            <div class="sp-kpi-card__sub">@current.HighRiskTrips high-risk trips identified</div>
+        </div>
+    </div>
+    <div class="sp-kpi-card @(current.MissedArrivalWindows > 5 ? "sp-kpi-card--warn" : "")">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--@(current.MissedArrivalWindows > 5 ? "yellow" : "green")"><i data-feather="calendar"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@current.MissedArrivalWindows</div>
+            <div class="sp-kpi-card__label">Missed Arrival Windows</div>
+            @if (baseline != null)
+            { <div class="sp-kpi-card__sub">Baseline: @baseline.MissedArrivalWindows</div> }
+        </div>
+    </div>
+</div>
+
+<!-- Snapshot History Table -->
+@if (snapshots.Any())
+{
+    <div class="sp-card">
+        <div class="sp-card__header"><h3 class="sp-card__title">Pilot Snapshot History</h3></div>
+        <table class="sp-table">
+            <thead>
+                <tr><th>Period</th><th>Type</th><th>Avg Wait (min)</th><th>Total Idling</th><th>Fuel Cost</th><th>CO₂ (kg)</th><th>Missed Windows</th><th>Reliability</th><th>Recs</th><th>Date</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var s in snapshots.OrderByDescending(x => x.SnapshotDate))
+                {
+                    var mc = s.MetricType switch {
+                        PilotMetricType.Baseline => "info",
+                        PilotMetricType.Target   => "muted",
+                        _                        => "success"
+                    };
+                    <tr>
+                        <td><strong>@s.PeriodLabel</strong></td>
+                        <td><span class="sp-badge sp-badge--@mc">@s.MetricType</span></td>
+                        <td>@s.AverageWaitingMinutes.ToString("F0")</td>
+                        <td>@s.TotalIdlingMinutes.ToString("N0") min</td>
+                        <td>R@s.EstimatedFuelCost.ToString("N0")</td>
+                        <td>@s.EstimatedCo2Kg.ToString("N1")</td>
+                        <td>@s.MissedArrivalWindows</td>
+                        <td>@s.DispatchReliabilityPercent.ToString("F1")%</td>
+                        <td>@s.RecommendationsGenerated</td>
+                        <td class="sp-table__mono">@s.SnapshotDate.ToString("dd MMM yyyy")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

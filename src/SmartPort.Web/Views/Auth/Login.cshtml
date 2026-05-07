@@ -1,0 +1,60 @@
+@model SmartPort.Web.Controllers.LoginViewModel
+@{
+    Layout = "_LayoutPublic";
+    ViewData["Title"] = "Sign In";
+}
+
+<div class="sp-auth-page">
+    <div class="sp-auth-card">
+        <div class="sp-auth-card__header">
+            <a href="/" class="sp-pub-logo">
+                <span class="sp-pub-logo__mark">⬡</span>
+                <span class="sp-pub-logo__text">SmartPort</span>
+            </a>
+            <h1>Sign in to Operations</h1>
+            <p>Access the port management platform</p>
+        </div>
+
+        <form asp-controller="Auth" asp-action="Login" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="All" class="sp-form__errors"></div>
+
+            <div class="sp-form__group">
+                <label asp-for="Email" class="sp-form__label">Email Address</label>
+                <input asp-for="Email" class="sp-form__input" placeholder="you@organisation.co.za" autocomplete="email" autofocus />
+                <span asp-validation-for="Email" class="sp-form__error"></span>
+            </div>
+
+            <div class="sp-form__group">
+                <label asp-for="Password" class="sp-form__label">Password</label>
+                <input asp-for="Password" class="sp-form__input" placeholder="••••••••" autocomplete="current-password" />
+                <span asp-validation-for="Password" class="sp-form__error"></span>
+            </div>
+
+            <div class="sp-form__row sp-form__row--split">
+                <label class="sp-form__checkbox-label">
+                    <input asp-for="RememberMe" type="checkbox" class="sp-form__checkbox" />
+                    Keep me signed in for 8 hours
+                </label>
+            </div>
+
+            <button type="submit" class="sp-btn sp-btn--primary sp-btn--full">Sign In</button>
+        </form>
+
+        <div class="sp-auth-card__footer">
+            <div class="sp-auth-demo-creds">
+                <h4>Demo Credentials</h4>
+                <table class="sp-demo-creds-table">
+                    <tbody>
+                        <tr><td><strong>Admin</strong></td><td>admin@@smartport.co.za</td><td>SmartPort@@2025!</td></tr>
+                        <tr><td><strong>Ops Manager</strong></td><td>ops.manager@@smartport.co.za</td><td>SmartPort@@2025!</td></tr>
+                        <tr><td><strong>Terminal Staff</strong></td><td>terminal1@@smartport.co.za</td><td>SmartPort@@2025!</td></tr>
+                        <tr><td><strong>Logistics</strong></td><td>logistics@@freightco.co.za</td><td>SmartPort@@2025!</td></tr>
+                        <tr><td><strong>Viewer</strong></td><td>executive@@transnet.co.za</td><td>SmartPort@@2025!</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

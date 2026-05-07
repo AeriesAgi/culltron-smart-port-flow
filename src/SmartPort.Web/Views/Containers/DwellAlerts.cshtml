@@ -1,0 +1,33 @@
+@model IEnumerable<SmartPort.Application.Interfaces.ContainerListDto>
+@{ ViewData["Title"] = "Dwell Alerts"; }
+<div class="sp-alert sp-alert--warning">
+    <i data-feather="clock"></i>
+    <strong>@Model.Count() containers</strong> have exceeded their 72-hour free time limit and are accruing demurrage. Agent notification recommended.
+</div>
+<div class="sp-card">
+    <table class="sp-table">
+        <thead><tr><th>Container No.</th><th>Block / Slot</th><th>Direction</th><th>Dwell Time</th><th>Free Time</th><th>Overage</th><th>Customs</th><th>Hold</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var c in Model.OrderByDescending(x => x.DwellTimeHours))
+            {
+                var overage = c.DwellTimeHours.HasValue ? c.DwellTimeHours - 72 : null;
+                <tr class="sp-table__row--warn">
+                    <td>
+                        <div class="sp-table__mono"><a asp-action="Detail" asp-route-id="@c.Id">@c.ContainerNumber</a></div>
+                        <div class="sp-table__secondary">@c.ShippingLine</div>
+                    </td>
+                    <td class="sp-table__mono">@(c.YardBlockCode != null ? $"Blk {c.YardBlockCode}" : "—")<br/>@c.YardSlot</td>
+                    <td><span class="sp-badge sp-badge--@(c.Direction == SmartPort.Domain.Enums.ContainerDirection.Import ? "blue" : "green")">@c.Direction</span></td>
+                    <td class="sp-table__cell--danger"><strong>@(c.DwellTimeHours.HasValue ? $"{c.DwellTimeHours:F0}h" : "—")</strong></td>
+                    <td>72h</td>
+                    <td class="sp-table__cell--danger"><strong>@(overage.HasValue ? $"+{overage:F0}h" : "—")</strong></td>
+                    <td><span class="sp-badge sp-badge--@(c.CustomsStatus == SmartPort.Domain.Enums.ComplianceStatus.Compliant ? "success" : "warning")">@c.CustomsStatus</span></td>
+                    <td>@(c.IsOnHold ? "🔒 Yes" : "—")</td>
+                    <td><a asp-action="Detail" asp-route-id="@c.Id" class="sp-btn sp-btn--xs sp-btn--outline">View</a></td>
+                </tr>
+            }
+            @if (!Model.Any())
+            { <tr><td colspan="9" class="sp-table__empty sp-empty--success">No containers currently exceeding free time.</td></tr> }
+        </tbody>
+    </table>
+</div>

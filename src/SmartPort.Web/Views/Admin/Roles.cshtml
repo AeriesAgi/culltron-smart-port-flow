@@ -1,0 +1,29 @@
+@model IEnumerable<Microsoft.AspNetCore.Identity.IdentityRole>
+@{ ViewData["Title"] = "Roles & Permissions"; }
+<div class="sp-card">
+    <div class="sp-card__header"><h3 class="sp-card__title">Platform Roles</h3></div>
+    <table class="sp-table">
+        <thead><tr><th>Role Name</th><th>Permissions Summary</th></tr></thead>
+        <tbody>
+            <tr><td><strong>Admin</strong></td><td>Full platform access — user management, system configuration, all operational modules, all settings</td></tr>
+            <tr><td><strong>PortOperationsManager</strong></td><td>Vessel and berth management, incident management, document approval, alert acknowledgment, analytics, AI recommendations</td></tr>
+            <tr><td><strong>TerminalStaff</strong></td><td>Container and yard operations, gate management, incident creation and acknowledgment, document submission — no user management</td></tr>
+            <tr><td><strong>LogisticsPartner</strong></td><td>Container tracking, document visibility, truck/gate status — read-only operational view for external partners</td></tr>
+            <tr><td><strong>Viewer</strong></td><td>Dashboard, analytics, vessel schedule — executive read-only view, no operational actions</td></tr>
+        </tbody>
+    </table>
+</div>
+<div class="sp-card" style="margin-top:1.5rem">
+    <div class="sp-card__header"><h3 class="sp-card__title">Authorization Policies</h3></div>
+    <table class="sp-table">
+        <thead><tr><th>Policy</th><th>Roles Granted</th></tr></thead>
+        <tbody>
+            <tr><td>CanManageUsers</td><td>Admin</td></tr>
+            <tr><td>CanManageVessels</td><td>Admin, PortOperationsManager</td></tr>
+            <tr><td>CanAcknowledgeAlerts</td><td>Admin, PortOperationsManager, TerminalStaff</td></tr>
+            <tr><td>CanManageIncidents</td><td>Admin, PortOperationsManager, TerminalStaff</td></tr>
+            <tr><td>CanApproveDocuments</td><td>Admin, PortOperationsManager</td></tr>
+            <tr><td>CanViewAnalytics</td><td>Admin, PortOperationsManager, Viewer</td></tr>
+        </tbody>
+    </table>
+</div>

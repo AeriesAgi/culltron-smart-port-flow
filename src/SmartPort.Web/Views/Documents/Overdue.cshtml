@@ -1,0 +1,30 @@
+@model IEnumerable<SmartPort.Application.Interfaces.DocumentListDto>
+@{ ViewData["Title"] = "Overdue Documents"; }
+<div class="sp-alert sp-alert--danger">
+    <i data-feather="alert-circle"></i>
+    <strong>@Model.Count() documents</strong> are overdue or missing. Vessel departures may be at risk. Immediate action required.
+</div>
+<div class="sp-card">
+    <table class="sp-table">
+        <thead><tr><th>Document</th><th>Type</th><th>Vessel</th><th>Status</th><th>Required By</th><th>Submitted By</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var d in Model.OrderBy(x => x.RequiredByDate))
+            {
+                <tr class="sp-table__row--danger">
+                    <td>
+                        <div class="sp-table__primary"><a asp-action="Detail" asp-route-id="@d.Id">@d.Title</a></div>
+                        <div class="sp-table__secondary sp-table__mono">@d.DocumentNumber</div>
+                    </td>
+                    <td><span class="sp-badge sp-badge--type">@d.DocumentType</span></td>
+                    <td>@(d.VesselName ?? "—")</td>
+                    <td><span class="sp-badge sp-badge--@(d.Status == SmartPort.Domain.Enums.DocumentStatus.Required ? "danger" : "warning")">@d.Status</span></td>
+                    <td class="sp-table__cell--danger"><strong>@(d.RequiredByDate?.ToString("dd MMM HH:mm") ?? "—")</strong></td>
+                    <td>@(string.IsNullOrEmpty(d.SubmittedBy) ? "Not submitted" : d.SubmittedBy)</td>
+                    <td><a asp-action="Detail" asp-route-id="@d.Id" class="sp-btn sp-btn--xs sp-btn--danger">Review Now</a></td>
+                </tr>
+            }
+            @if (!Model.Any())
+            { <tr><td colspan="7" class="sp-table__empty sp-empty--success">No overdue documents.</td></tr> }
+        </tbody>
+    </table>
+</div>

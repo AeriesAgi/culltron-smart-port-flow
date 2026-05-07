@@ -1,0 +1,56 @@
+@model SmartPort.Application.Interfaces.YardBlockDetailDto
+@{ ViewData["Title"] = $"Block {Model.BlockCode}"; }
+<div class="sp-detail-grid">
+    <div class="sp-detail-main">
+        <div class="sp-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">Containers in Block @Model.BlockCode</h3><a asp-action="Yard" class="sp-card__link">← Yard Overview</a></div>
+            @if (Model.Containers.Any())
+            {
+                <table class="sp-table">
+                    <thead><tr><th>Container</th><th>Slot</th><th>Direction</th><th>Status</th><th>Dwell</th><th>Customs</th><th>Flags</th></tr></thead>
+                    <tbody>
+                        @foreach (var c in Model.Containers)
+                        {
+                            <tr class="@(c.IsDwellAlertRaised ? "sp-table__row--warn" : c.IsOnHold ? "sp-table__row--danger" : "")">
+                                <td><a asp-action="Detail" asp-route-id="@c.Id" class="sp-table__mono">@c.ContainerNumber</a></td>
+                                <td class="sp-table__mono">@(c.YardSlot ?? "—")</td>
+                                <td><span class="sp-badge sp-badge--@(c.Direction == SmartPort.Domain.Enums.ContainerDirection.Import ? "blue" : "green")">@c.Direction</span></td>
+                                <td><span class="sp-badge sp-badge--info">@c.Status</span></td>
+                                <td class="@(c.IsDwellAlertRaised ? "sp-table__cell--danger" : "")">@(c.DwellTimeHours.HasValue ? $"{c.DwellTimeHours:F0}h" : "—")</td>
+                                <td><span class="sp-badge sp-badge--@(c.CustomsStatus == SmartPort.Domain.Enums.ComplianceStatus.Compliant ? "success" : "warning")">@c.CustomsStatus</span></td>
+                                <td>
+                                    @if (c.IsHazardous) { <span>⚠</span> }
+                                    @if (c.IsReefer)    { <span>❄</span> }
+                                    @if (c.IsOnHold)    { <span>🔒</span> }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else { <div class="sp-empty">No containers in this block.</div> }
+        </div>
+    </div>
+    <div class="sp-detail-sidebar">
+        <div class="sp-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">Block @Model.BlockCode</h3></div>
+            <dl class="sp-dl">
+                <dt>Terminal</dt><dd>@Model.Terminal</dd>
+                <dt>Zone</dt><dd>@Model.Zone</dd>
+                <dt>Config</dt><dd>@Model.Rows rows × @Model.Bays bays × @Model.Tiers tiers</dd>
+                <dt>Capacity</dt><dd>@Model.TotalCapacityTEU TEU</dd>
+                <dt>Occupied</dt><dd>@Model.CurrentOccupancyTEU TEU</dd>
+                <dt>Utilisation</dt><dd class="@(Model.IsCritical ? "sp-table__cell--danger" : "")"><strong>@Model.OccupancyPercent%</strong></dd>
+                <dt>Reefer</dt><dd>@(Model.IsReeferBlock ? "Yes" : "No")</dd>
+                <dt>Hazmat</dt><dd>@(Model.IsHazardousBlock ? "Yes" : "No")</dd>
+            </dl>
+            <div style="padding:.5rem 1.25rem 1rem">
+                <div class="sp-progress sp-progress--@(Model.IsCritical ? "critical" : Model.IsNearCapacity ? "warning" : "normal") sp-progress--lg">
+                    <div class="sp-progress__bar" style="width:@Model.OccupancyPercent%"></div>
+                </div>
+                @if (Model.IsCritical)      { <div class="sp-alert sp-alert--danger"  style="margin-top:.75rem">Block is at critical capacity.</div> }
+                else if (Model.IsNearCapacity) { <div class="sp-alert sp-alert--warning" style="margin-top:.75rem">Block is near capacity.</div> }
+            </div>
+        </div>
+    </div>
+</div>

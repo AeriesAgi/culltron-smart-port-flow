@@ -1,0 +1,52 @@
+@model IEnumerable<SmartPort.Application.Interfaces.YardBlockStatusDto>
+@{
+    ViewData["Title"] = "Yard Overview";
+    var total = Model.Sum(y => y.TotalCapacityTEU);
+    var occupied = Model.Sum(y => y.CurrentOccupancyTEU);
+    var pct = total > 0 ? (decimal)occupied / total * 100 : 0;
+}
+<div class="sp-toolbar">
+    <div class="sp-toolbar__actions">
+        <a asp-action="DwellAlerts" class="sp-btn sp-btn--sm sp-btn--warning">Dwell Alerts</a>
+        <a asp-action="Index" class="sp-btn sp-btn--sm sp-btn--outline">Container List</a>
+    </div>
+</div>
+
+<div class="sp-kpi-grid sp-kpi-grid--sm">
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@occupied.ToString("N0")</div><div class="sp-kpi-card__label">TEU Occupied</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@total.ToString("N0")</div><div class="sp-kpi-card__label">Total Capacity</div></div></div>
+    <div class="sp-kpi-card @(pct >= 85 ? "sp-kpi-card--warn" : "")">
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@pct.ToString("F1")%</div><div class="sp-kpi-card__label">Overall Occupancy</div></div>
+    </div>
+    <div class="sp-kpi-card @(Model.Any(y => y.IsCritical) ? "sp-kpi-card--danger" : "")">
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.Count(y => y.IsCritical)</div><div class="sp-kpi-card__label">Critical Blocks (≥95%)</div></div>
+    </div>
+</div>
+
+<div class="sp-yard-overview-grid">
+    @foreach (var y in Model.OrderBy(y => y.Zone).ThenBy(y => y.BlockCode))
+    {
+        var fillClass = y.IsCritical ? "critical" : y.IsNearCapacity ? "warning" : "normal";
+        <div class="sp-yard-detail-card @(y.IsCritical ? "sp-yard-detail-card--critical" : "")">
+            <div class="sp-yard-detail-card__header">
+                <span class="sp-yard-detail-card__code">Block @y.BlockCode</span>
+                <span class="sp-yard-detail-card__zone">@y.Zone</span>
+                <div>
+                    @if (y.IsReeferBlock)    { <span class="sp-badge sp-badge--info"   style="font-size:10px">❄ Reefer</span> }
+                    @if (y.IsHazardousBlock) { <span class="sp-badge sp-badge--danger" style="font-size:10px">⚠ Hazmat</span> }
+                    @if (y.IsCritical)       { <span class="sp-badge sp-badge--danger" style="font-size:10px">CRITICAL</span> }
+                    else if (y.IsNearCapacity) { <span class="sp-badge sp-badge--warning" style="font-size:10px">NEAR FULL</span> }
+                </div>
+            </div>
+            <div class="sp-progress sp-progress--@fillClass sp-progress--lg" style="margin:.5rem 0">
+                <div class="sp-progress__bar" style="width:@y.OccupancyPercent%"></div>
+            </div>
+            <div class="sp-yard-detail-card__stats">
+                <span>@y.CurrentOccupancyTEU / @y.TotalCapacityTEU TEU</span>
+                <strong>@y.OccupancyPercent%</strong>
+            </div>
+            <div class="sp-yard-detail-card__meta">@y.Terminal</div>
+            <a asp-action="YardBlock" asp-route-id="@y.Id" class="sp-btn sp-btn--xs sp-btn--outline" style="margin-top:.625rem">View Block →</a>
+        </div>
+    }
+</div>
