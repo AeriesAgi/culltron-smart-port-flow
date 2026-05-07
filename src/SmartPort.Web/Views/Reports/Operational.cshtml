@@ -1,0 +1,45 @@
+@using SmartPort.Application.Interfaces
+@{ ViewData["Title"] = "Operational Report"; var summary = ViewBag.Summary as FlowIntelligenceSummaryDto; var activeTrips = ViewBag.ActiveTrips as IEnumerable<DispatchTripListDto> ?? []; var highRisk = ViewBag.HighRisk as IEnumerable<DispatchTripListDto> ?? []; var disruptions = ViewBag.Disruptions as IEnumerable<DisruptionListDto> ?? []; }
+<div class="sp-toolbar">
+    <h2 style="margin:0">Operational Report — @DateTime.UtcNow.ToString("dd MMM yyyy HH:mm") SAST</h2>
+    <a asp-action="Index" asp-controller="Reports" class="sp-btn sp-btn--sm sp-btn--outline">← Reports</a>
+</div>
+<div class="sp-alert sp-alert--info" style="margin-bottom:1rem"><i data-feather="info"></i> Synthetic demo data only. Generated at @DateTime.UtcNow.ToString("HH:mm:ss") UTC.</div>
+@if (summary != null)
+{
+    <div class="sp-kpi-grid sp-kpi-grid--sm" style="margin-bottom:1.5rem">
+        <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@summary.ActiveTrips</div><div class="sp-kpi-card__label">Active Trips</div></div></div>
+        <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@summary.HighRiskTrips</div><div class="sp-kpi-card__label">High-Risk Trips</div></div></div>
+        <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@summary.ActiveDisruptions</div><div class="sp-kpi-card__label">Active Disruptions</div></div></div>
+        <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@summary.WaitingTrucks</div><div class="sp-kpi-card__label">Trucks Waiting</div></div></div>
+        <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@summary.RecommendationsToday</div><div class="sp-kpi-card__label">Recs Today</div></div></div>
+    </div>
+}
+<div class="sp-card" style="margin-bottom:1.25rem">
+    <div class="sp-card__header"><h3 class="sp-card__title">Active Dispatch Trips</h3></div>
+    <table class="sp-table">
+        <thead><tr><th>Vehicle</th><th>Organisation</th><th>Route</th><th>Status</th><th>Urgency</th><th>Risk</th><th>Dispatch Time</th></tr></thead>
+        <tbody>
+            @foreach (var t in activeTrips)
+            {
+                var rc = t.LatestRiskLevel switch { FlowRiskLevel.Critical => "danger", FlowRiskLevel.High => "high", FlowRiskLevel.Medium => "warning", _ => "success" };
+                <tr><td class="sp-table__mono">@t.VehicleRegistration</td><td>@t.OrganisationName</td><td>@t.RouteName</td><td><span class="sp-badge sp-badge--info">@t.Status</span></td><td><span class="sp-badge sp-badge--type">@t.UrgencyLevel</span></td><td><span class="sp-badge sp-badge--@rc">@(t.LatestRiskLevel?.ToString() ?? "—")</span></td><td class="sp-table__mono">@t.PlannedDispatchTime.ToString("HH:mm dd MMM")</td></tr>
+            }
+            @if (!activeTrips.Any()) { <tr><td colspan="7" class="sp-table__empty">No active trips.</td></tr> }
+        </tbody>
+    </table>
+</div>
+<div class="sp-card" style="margin-bottom:1.25rem">
+    <div class="sp-card__header"><h3 class="sp-card__title">Active Disruptions</h3></div>
+    <table class="sp-table">
+        <thead><tr><th>Title</th><th>Type</th><th>Severity</th><th>Route</th><th>Since</th></tr></thead>
+        <tbody>
+            @foreach (var d in disruptions)
+            {
+                var sc = d.Severity switch { DisruptionSeverity.Critical => "danger", DisruptionSeverity.High => "high", DisruptionSeverity.Medium => "warning", _ => "info" };
+                <tr><td>@d.Title</td><td><span class="sp-badge sp-badge--type">@d.DisruptionType</span></td><td><span class="sp-badge sp-badge--@sc">@d.Severity</span></td><td>@(d.AffectedRoute ?? "—")</td><td class="sp-table__mono">@d.StartTime.ToString("HH:mm dd MMM")</td></tr>
+            }
+            @if (!disruptions.Any()) { <tr><td colspan="5" class="sp-table__empty">No active disruptions.</td></tr> }
+        </tbody>
+    </table>
+</div>

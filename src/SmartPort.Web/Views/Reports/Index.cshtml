@@ -1,0 +1,40 @@
+@{ ViewData["Title"] = "Reports"; }
+<div class="sp-page-header">
+    <div>
+        <div class="sp-agent-badge"><span>📋</span> Reports</div>
+        <h1>Operational Reports</h1>
+        <p style="color:var(--sp-text-muted)">Screen-based reports and data exports. All data is synthetic.</p>
+    </div>
+</div>
+<div class="sp-modules-grid" style="margin-top:1rem">
+    <a asp-action="Operational" asp-controller="Reports" class="sp-module-card" style="text-decoration:none;cursor:pointer">
+        <div class="sp-module-card__icon">🏭</div>
+        <h3>Operational Report</h3>
+        <p>Active trips, high-risk dispatch, disruptions, and fleet status summary.</p>
+    </a>
+    <a asp-action="Emissions" asp-controller="Reports" class="sp-module-card" style="text-decoration:none;cursor:pointer">
+        <div class="sp-module-card__icon">🌿</div>
+        <h3>Emissions Report</h3>
+        <p>Estimated diesel waste, CO₂ impact, and avoidable idling breakdown.</p>
+    </a>
+    <a asp-action="Pilot" asp-controller="Reports" class="sp-module-card" style="text-decoration:none;cursor:pointer">
+        <div class="sp-module-card__icon">📊</div>
+        <h3>Pilot Summary Report</h3>
+        <p>Baseline vs current performance comparison for the pilot programme.</p>
+    </a>
+    <a asp-action="Disruptions" asp-controller="Reports" class="sp-module-card" style="text-decoration:none;cursor:pointer">
+        <div class="sp-module-card__icon">⚡</div>
+        <h3>Disruption Report</h3>
+        <p>All disruption events — type, severity, route, duration, resolution status.</p>
+    </a>
+    <a asp-action="Recommendations" asp-controller="Reports" class="sp-module-card" style="text-decoration:none;cursor:pointer">
+        <div class="sp-module-card__icon">🧠</div>
+        <h3>Recommendation History</h3>
+        <p>All Flow Intelligence recommendations — accepted, dismissed, and pending.</p>
+    </a>
+    <a asp-action="ExportEmissionsCsv" asp-controller="Reports" class="sp-module-card" style="text-decoration:none;cursor:pointer">
+        <div class="sp-module-card__icon">⬇</div>
+        <h3>Export Emissions CSV</h3>
+        <p>Download all idling and emissions estimates as a CSV file.</p>
+    </a>
+</div>

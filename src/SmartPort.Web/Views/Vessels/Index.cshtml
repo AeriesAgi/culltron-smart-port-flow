@@ -1,0 +1,65 @@
+@model SmartPort.Application.Interfaces.PagedResult<SmartPort.Application.Interfaces.VesselListDto>
+@{
+    ViewData["Title"] = "Vessel Schedule";
+    var filter = ViewBag.Filter as SmartPort.Application.Interfaces.VesselFilterDto ?? new();
+}
+<div class="sp-toolbar">
+    <form method="get" class="sp-filter-bar">
+        <input name="SearchTerm" value="@filter.SearchTerm" class="sp-form__input sp-form__input--sm" placeholder="Search vessel, IMO, voyage…" />
+        <select name="Status" class="sp-form__select sp-form__select--sm">
+            <option value="">All Status</option>
+            @foreach (var s in Enum.GetValues<SmartPort.Domain.Enums.VesselStatus>())
+            { <option value="@s" selected="@(filter.Status == s)">@s</option> }
+        </select>
+        <select name="VesselType" class="sp-form__select sp-form__select--sm">
+            <option value="">All Types</option>
+            @foreach (var t in Enum.GetValues<SmartPort.Domain.Enums.VesselType>())
+            { <option value="@t" selected="@(filter.VesselType == t)">@t</option> }
+        </select>
+        <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Filter</button>
+        <a asp-action="Index" class="sp-btn sp-btn--sm sp-btn--outline">Reset</a>
+    </form>
+    <div class="sp-toolbar__actions">
+        <a asp-action="Schedule" class="sp-btn sp-btn--sm sp-btn--outline">Berth Schedule</a>
+        @if (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager"))
+        { <a asp-action="Create" class="sp-btn sp-btn--sm sp-btn--primary">+ Register Vessel</a> }
+    </div>
+</div>
+<div class="sp-card">
+    <table class="sp-table">
+        <thead>
+            <tr><th>Vessel</th><th>Line / Agent</th><th>Type</th><th>Status</th><th>ETA</th><th>ETD</th><th>Voyage</th><th>Delay</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var v in Model.Items)
+            {
+                var sc = v.Status switch {
+                    SmartPort.Domain.Enums.VesselStatus.CargoOperations => "success",
+                    SmartPort.Domain.Enums.VesselStatus.Berthed => "info",
+                    SmartPort.Domain.Enums.VesselStatus.Approaching => "info",
+                    SmartPort.Domain.Enums.VesselStatus.AtAnchor => "warning",
+                    SmartPort.Domain.Enums.VesselStatus.Delayed => "danger",
+                    SmartPort.Domain.Enums.VesselStatus.Departed => "muted",
+                    _ => "default"
+                };
+                <tr class="@(v.DelayMinutes > 0 ? "sp-table__row--warn" : "")">
+                    <td>
+                        <div class="sp-table__primary"><a asp-action="Detail" asp-route-id="@v.Id">@v.Name</a></div>
+                        <div class="sp-table__secondary">@v.IMONumber · @v.FlagCode</div>
+                    </td>
+                    <td><div class="sp-table__primary">@v.ShippingLine</div><div class="sp-table__secondary">@v.Agent</div></td>
+                    <td><span class="sp-badge sp-badge--type">@v.VesselType</span></td>
+                    <td><span class="sp-badge sp-badge--@sc">@v.Status</span></td>
+                    <td class="sp-table__mono">@(v.ETA?.ToString("dd MMM HH:mm") ?? "—")</td>
+                    <td class="sp-table__mono">@(v.ETD?.ToString("dd MMM HH:mm") ?? "—")</td>
+                    <td class="sp-table__mono">@(v.VoyageNumber ?? "—")</td>
+                    <td>@(v.DelayMinutes > 0 ? $"+{v.DelayMinutes}m" : "—")</td>
+                    <td><a asp-action="Detail" asp-route-id="@v.Id" class="sp-btn sp-btn--xs sp-btn--outline">View</a></td>
+                </tr>
+            }
+            @if (!Model.Items.Any())
+            { <tr><td colspan="9" class="sp-table__empty">No vessels match the current filter.</td></tr> }
+        </tbody>
+    </table>
+    @await Html.PartialAsync("_Pagination", Model)
+</div>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] != null ? $"{ViewData["Title"]} — Culltron Smart Port Flow" : "Culltron Smart Port Flow | Agentic Port Operations Copilot")</title>
+    <meta name="description" content="Culltron Smart Port Flow — an enterprise AI operations copilot for port congestion, berth, gate, truck-flow, emissions and energy disruption intelligence." />
+    <link rel="stylesheet" href="~/css/public.css" asp-append-version="true" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="sp-public">
+
+<!-- ─── Navbar ─────────────────────────────────────────────────────────── -->
+<nav class="sp-pub-nav" id="pubNav">
+    <div class="sp-pub-nav__inner container">
+        <a href="/" class="sp-pub-logo">
+            <span class="sp-pub-logo__mark">⬡</span>
+            <span class="sp-pub-logo__text">Culltron Smart Port Flow</span>
+        </a>
+        <ul class="sp-pub-nav__links">
+            <li><a asp-controller="Home" asp-action="Product">Platform</a></li>
+            <li><a asp-controller="Home" asp-action="Features">Features</a></li>
+            <li><a asp-controller="Home" asp-action="About">About</a></li>
+            <li><a asp-controller="Home" asp-action="Pricing">Pricing</a></li>
+            <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
+        </ul>
+        <div class="sp-pub-nav__actions">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a asp-controller="Dashboard" asp-action="Index" class="sp-btn sp-btn--primary">Go to Dashboard</a>
+            }
+            else
+            {
+                <a asp-controller="Auth" asp-action="Login" class="sp-btn sp-btn--outline">Sign In</a>
+                <a asp-controller="Home" asp-action="Demo" class="sp-btn sp-btn--primary">Request Demo</a>
+            }
+        </div>
+        <button class="sp-pub-nav__hamburger" id="mobileMenuToggle" aria-label="Toggle menu">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</nav>
+
+<!-- ─── Content ───────────────────────────────────────────────────────── -->
+<div class="sp-pub-content">
+    @RenderBody()
+</div>
+
+<!-- ─── Footer ────────────────────────────────────────────────────────── -->
+<footer class="sp-pub-footer">
+    <div class="container">
+        <div class="sp-pub-footer__grid">
+            <div class="sp-pub-footer__brand">
+                <div class="sp-pub-logo sp-pub-logo--white">
+                    <span class="sp-pub-logo__mark">⬡</span>
+                    <span class="sp-pub-logo__text">Culltron Smart Port Flow</span>
+                </div>
+                <p>Agentic Smart Port operations intelligence for premium hackathon and enterprise demos.</p>
+                <p class="sp-pub-footer__copy">© @DateTime.Now.Year SmartPort Technologies (Pty) Ltd.<br>Registered in South Africa.</p>
+            </div>
+            <div class="sp-pub-footer__links">
+                <h4>Platform</h4>
+                <ul>
+                    <li><a asp-controller="Home" asp-action="Product">Overview</a></li>
+                    <li><a asp-controller="Home" asp-action="Features">Features</a></li>
+                    <li><a asp-controller="Home" asp-action="Pricing">Pricing</a></li>
+                    <li><a asp-controller="Home" asp-action="Demo">Request Demo</a></li>
+                </ul>
+            </div>
+            <div class="sp-pub-footer__links">
+                <h4>Company</h4>
+                <ul>
+                    <li><a asp-controller="Home" asp-action="About">About Us</a></li>
+                    <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                </ul>
+            </div>
+            <div class="sp-pub-footer__links">
+                <h4>Contact</h4>
+                <ul>
+                    <li>support@smartport.co.za</li>
+                    <li>+27 31 000 0000</li>
+                    <li>Durban, KwaZulu-Natal</li>
+                    <li>South Africa</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="~/js/public.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

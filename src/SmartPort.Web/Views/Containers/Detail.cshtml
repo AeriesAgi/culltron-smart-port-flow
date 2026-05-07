@@ -1,0 +1,49 @@
+@model SmartPort.Application.Interfaces.ContainerDetailDto
+@{ ViewData["Title"] = Model.ContainerNumber; }
+<div class="sp-detail-grid">
+    <div class="sp-detail-main">
+        <div class="sp-card">
+            <div class="sp-card__header">
+                <h3 class="sp-card__title sp-table__mono">@Model.ContainerNumber</h3>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                    <span class="sp-badge sp-badge--info">@Model.Status</span>
+                    @if (c.IsDwellAlertRaised) { <span class="sp-badge sp-badge--warning">⏱ Dwell Alert</span> }
+                    @if (c.IsOnHold)           { <span class="sp-badge sp-badge--danger">🔒 On Hold</span> }
+                    @if (c.IsHazardous)        { <span class="sp-badge sp-badge--danger">⚠ Hazardous</span> }
+                    @if (c.IsReefer)           { <span class="sp-badge sp-badge--info">❄ Reefer</span> }
+                </div>
+            </div>
+            @if (Model.IsHazardous) { <div class="sp-alert sp-alert--danger" style="margin:.75rem 1.25rem 0"><i data-feather="alert-triangle"></i> Hazardous cargo — IMDG Class @Model.HazardClass</div> }
+            @if (Model.IsReefer)    { <div class="sp-alert sp-alert--info"   style="margin:.75rem 1.25rem 0"><i data-feather="thermometer"></i> Reefer container — Set temperature: @Model.ReeferSetTemp°C</div> }
+            @if (Model.IsOnHold)    { <div class="sp-alert sp-alert--warning" style="margin:.75rem 1.25rem 0"><i data-feather="lock"></i> On hold: @(Model.HoldReason ?? "Contact terminal for details")</div> }
+            @if (Model.IsDwellAlertRaised) { <div class="sp-alert sp-alert--warning" style="margin:.75rem 1.25rem 0"><i data-feather="clock"></i> Container has exceeded free time limit of @(Model.FreeTimeLimitHours ?? 72)h. Dwell: @(Model.DwellTimeHours?.ToString("F0"))h.</div> }
+        </div>
+    </div>
+    <div class="sp-detail-sidebar">
+        <div class="sp-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">Container Details</h3></div>
+            <dl class="sp-dl">
+                <dt>Number</dt><dd class="sp-table__mono">@Model.ContainerNumber</dd>
+                <dt>Size / Type</dt><dd>@((int)Model.Size)ft @Model.ContainerType</dd>
+                <dt>Direction</dt><dd>@Model.Direction</dd>
+                <dt>Status</dt><dd><span class="sp-badge sp-badge--info">@Model.Status</span></dd>
+                <dt>Shipping Line</dt><dd>@(Model.ShippingLine ?? "—")</dd>
+                <dt>Vessel</dt><dd>@(Model.VesselName ?? "—")</dd>
+                <dt>POL</dt><dd>@(Model.PortOfLoading ?? "—")</dd>
+                <dt>POD</dt><dd>@(Model.PortOfDischarge ?? "—")</dd>
+                <dt>Destination</dt><dd>@(Model.FinalDestination ?? "—")</dd>
+                <dt>Gross Weight</dt><dd>@(Model.GrossWeightKg.HasValue ? $"{Model.GrossWeightKg:N0} kg" : "—")</dd>
+                <dt>Customs Ref</dt><dd class="sp-table__mono">@(Model.CustomsReferenceNumber ?? "—")</dd>
+                <dt>Customs</dt><dd><span class="sp-badge sp-badge--@(Model.CustomsStatus == SmartPort.Domain.Enums.ComplianceStatus.Compliant ? "success" : "warning")">@Model.CustomsStatus</span></dd>
+                <dt>Yard Location</dt><dd class="sp-table__mono">@(Model.YardBlockCode != null ? $"Block {Model.YardBlockCode} · {Model.YardSlot}" : "Not in yard")</dd>
+                <dt>Gate In</dt><dd class="sp-table__mono">@(Model.GateInDateTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
+                <dt>Gate Out</dt><dd class="sp-table__mono">@(Model.GateOutDateTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
+                <dt>Dwell Time</dt><dd class="@(Model.IsDwellAlertRaised ? "sp-table__cell--danger" : "")">@(Model.DwellTimeHours.HasValue ? $"{Model.DwellTimeHours:F0} hours" : "—")</dd>
+                <dt>Free Time</dt><dd>@(Model.FreeTimeLimitHours.HasValue ? $"{Model.FreeTimeLimitHours}h" : "72h (default)")</dd>
+            </dl>
+        </div>
+        <div style="margin-top:.75rem">
+            <a asp-action="Index" class="sp-btn sp-btn--outline sp-btn--full">← Container List</a>
+        </div>
+    </div>
+</div>

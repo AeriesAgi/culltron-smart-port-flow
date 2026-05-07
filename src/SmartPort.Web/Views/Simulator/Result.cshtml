@@ -1,0 +1,116 @@
+@using SmartPort.Infrastructure.Services
+@model ScenarioResult
+@{ ViewData["Title"] = "Simulation Result"; var input = ViewBag.Input as ScenarioInput; }
+
+<div class="sp-sim-result-page">
+  <div class="sp-page-header">
+    <div>
+      <div class="sp-agent-badge"><span>🔬</span> Simulation Result</div>
+      <h1>@Model.ScenarioName</h1>
+      <p style="color:var(--sp-text-muted)">Simulated at @Model.SimulatedAt.ToString("HH:mm dd MMM yyyy") SAST &nbsp;|&nbsp; Synthetic estimate — indicative only</p>
+    </div>
+    <a asp-action="Index" asp-controller="Simulator" class="sp-btn sp-btn--outline">← New Simulation</a>
+  </div>
+
+  <!-- Warnings -->
+  @foreach (var w in Model.Warnings)
+  { <div class="sp-alert sp-alert--danger" style="margin-bottom:.75rem"><i data-feather="alert-triangle"></i> @w</div> }
+
+  <!-- Risk Score Grid -->
+  <div class="sp-kpi-grid" style="margin-bottom:1.5rem">
+    <div class="sp-kpi-card sp-kpi-card--@(Model.OverallCongestionRisk > 80 ? "danger" : Model.OverallCongestionRisk > 60 ? "warn" : "")">
+      <div class="sp-kpi-card__icon sp-kpi-card__icon--@(Model.OverallRiskColour == "danger" ? "red" : Model.OverallRiskColour == "high" ? "orange" : "yellow")"><i data-feather="activity"></i></div>
+      <div class="sp-kpi-card__body">
+        <div class="sp-kpi-card__value">@Model.OverallCongestionRisk<span style="font-size:1rem">/100</span></div>
+        <div class="sp-kpi-card__label">Overall Congestion Risk</div>
+        <div class="sp-kpi-card__sub"><span class="sp-badge sp-badge--@Model.OverallRiskColour">@Model.OverallRiskLevel</span></div>
+      </div>
+    </div>
+    <div class="sp-kpi-card">
+      <div class="sp-kpi-card__icon sp-kpi-card__icon--@(Model.GateRiskColour == "danger" ? "red" : "yellow")"><i data-feather="truck"></i></div>
+      <div class="sp-kpi-card__body">
+        <div class="sp-kpi-card__value">@Model.GateDelayRisk<span style="font-size:1rem">/100</span></div>
+        <div class="sp-kpi-card__label">Gate Delay Risk</div>
+        <div class="sp-kpi-card__sub"><span class="sp-badge sp-badge--@Model.GateRiskColour">@Model.GateRiskLevel</span></div>
+      </div>
+    </div>
+    <div class="sp-kpi-card">
+      <div class="sp-kpi-card__icon sp-kpi-card__icon--purple"><i data-feather="anchor"></i></div>
+      <div class="sp-kpi-card__body">
+        <div class="sp-kpi-card__value">@Model.BerthDelayRisk<span style="font-size:1rem">/100</span></div>
+        <div class="sp-kpi-card__label">Berth Delay Risk</div>
+        <div class="sp-kpi-card__sub"><span class="sp-badge sp-badge--@Model.BerthRiskColour">@Model.BerthRiskLevel</span></div>
+      </div>
+    </div>
+    <div class="sp-kpi-card">
+      <div class="sp-kpi-card__icon sp-kpi-card__icon--@(Model.EnergyDisruptionRisk > 60 ? "red" : "orange")"><i data-feather="zap"></i></div>
+      <div class="sp-kpi-card__body">
+        <div class="sp-kpi-card__value">@Model.EnergyDisruptionRisk<span style="font-size:1rem">/100</span></div>
+        <div class="sp-kpi-card__label">Energy Risk</div>
+        <div class="sp-kpi-card__sub"><span class="sp-badge sp-badge--@Model.EnergyRiskColour">@Model.EnergyRiskLevel</span></div>
+      </div>
+    </div>
+    <div class="sp-kpi-card @(Model.WaitingTimeIncreasePct > 50 ? "sp-kpi-card--warn" : "")">
+      <div class="sp-kpi-card__icon sp-kpi-card__icon--teal"><i data-feather="clock"></i></div>
+      <div class="sp-kpi-card__body">
+        <div class="sp-kpi-card__value">@Model.EstimatedWaitingTimeMinutes:F0 min</div>
+        <div class="sp-kpi-card__label">Est. Waiting Time</div>
+        <div class="sp-kpi-card__sub">Baseline: @Model.BaselineWaitingMinutes min (+@Model.WaitingTimeIncreasePct%)</div>
+      </div>
+    </div>
+    <div class="sp-kpi-card">
+      <div class="sp-kpi-card__icon sp-kpi-card__icon--green"><i data-feather="wind"></i></div>
+      <div class="sp-kpi-card__body">
+        <div class="sp-kpi-card__value">@Model.EstimatedCo2Kg:F1 kg</div>
+        <div class="sp-kpi-card__label">Est. CO₂ (scenario)</div>
+        <div class="sp-kpi-card__sub">Diesel: @Model.EstimatedDieselLitres:F1 L · R@Model.EstimatedFuelCostRand:F0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sp-analytics-grid">
+    <!-- Risk Factors -->
+    <div class="sp-card">
+      <div class="sp-card__header"><h3 class="sp-card__title">Risk Factor Analysis</h3></div>
+      <div style="padding:1rem 1.25rem">
+        @if (Model.RiskFactors.Any())
+        {
+          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.625rem">
+            @foreach (var (f, i) in Model.RiskFactors.Select((f, i) => (f, i)))
+            {
+              <li style="display:flex;align-items:flex-start;gap:.625rem;padding:.625rem;background:rgba(255,255,255,.03);border-radius:6px;border-left:3px solid var(--sp-warning);font-size:.875rem">
+                <span style="font-weight:700;color:var(--sp-warning);flex-shrink:0">@(i+1).</span>
+                <span>@f</span>
+              </li>
+            }
+          </ul>
+        }
+        else { <div class="sp-empty">No significant risk factors identified for this scenario.</div> }
+      </div>
+    </div>
+
+    <!-- Recommended Actions -->
+    <div class="sp-card">
+      <div class="sp-card__header"><h3 class="sp-card__title">Recommended Actions</h3></div>
+      <div style="padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem">
+        @foreach (var r in Model.Recommendations)
+        {
+          <div style="border:1px solid var(--sp-border);border-left:4px solid var(--sp-@(r.UrgencyColour == "high" ? "orange" : r.UrgencyColour == "danger" ? "danger" : r.UrgencyColour == "warning" ? "warning" : "success"));border-radius:var(--sp-radius);padding:1rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.375rem">
+              <strong>@r.Title</strong>
+              <span class="sp-badge sp-badge--@r.UrgencyColour">@r.Urgency</span>
+            </div>
+            <div style="font-size:.8125rem;color:var(--sp-text-muted);margin-bottom:.25rem">@r.Reason</div>
+            <div style="font-size:.8125rem;color:var(--sp-teal)">→ @r.ExpectedImpact</div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:1.25rem;display:flex;gap:.75rem">
+    <a asp-action="Index" asp-controller="Simulator" class="sp-btn sp-btn--outline">← Run Another Scenario</a>
+    <a asp-action="Index" asp-controller="Agent" class="sp-btn sp-btn--outline">Ask AI Agent about this</a>
+  </div>
+  <div style="margin-top:.75rem;font-size:.75rem;color:var(--sp-text-subtle)">Simulation outputs are synthetic estimates generated by the Culltron Flow Intelligence Engine. All data is indicative and for demonstration purposes only.</div>
+</div>

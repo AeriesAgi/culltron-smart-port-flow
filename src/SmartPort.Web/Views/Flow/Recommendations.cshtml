@@ -1,0 +1,56 @@
+@using SmartPort.Application.Interfaces
+@model IEnumerable<FlowRecommendationDto2>
+@{ ViewData["Title"] = "Flow Recommendations"; }
+
+<div class="sp-toolbar">
+    <div class="sp-toolbar__meta"><i data-feather="cpu"></i> @Model.Count() total recommendations · @Model.Count(r => r.IsPending) pending</div>
+    <a asp-action="Index" asp-controller="Flow" class="sp-btn sp-btn--sm sp-btn--outline">← Flow Intelligence</a>
+</div>
+
+<div class="sp-rec-page">
+    @foreach (var r in Model.OrderByDescending(x => x.GeneratedAt))
+    {
+        var pc = r.RiskColourClass;
+        var statusLabel = r.AcceptedByUser == null ? "Pending" : r.AcceptedByUser == true ? "Accepted" : "Dismissed";
+        var statusClass = r.AcceptedByUser == null ? "warning" : r.AcceptedByUser == true ? "success" : "muted";
+        <div class="sp-rec-card sp-rec-card--@pc @(r.AcceptedByUser != null ? "sp-rec-card--" + (r.AcceptedByUser == true ? "accepted" : "dismissed") : "")">
+            <div class="sp-rec-card__header">
+                <span class="sp-badge sp-badge--@pc">@r.RiskLevel</span>
+                <span class="sp-badge sp-badge--type">@r.RecommendationType</span>
+                <span class="sp-badge sp-badge--@statusClass">@statusLabel</span>
+                <span class="sp-badge sp-badge--muted">@r.ConfidenceLevel confidence</span>
+                <span class="sp-badge sp-badge--ai">🧠 Flow Engine</span>
+            </div>
+            <h3 class="sp-rec-card__title">@r.RecommendationText</h3>
+            <p class="sp-rec-card__summary" style="color:var(--sp-text-muted)">@r.Reason</p>
+            @if (!string.IsNullOrEmpty(r.ExpectedBenefit))
+            { <div class="sp-rec-card__impact"><i data-feather="trending-up" style="width:14px;height:14px;vertical-align:-2px"></i> @r.ExpectedBenefit</div> }
+            <div class="sp-rec-card__meta">
+                @if (!string.IsNullOrEmpty(r.TripRoute)) { <span>Route: <strong>@r.TripRoute</strong> · </span> }
+                @if (!string.IsNullOrEmpty(r.VehicleRegistration)) { <span>Vehicle: <strong>@r.VehicleRegistration</strong> · </span> }
+                <span>Org: @r.OrganisationName · </span>
+                <span>@r.GeneratedAt.ToString("HH:mm dd MMM")</span>
+                @if (r.CongestionScore.HasValue) { <span> · Congestion score: @r.CongestionScore/100</span> }
+            </div>
+            @if (r.AcceptedByUser != null && !string.IsNullOrEmpty(r.ActedOnBy))
+            { <div class="sp-rec-card__acted">@statusLabel by @r.ActedOnBy · @r.AcceptedAt?.ToString("HH:mm dd MMM") — @r.UserFeedback</div> }
+            @if (r.IsPending)
+            {
+                <div class="sp-rec-card__footer">
+                    <form asp-action="Accept" asp-controller="Flow" asp-route-id="@r.Id" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="feedback" value="Accepted via recommendations panel" />
+                        <button type="submit" class="sp-btn sp-btn--sm sp-btn--success">Accept &amp; Action</button>
+                    </form>
+                    <form asp-action="Dismiss" asp-controller="Flow" asp-route-id="@r.Id" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="feedback" value="Dismissed" />
+                        <button type="submit" class="sp-btn sp-btn--sm sp-btn--outline">Dismiss</button>
+                    </form>
+                </div>
+            }
+        </div>
+    }
+    @if (!Model.Any())
+    { <div class="sp-card"><div class="sp-empty"><i data-feather="cpu"></i> No recommendations on record.</div></div> }
+</div>

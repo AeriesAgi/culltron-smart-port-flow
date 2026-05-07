@@ -1,0 +1,33 @@
+@using SmartPort.Application.Interfaces
+@{ ViewData["Title"] = "Recommendation History"; var recs = ViewBag.Recs as IEnumerable<FlowRecommendationDto2> ?? []; }
+<div class="sp-toolbar"><h2 style="margin:0">Recommendation History — @DateTime.UtcNow.ToString("dd MMM yyyy")</h2><a asp-action="Index" asp-controller="Reports" class="sp-btn sp-btn--sm sp-btn--outline">← Reports</a></div>
+<div class="sp-kpi-grid sp-kpi-grid--sm" style="margin-bottom:1.25rem">
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@recs.Count()</div><div class="sp-kpi-card__label">Total</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@recs.Count(r => r.IsPending)</div><div class="sp-kpi-card__label">Pending</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@recs.Count(r => r.AcceptedByUser == true)</div><div class="sp-kpi-card__label">Accepted</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@recs.Count(r => r.AcceptedByUser == false)</div><div class="sp-kpi-card__label">Dismissed</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@recs.Count(r => r.RiskLevel == FlowRiskLevel.Critical || r.RiskLevel == FlowRiskLevel.High)</div><div class="sp-kpi-card__label">High / Critical</div></div></div>
+</div>
+<div class="sp-card">
+    <table class="sp-table">
+        <thead><tr><th>Recommendation</th><th>Type</th><th>Risk</th><th>Confidence</th><th>Vehicle / Route</th><th>Status</th><th>Generated</th></tr></thead>
+        <tbody>
+            @foreach (var r in recs.OrderByDescending(x => x.GeneratedAt))
+            {
+                var rc = r.RiskColourClass;
+                var sc = r.AcceptedByUser == null ? "warning" : r.AcceptedByUser == true ? "success" : "muted";
+                var sl = r.AcceptedByUser == null ? "Pending" : r.AcceptedByUser == true ? "Accepted" : "Dismissed";
+                <tr>
+                    <td><div class="sp-table__primary" style="max-width:280px;white-space:normal">@r.RecommendationText</div><div class="sp-table__secondary">@r.OrganisationName</div></td>
+                    <td><span class="sp-badge sp-badge--type">@r.RecommendationType</span></td>
+                    <td><span class="sp-badge sp-badge--@rc">@r.RiskLevel @(r.CongestionScore.HasValue ? $"({r.CongestionScore})" : "")</span></td>
+                    <td>@r.ConfidenceLevel</td>
+                    <td><div class="sp-table__mono">@(r.VehicleRegistration ?? "—")</div><div class="sp-table__secondary">@(r.TripRoute ?? "—")</div></td>
+                    <td><span class="sp-badge sp-badge--@sc">@sl</span></td>
+                    <td class="sp-table__mono">@r.GeneratedAt.ToString("HH:mm dd MMM")</td>
+                </tr>
+            }
+            @if (!recs.Any()) { <tr><td colspan="7" class="sp-table__empty">No recommendations on record.</td></tr> }
+        </tbody>
+    </table>
+</div>

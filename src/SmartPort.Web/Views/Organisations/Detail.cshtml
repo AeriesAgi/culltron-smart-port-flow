@@ -1,0 +1,53 @@
+@using SmartPort.Application.Interfaces
+@model OrganisationDetailDto
+@{ ViewData["Title"] = Model.Name; }
+<div class="sp-detail-grid">
+    <div class="sp-detail-main">
+        <div class="sp-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">Fleet Vehicles</h3><a asp-action="Create" asp-controller="Fleet" class="sp-card__link">+ Add Vehicle</a></div>
+            @if (Model.Vehicles.Any())
+            {
+                <table class="sp-table">
+                    <thead><tr><th>Registration</th><th>Fleet #</th><th>Type</th><th>Cargo</th><th>Status</th><th>Location</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var v in Model.Vehicles)
+                        {
+                            var sc = v.Status switch { FleetVehicleStatus.Dispatched => "info", FleetVehicleStatus.Waiting => "warning", FleetVehicleStatus.AtGate => "success", FleetVehicleStatus.Delayed => "danger", FleetVehicleStatus.Available => "success", _ => "muted" };
+                            <tr>
+                                <td class="sp-table__mono"><a asp-action="Detail" asp-controller="Fleet" asp-route-id="@v.Id">@v.RegistrationNumber</a></td>
+                                <td>@(v.FleetNumber ?? "—")</td>
+                                <td>@v.VehicleType</td>
+                                <td><span class="sp-badge sp-badge--type">@v.CargoType</span></td>
+                                <td><span class="sp-badge sp-badge--@sc">@v.Status</span></td>
+                                <td>@(v.CurrentLocation ?? "—")</td>
+                                <td><a asp-action="Detail" asp-controller="Fleet" asp-route-id="@v.Id" class="sp-btn sp-btn--xs sp-btn--outline">View</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else { <div class="sp-empty">No vehicles registered for this organisation. <a asp-action="Create" asp-controller="Fleet">Register one →</a></div> }
+        </div>
+    </div>
+    <div class="sp-detail-sidebar">
+        <div class="sp-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">Organisation Details</h3></div>
+            <dl class="sp-dl">
+                <dt>Name</dt><dd><strong>@Model.Name</strong></dd>
+                <dt>Type</dt><dd><span class="sp-badge sp-badge--type">@Model.OrganisationType</span></dd>
+                <dt>Reg. Number</dt><dd>@(Model.RegistrationNumber ?? "—")</dd>
+                <dt>Contact</dt><dd>@Model.ContactPerson</dd>
+                <dt>Email</dt><dd class="sp-table__mono">@Model.ContactEmail</dd>
+                <dt>Phone</dt><dd>@(Model.ContactPhone ?? "—")</dd>
+                <dt>Address</dt><dd>@(Model.Address ?? "—")</dd>
+                <dt>Province</dt><dd>@Model.Province</dd>
+                <dt>Status</dt><dd><span class="sp-badge sp-badge--@(Model.IsActive ? "success" : "muted")">@(Model.IsActive ? "Active" : "Inactive")</span></dd>
+                <dt>Registered</dt><dd class="sp-table__mono">@Model.CreatedAt.ToString("dd MMM yyyy")</dd>
+            </dl>
+        </div>
+        @if (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager"))
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="sp-btn sp-btn--outline sp-btn--full" style="margin-top:.5rem">Edit Organisation</a>
+        }
+    </div>
+</div>

@@ -1,0 +1,65 @@
+@model SmartPort.Application.Interfaces.PagedResult<SmartPort.Application.Interfaces.DocumentListDto>
+@{
+    ViewData["Title"] = "Documents & Compliance";
+    var filter = ViewBag.Filter as SmartPort.Application.Interfaces.DocumentFilterDto ?? new();
+}
+<div class="sp-toolbar">
+    <form method="get" class="sp-filter-bar">
+        <input name="SearchTerm" value="@filter.SearchTerm" class="sp-form__input sp-form__input--sm" placeholder="Document number, title…" />
+        <select name="DocumentType" class="sp-form__select sp-form__select--sm">
+            <option value="">All Types</option>
+            @foreach (var t in Enum.GetValues<SmartPort.Domain.Enums.DocumentType>()) { <option value="@t" selected="@(filter.DocumentType == t)">@t</option> }
+        </select>
+        <select name="Status" class="sp-form__select sp-form__select--sm">
+            <option value="">All Status</option>
+            @foreach (var s in Enum.GetValues<SmartPort.Domain.Enums.DocumentStatus>()) { <option value="@s" selected="@(filter.Status == s)">@s</option> }
+        </select>
+        <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Filter</button>
+        <a asp-action="Index" class="sp-btn sp-btn--sm sp-btn--outline">Reset</a>
+    </form>
+    <div class="sp-toolbar__actions">
+        <a asp-action="Overdue" class="sp-btn sp-btn--sm sp-btn--warning">Overdue Documents</a>
+        @if (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager"))
+        { <a asp-action="Create" class="sp-btn sp-btn--sm sp-btn--primary">+ Add Document</a> }
+    </div>
+</div>
+<div class="sp-card">
+    <table class="sp-table">
+        <thead><tr><th>Document</th><th>Type</th><th>Vessel</th><th>Status</th><th>Compliance</th><th>Issuing Authority</th><th>Required By</th><th>Expiry</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var d in Model.Items)
+            {
+                var sc = d.Status switch {
+                    SmartPort.Domain.Enums.DocumentStatus.Approved    => "success",
+                    SmartPort.Domain.Enums.DocumentStatus.Rejected    => "danger",
+                    SmartPort.Domain.Enums.DocumentStatus.Required    => "warning",
+                    SmartPort.Domain.Enums.DocumentStatus.UnderReview => "info",
+                    _ => "muted"
+                };
+                var cc = d.ComplianceStatus switch {
+                    SmartPort.Domain.Enums.ComplianceStatus.Compliant     => "success",
+                    SmartPort.Domain.Enums.ComplianceStatus.NonCompliant  => "danger",
+                    SmartPort.Domain.Enums.ComplianceStatus.PendingReview => "warning",
+                    _ => "muted"
+                };
+                <tr class="@(d.IsOverdue ? "sp-table__row--danger" : d.IsExpired ? "sp-table__row--warn" : "")">
+                    <td>
+                        <div class="sp-table__primary"><a asp-action="Detail" asp-route-id="@d.Id">@d.Title</a></div>
+                        <div class="sp-table__secondary sp-table__mono">@d.DocumentNumber</div>
+                    </td>
+                    <td><span class="sp-badge sp-badge--type">@d.DocumentType</span></td>
+                    <td>@(d.VesselName ?? "—")</td>
+                    <td><span class="sp-badge sp-badge--@sc">@d.Status</span></td>
+                    <td><span class="sp-badge sp-badge--@cc">@d.ComplianceStatus</span></td>
+                    <td>@d.IssuingAuthority</td>
+                    <td class="@(d.IsOverdue ? "sp-table__cell--danger" : "")">@(d.RequiredByDate?.ToString("dd MMM HH:mm") ?? "—")</td>
+                    <td class="@(d.IsExpired ? "sp-table__cell--danger" : "")">@(d.ExpiryDate?.ToString("dd MMM yyyy") ?? "—")</td>
+                    <td><a asp-action="Detail" asp-route-id="@d.Id" class="sp-btn sp-btn--xs sp-btn--outline">View</a></td>
+                </tr>
+            }
+            @if (!Model.Items.Any())
+            { <tr><td colspan="9" class="sp-table__empty">No documents match the current filter.</td></tr> }
+        </tbody>
+    </table>
+    @await Html.PartialAsync("_Pagination", Model)
+</div>

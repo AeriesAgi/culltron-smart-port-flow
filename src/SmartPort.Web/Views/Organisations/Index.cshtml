@@ -1,0 +1,35 @@
+@using SmartPort.Application.Interfaces
+@model IEnumerable<OrganisationListDto>
+@{ ViewData["Title"] = "Organisations"; }
+<div class="sp-toolbar">
+    <div class="sp-toolbar__meta"><i data-feather="briefcase"></i> @Model.Count() registered organisations</div>
+    @if (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager"))
+    { <a asp-action="Create" class="sp-btn sp-btn--sm sp-btn--primary"><i data-feather="plus"></i> Register Organisation</a> }
+</div>
+<div class="sp-card">
+    <table class="sp-table">
+        <thead><tr><th>Organisation</th><th>Type</th><th>Contact</th><th>Province</th><th>Vehicles</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var o in Model.OrderBy(x => x.Name))
+            {
+                <tr class="@(!o.IsActive ? "sp-table__row--muted" : "")">
+                    <td>
+                        <div class="sp-table__primary"><a asp-action="Detail" asp-route-id="@o.Id">@o.Name</a></div>
+                        <div class="sp-table__secondary">@o.ContactEmail</div>
+                    </td>
+                    <td><span class="sp-badge sp-badge--type">@o.OrganisationType</span></td>
+                    <td><div class="sp-table__primary">@o.ContactPerson</div></td>
+                    <td>@o.Province</td>
+                    <td><span class="sp-badge sp-badge--info">@o.VehicleCount</span></td>
+                    <td><span class="sp-badge sp-badge--@(o.IsActive ? "success" : "muted")">@(o.IsActive ? "Active" : "Inactive")</span></td>
+                    <td>
+                        <a asp-action="Detail" asp-route-id="@o.Id" class="sp-btn sp-btn--xs sp-btn--outline">View</a>
+                        @if (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager"))
+                        { <a asp-action="Edit" asp-route-id="@o.Id" class="sp-btn sp-btn--xs sp-btn--outline">Edit</a> }
+                    </td>
+                </tr>
+            }
+            @if (!Model.Any()) { <tr><td colspan="7" class="sp-table__empty">No organisations registered yet.</td></tr> }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,32 @@
+@model SmartPort.Application.Interfaces.CreateVesselDto
+@{ ViewData["Title"] = "Register Vessel"; }
+<div class="sp-form-page">
+    <div class="sp-card sp-card--form">
+        <div class="sp-card__header"><h3 class="sp-card__title">Register New Vessel</h3></div>
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="sp-form__errors"></div>
+            <div class="sp-form__grid sp-form__grid--2">
+                <div class="sp-form__group"><label asp-for="IMONumber" class="sp-form__label">IMO Number *</label><input asp-for="IMONumber" class="sp-form__input" placeholder="IMO9321483"/><span asp-validation-for="IMONumber" class="sp-form__error"></span></div>
+                <div class="sp-form__group"><label asp-for="Name" class="sp-form__label">Vessel Name *</label><input asp-for="Name" class="sp-form__input" placeholder="MSC SARACEN"/><span asp-validation-for="Name" class="sp-form__error"></span></div>
+                <div class="sp-form__group"><label asp-for="ShippingLine" class="sp-form__label">Shipping Line</label><input asp-for="ShippingLine" class="sp-form__input" placeholder="MSC"/></div>
+                <div class="sp-form__group"><label asp-for="Agent" class="sp-form__label">Port Agent</label><input asp-for="Agent" class="sp-form__input" placeholder="Med-Shipping Agencies SA"/></div>
+                <div class="sp-form__group"><label asp-for="VesselType" class="sp-form__label">Vessel Type *</label>
+                    <select asp-for="VesselType" class="sp-form__select">
+                        @foreach (var t in Enum.GetValues<SmartPort.Domain.Enums.VesselType>()) { <option value="@t">@t</option> }
+                    </select>
+                </div>
+                <div class="sp-form__group"><label asp-for="VoyageNumber" class="sp-form__label">Voyage Number</label><input asp-for="VoyageNumber" class="sp-form__input" placeholder="FE622N"/></div>
+                <div class="sp-form__group"><label asp-for="LengthOverall" class="sp-form__label">Length Overall (m)</label><input asp-for="LengthOverall" class="sp-form__input" type="number" step="0.1"/></div>
+                <div class="sp-form__group"><label asp-for="MaxDraught" class="sp-form__label">Max Draught (m)</label><input asp-for="MaxDraught" class="sp-form__input" type="number" step="0.1"/></div>
+                <div class="sp-form__group"><label asp-for="GrossTonnage" class="sp-form__label">Gross Tonnage</label><input asp-for="GrossTonnage" class="sp-form__input" type="number"/></div>
+                <div class="sp-form__group"><label asp-for="TEUCapacity" class="sp-form__label">TEU Capacity</label><input asp-for="TEUCapacity" class="sp-form__input" type="number"/></div>
+                <div class="sp-form__group"><label asp-for="EstimatedTimeOfArrival" class="sp-form__label">ETA (UTC)</label><input asp-for="EstimatedTimeOfArrival" class="sp-form__input" type="datetime-local"/></div>
+            </div>
+            <div class="sp-form__footer">
+                <a asp-action="Index" class="sp-btn sp-btn--outline">Cancel</a>
+                <button type="submit" class="sp-btn sp-btn--primary">Register Vessel</button>
+            </div>
+        </form>
+    </div>
+</div>
