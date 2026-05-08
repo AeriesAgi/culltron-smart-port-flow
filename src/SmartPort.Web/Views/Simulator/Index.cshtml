@@ -1,0 +1,100 @@
+@using SmartPort.Infrastructure.Services
+@{
+    ViewData["Title"] = "Scenario Simulator";
+    var presets = ViewBag.Presets as List<ScenarioInput> ?? new();
+}
+
+<div class="sp-sim-page">
+  <div class="sp-page-header">
+    <div>
+      <div class="sp-agent-badge"><span>🔬</span> Scenario Simulator</div>
+      <h1>Port Scenario Simulator</h1>
+      <p style="color:var(--sp-text-muted)">Model what-if situations and see predicted risk, waiting time, and emissions impact before they occur.</p>
+    </div>
+  </div>
+
+  <div class="sp-alert sp-alert--info" style="margin-bottom:1.25rem">
+    <i data-feather="info"></i> All simulation outputs are <strong>deterministic estimates</strong> based on synthetic operational data. Results are indicative only.
+  </div>
+
+  <!-- Preset Scenarios -->
+  <div class="sp-card" style="margin-bottom:1.5rem">
+    <div class="sp-card__header"><h3 class="sp-card__title">Quick Preset Scenarios</h3></div>
+    <div style="padding:1rem 1.25rem;display:flex;gap:.75rem;flex-wrap:wrap">
+      @foreach (var p in presets)
+      {
+        <form asp-action="RunPreset" asp-controller="Simulator" method="post" style="display:inline">
+          @Html.AntiForgeryToken()
+          <input type="hidden" name="name" value="@p.ScenarioName" />
+          <button type="submit" class="sp-btn sp-btn--outline sp-btn--sm">@p.ScenarioName</button>
+        </form>
+      }
+    </div>
+  </div>
+
+  <!-- Custom Simulator Form -->
+  <div class="sp-card">
+    <div class="sp-card__header"><h3 class="sp-card__title">Custom Scenario</h3></div>
+    <form asp-action="Run" asp-controller="Simulator" method="post" style="padding:1.5rem">
+      @Html.AntiForgeryToken()
+      <div class="sp-form__grid sp-form__grid--2">
+        <div class="sp-form__group sp-form__group--full">
+          <label class="sp-form__label">Scenario Name</label>
+          <input name="ScenarioName" class="sp-form__input" value="Custom Scenario" />
+        </div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Gate Capacity Drop (%)</label>
+          <input name="GateCapacityDropPercent" type="range" min="0" max="60" value="0" class="sp-range" id="gateRange" oninput="document.getElementById('gateVal').textContent=this.value+'%'" />
+          <span id="gateVal" class="sp-range-val">0%</span>
+        </div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Truck Arrival Spike (%)</label>
+          <input name="TruckArrivalSpikePercent" type="range" min="0" max="80" value="0" class="sp-range" id="truckRange" oninput="document.getElementById('truckVal').textContent=this.value+'%'" />
+          <span id="truckVal" class="sp-range-val">0%</span>
+        </div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Vessel ETA Slip (hours)</label>
+          <input name="VesselEtaSlipHours" type="range" min="0" max="8" value="0" class="sp-range" id="etaRange" oninput="document.getElementById('etaVal').textContent=this.value+'h'" />
+          <span id="etaVal" class="sp-range-val">0h</span>
+        </div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Berth Occupancy Increase (%)</label>
+          <input name="BerthOccupancyIncreasePercent" type="range" min="0" max="40" value="0" class="sp-range" id="berthRange" oninput="document.getElementById('berthVal').textContent=this.value+'%'" />
+          <span id="berthVal" class="sp-range-val">0%</span>
+        </div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Crane Availability Drop (%)</label>
+          <input name="CraneAvailabilityDropPercent" type="range" min="0" max="50" value="0" class="sp-range" id="craneRange" oninput="document.getElementById('craneVal').textContent=this.value+'%'" />
+          <span id="craneVal" class="sp-range-val">0%</span>
+        </div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Container Backlog Increase (%)</label>
+          <input name="ContainerBacklogIncreasePercent" type="range" min="0" max="60" value="0" class="sp-range" id="backlogRange" oninput="document.getElementById('backlogVal').textContent=this.value+'%'" />
+          <span id="backlogVal" class="sp-range-val">0%</span>
+        </div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Load-Shedding Stage</label>
+          <select name="LoadSheddingStage" class="sp-form__select">
+            <option value="0">None</option>
+            <option value="1">Stage 1</option>
+            <option value="2">Stage 2</option>
+            <option value="3">Stage 3</option>
+            <option value="4">Stage 4</option>
+          </select>
+        </div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Time of Day</label>
+          <select name="TimeOfDay" class="sp-form__select">
+            <option value="Current">Current</option>
+            <option value="Peak (07:00-09:00)">Peak (07:00–09:00)</option>
+            <option value="Peak (16:00-18:00)">Peak (16:00–18:00)</option>
+            <option value="Afternoon">Afternoon</option>
+          </select>
+        </div>
+      </div>
+      <div class="sp-form__footer">
+        <button type="submit" class="sp-btn sp-btn--primary">Run Simulation →</button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,131 @@
+@model SmartPort.Application.Interfaces.VesselDetailDto
+@{ ViewData["Title"] = Model.Name; }
+<div class="sp-detail-grid">
+    <div class="sp-detail-main">
+        <div class="sp-card sp-card--vessel-hero">
+            <div class="sp-vessel-hero">
+                <div class="sp-vessel-hero__badge sp-badge sp-badge--info">@Model.Status</div>
+                <div class="sp-vessel-hero__name">@Model.Name</div>
+                <div class="sp-vessel-hero__meta">
+                    <span>@Model.ShippingLine</span> · <span>@Model.FlagCode @Model.FlagCountry</span> · <span>IMO @Model.IMONumber</span>
+                </div>
+                @if (Model.DelayMinutes.HasValue && Model.DelayMinutes > 0)
+                { <div class="sp-vessel-hero__alert"><i data-feather="alert-circle"></i> Delayed +@Model.DelayMinutes min — @Model.DelayReason</div> }
+            </div>
+        </div>
+
+        <div class="sp-card" style="margin-top:1rem">
+            <div class="sp-card__header"><h3 class="sp-card__title">Berth Assignments</h3></div>
+            @if (Model.BerthAssignments.Any())
+            {
+                <table class="sp-table">
+                    <thead><tr><th>Berth</th><th>Planned Arrival</th><th>Planned Departure</th><th>Discharge</th><th>Load</th><th>Status</th><th>Delay</th></tr></thead>
+                    <tbody>
+                        @foreach (var a in Model.BerthAssignments)
+                        {
+                            <tr>
+                                <td><strong>@a.BerthCode</strong></td>
+                                <td class="sp-table__mono">@a.PlannedArrival.ToString("dd MMM HH:mm")</td>
+                                <td class="sp-table__mono">@a.PlannedDeparture.ToString("dd MMM HH:mm")</td>
+                                <td>@a.ActualDischarge / @a.PlannedDischarge TEU</td>
+                                <td>@a.ActualLoad / @a.PlannedLoad TEU</td>
+                                <td><span class="sp-badge sp-badge--info">@a.OperationalStatus</span></td>
+                                <td>@(a.DelayMinutes.HasValue ? $"+{a.DelayMinutes}m" : "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else { <div class="sp-empty">No berth assignments yet.</div> }
+        </div>
+
+        <div class="sp-card" style="margin-top:1rem">
+            <div class="sp-card__header"><h3 class="sp-card__title">Documents &amp; Compliance</h3><a asp-controller="Documents" asp-action="Index" asp-route-vesselId="@Model.Id" class="sp-card__link">Manage →</a></div>
+            @if (Model.Documents.Any())
+            {
+                <table class="sp-table">
+                    <thead><tr><th>Document</th><th>Type</th><th>Status</th><th>Required By</th></tr></thead>
+                    <tbody>
+                        @foreach (var d in Model.Documents)
+                        {
+                            var dc = d.Status == SmartPort.Domain.Enums.DocumentStatus.Approved ? "success" : d.IsOverdue ? "danger" : "warning";
+                            <tr class="@(d.IsOverdue ? "sp-table__row--danger" : "")">
+                                <td><a asp-controller="Documents" asp-action="Detail" asp-route-id="@d.Id">@d.Title</a></td>
+                                <td><span class="sp-badge sp-badge--type">@d.DocumentType</span></td>
+                                <td><span class="sp-badge sp-badge--@dc">@d.Status</span></td>
+                                <td class="@(d.IsOverdue ? "sp-table__cell--danger" : "")">@(d.RequiredByDate?.ToString("dd MMM HH:mm") ?? "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else { <div class="sp-empty">No documents on record.</div> }
+        </div>
+
+        @if (Model.Incidents.Any())
+        {
+            <div class="sp-card" style="margin-top:1rem">
+                <div class="sp-card__header"><h3 class="sp-card__title">Related Incidents</h3></div>
+                <table class="sp-table">
+                    <thead><tr><th>Reference</th><th>Title</th><th>Severity</th><th>Status</th><th>Occurred</th></tr></thead>
+                    <tbody>
+                        @foreach (var i in Model.Incidents)
+                        {
+                            <tr>
+                                <td class="sp-table__mono"><a asp-controller="Incidents" asp-action="Detail" asp-route-id="@i.Id">@i.ReferenceNumber</a></td>
+                                <td>@i.Title</td>
+                                <td><span class="sp-badge sp-badge--@i.Severity.ToString().ToLower()">@i.Severity</span></td>
+                                <td><span class="sp-badge sp-badge--info">@i.Status</span></td>
+                                <td class="sp-table__mono">@i.OccurredAt.ToString("dd MMM HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <div class="sp-detail-sidebar">
+        <div class="sp-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">Vessel Details</h3></div>
+            <dl class="sp-dl">
+                <dt>IMO</dt><dd class="sp-table__mono">@Model.IMONumber</dd>
+                <dt>MMSI</dt><dd class="sp-table__mono">@Model.MMSINumber</dd>
+                <dt>Call Sign</dt><dd>@Model.CallSign</dd>
+                <dt>Flag</dt><dd>@Model.FlagCountry (@Model.FlagCode)</dd>
+                <dt>Port of Registry</dt><dd>@Model.PortOfRegistry</dd>
+                <dt>Type</dt><dd>@Model.VesselType</dd>
+                <dt>Operator</dt><dd>@Model.Operator</dd>
+                <dt>Agent</dt><dd>@Model.Agent</dd>
+                <dt>Voyage</dt><dd class="sp-table__mono">@(Model.VoyageNumber ?? "—")</dd>
+                <dt>From</dt><dd>@(Model.PreviousPort ?? "—")</dd>
+                <dt>Next Port</dt><dd>@(Model.NextPort ?? "—")</dd>
+            </dl>
+        </div>
+        <div class="sp-card" style="margin-top:1rem">
+            <div class="sp-card__header"><h3 class="sp-card__title">Technical</h3></div>
+            <dl class="sp-dl">
+                <dt>GT</dt><dd>@Model.GrossTonnage.ToString("N0")</dd>
+                <dt>DWT</dt><dd>@Model.DeadweightTonnage.ToString("N0")</dd>
+                <dt>LOA</dt><dd>@Model.LengthOverall m</dd>
+                <dt>Beam</dt><dd>@Model.Beam m</dd>
+                <dt>Max Draught</dt><dd>@Model.MaxDraught m</dd>
+                <dt>TEU Cap.</dt><dd>@(Model.TEUCapacity > 0 ? $"{Model.TEUCapacity:N0}" : "N/A")</dd>
+                <dt>Built</dt><dd>@Model.YearBuilt</dd>
+            </dl>
+        </div>
+        <div class="sp-card" style="margin-top:1rem">
+            <div class="sp-card__header"><h3 class="sp-card__title">Schedule</h3></div>
+            <dl class="sp-dl">
+                <dt>ETA</dt><dd class="sp-table__mono">@(Model.ETA?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
+                <dt>ATA</dt><dd class="sp-table__mono">@(Model.ActualTimeOfArrival?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
+                <dt>ETD</dt><dd class="sp-table__mono">@(Model.ETD?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
+                <dt>ATD</dt><dd class="sp-table__mono">@(Model.ActualTimeOfDeparture?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
+                @if (Model.TurnaroundHours.HasValue) { <dt>Turnaround</dt><dd>@Model.TurnaroundHours.Value.ToString("F1") h</dd> }
+                @if (Model.DelayMinutes > 0) { <dt>Delay</dt><dd class="sp-table__cell--danger">+@Model.DelayMinutes min</dd> }
+            </dl>
+        </div>
+        @if (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager"))
+        { <div style="margin-top:1rem"><a asp-action="Edit" asp-route-id="@Model.Id" class="sp-btn sp-btn--outline sp-btn--full">Edit Vessel</a></div> }
+    </div>
+</div>

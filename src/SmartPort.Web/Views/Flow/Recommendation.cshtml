@@ -1,0 +1,55 @@
+@using SmartPort.Application.Interfaces
+@model FlowRecommendationDto2
+@{ ViewData["Title"] = "Recommendation Detail"; var rc = Model.RiskColourClass; }
+<div class="sp-detail-grid">
+  <div class="sp-detail-main">
+    <div class="sp-card sp-rec-card sp-rec-card--@rc" style="overflow:visible">
+      <div class="sp-rec-card__header">
+        <span class="sp-badge sp-badge--@rc">@Model.RiskLevel</span>
+        <span class="sp-badge sp-badge--type">@Model.RecommendationType</span>
+        <span class="sp-badge sp-badge--@(Model.AcceptedByUser==null?"warning":Model.AcceptedByUser==true?"success":"muted")">@(Model.AcceptedByUser==null?"Pending":Model.AcceptedByUser==true?"Accepted":"Dismissed")</span>
+        <span class="sp-badge sp-badge--ai">🧠 Flow Engine</span>
+      </div>
+      <h3 class="sp-rec-card__title" style="font-size:1.125rem">@Model.RecommendationText</h3>
+      <div class="sp-rec-card__action-box"><strong>Reason:</strong><p>@Model.Reason</p></div>
+      @if (!string.IsNullOrEmpty(Model.ExpectedBenefit))
+      { <div class="sp-rec-card__impact">→ Expected Impact: @Model.ExpectedBenefit</div> }
+      @if (!string.IsNullOrEmpty(Model.ActedOnBy))
+      { <div class="sp-rec-card__acted">Actioned by @Model.ActedOnBy — @Model.ActedOnNotes</div> }
+      @if (Model.IsPending)
+      {
+        <div class="sp-rec-card__footer">
+          <form asp-action="Accept" asp-controller="Flow" asp-route-id="@Model.Id" method="post" style="display:inline">
+            @Html.AntiForgeryToken()<input type="hidden" name="feedback" value="Accepted via detail view"/>
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--success">Accept &amp; Action</button>
+          </form>
+          <form asp-action="Dismiss" asp-controller="Flow" asp-route-id="@Model.Id" method="post" style="display:inline">
+            @Html.AntiForgeryToken()<input type="hidden" name="feedback" value="Dismissed"/>
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--outline">Dismiss</button>
+          </form>
+        </div>
+      }
+    </div>
+  </div>
+  <div class="sp-detail-sidebar">
+    <div class="sp-card">
+      <div class="sp-card__header"><h3 class="sp-card__title">Details</h3></div>
+      <dl class="sp-dl">
+        <dt>Type</dt><dd><span class="sp-badge sp-badge--type">@Model.RecommendationType</span></dd>
+        <dt>Risk</dt><dd><span class="sp-badge sp-badge--@rc">@Model.RiskLevel</span></dd>
+        <dt>Confidence</dt><dd>@Model.ConfidenceLevel</dd>
+        <dt>Score</dt><dd>@(Model.CongestionScore.HasValue?$"{Model.CongestionScore}/100":"—")</dd>
+        <dt>Organisation</dt><dd>@Model.OrganisationName</dd>
+        <dt>Vehicle</dt><dd class="sp-table__mono">@(Model.VehicleRegistration??"—")</dd>
+        <dt>Route</dt><dd>@(Model.TripRoute??"—")</dd>
+        <dt>Generated</dt><dd class="sp-table__mono">@Model.GeneratedAt.ToString("dd MMM HH:mm")</dd>
+        @if (Model.AcceptedAt.HasValue) { <dt>Actioned</dt><dd class="sp-table__mono">@Model.AcceptedAt.Value.ToString("dd MMM HH:mm")</dd> }
+      </dl>
+    </div>
+    <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:.5rem">
+      @if (Model.DispatchTripId.HasValue)
+      { <a asp-action="Detail" asp-controller="Dispatch" asp-route-id="@Model.DispatchTripId" class="sp-btn sp-btn--outline sp-btn--full">View Dispatch Trip</a> }
+      <a asp-action="Recommendations" asp-controller="Flow" class="sp-btn sp-btn--outline sp-btn--full">← All Recommendations</a>
+    </div>
+  </div>
+</div>

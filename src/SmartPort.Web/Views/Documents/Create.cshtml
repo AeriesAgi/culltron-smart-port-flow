@@ -1,0 +1,50 @@
+@model SmartPort.Application.Interfaces.CreateDocumentDto
+@{ ViewData["Title"] = "Add Document"; }
+<div class="sp-form-page">
+    <div class="sp-card sp-card--form">
+        <div class="sp-card__header"><h3 class="sp-card__title">Add Document Record</h3></div>
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div class="sp-form__grid sp-form__grid--2">
+                <div class="sp-form__group">
+                    <label asp-for="DocumentType" class="sp-form__label">Document Type *</label>
+                    <select asp-for="DocumentType" class="sp-form__select">
+                        @foreach (var t in Enum.GetValues<SmartPort.Domain.Enums.DocumentType>()) { <option value="@t">@t</option> }
+                    </select>
+                </div>
+                <div class="sp-form__group sp-form__group--full">
+                    <label asp-for="Title" class="sp-form__label">Title *</label>
+                    <input asp-for="Title" class="sp-form__input" placeholder="e.g. MSC SARACEN – DG Declaration FE622N" />
+                </div>
+                <div class="sp-form__group">
+                    <label asp-for="IssuingAuthority" class="sp-form__label">Issuing Authority *</label>
+                    <input asp-for="IssuingAuthority" class="sp-form__input" placeholder="SARS, SAMSA, DAFF, Shipper…" />
+                </div>
+                <div class="sp-form__group">
+                    <label asp-for="VesselId" class="sp-form__label">Vessel ID (optional)</label>
+                    <input asp-for="VesselId" class="sp-form__input" type="number" />
+                </div>
+                <div class="sp-form__group">
+                    <label asp-for="ContainerNumber" class="sp-form__label">Container Number (optional)</label>
+                    <input asp-for="ContainerNumber" class="sp-form__input" placeholder="MAEU1234567" />
+                </div>
+                <div class="sp-form__group">
+                    <label asp-for="RequiredByDate" class="sp-form__label">Required By (UTC)</label>
+                    <input asp-for="RequiredByDate" class="sp-form__input" type="datetime-local" />
+                </div>
+                <div class="sp-form__group">
+                    <label asp-for="ExpiryDate" class="sp-form__label">Expiry Date</label>
+                    <input asp-for="ExpiryDate" class="sp-form__input" type="datetime-local" />
+                </div>
+                <div class="sp-form__group sp-form__group--full">
+                    <label asp-for="Notes" class="sp-form__label">Notes</label>
+                    <textarea asp-for="Notes" class="sp-form__textarea" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="sp-form__footer">
+                <a asp-action="Index" class="sp-btn sp-btn--outline">Cancel</a>
+                <button type="submit" class="sp-btn sp-btn--primary">Create Document Record</button>
+            </div>
+        </form>
+    </div>
+</div>

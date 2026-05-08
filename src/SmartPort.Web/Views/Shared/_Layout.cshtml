@@ -1,0 +1,166 @@
+@using Microsoft.AspNetCore.Identity
+@using SmartPort.Infrastructure.Persistence
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] != null ? $"{ViewData["Title"]} — Culltron SmartPort" : "Culltron SmartPort AI Agent")</title>
+    <meta name="description" content="Culltron SmartPort AI Agent — AI-Powered Insights for Smarter Ports" />
+    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="sp-app">
+
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var roles = currentUser != null ? await UserManager.GetRolesAsync(currentUser) : new List<string>();
+    var ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var act  = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+}
+
+<aside class="sp-sidebar" id="sidebar">
+    <div class="sp-sidebar__header">
+        <a href="/dashboard" class="sp-logo">
+            <span class="sp-logo__mark">⬡</span>
+            <span class="sp-logo__text">Culltron</span>
+        </a>
+        <button class="sp-sidebar__toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+    </div>
+
+    <nav class="sp-nav" role="navigation">
+
+        <!-- ── AI / Core ── -->
+        <div class="sp-nav__section">
+            <span class="sp-nav__label">AI Agent</span>
+            <a asp-controller="Dashboard" asp-action="Index" class="sp-nav__item @(ctrl=="Dashboard"?"active":"")">
+                <span class="sp-nav__icon">⬡</span><span>Command Centre</span>
+            </a>
+            <a asp-controller="Agent" asp-action="Index" class="sp-nav__item @(ctrl=="Agent"?"active":"")">
+                <span class="sp-nav__icon">🤖</span><span>AI Agent</span>
+            </a>
+            <a asp-controller="Copilot" asp-action="Index" class="sp-nav__item @(ctrl=="Copilot"?"active":"")">
+                <span class="sp-nav__icon">✦</span><span>Copilot Chat</span>
+            </a>
+            <a asp-controller="Simulator" asp-action="Index" class="sp-nav__item @(ctrl=="Simulator"?"active":"")">
+                <span class="sp-nav__icon">🔬</span><span>Simulator</span>
+            </a>
+            <a asp-controller="Flow" asp-action="Index" class="sp-nav__item @(ctrl=="Flow"?"active":"")">
+                <span class="sp-nav__icon">🧠</span><span>Flow Intelligence</span>
+            </a>
+        </div>
+
+        <!-- ── Dispatch & Fleet ── -->
+        <div class="sp-nav__section">
+            <span class="sp-nav__label">Logistics</span>
+            <a asp-controller="Dispatch" asp-action="Index" class="sp-nav__item @(ctrl=="Dispatch"?"active":"")">
+                <span class="sp-nav__icon">🚛</span><span>Dispatch Trips</span>
+            </a>
+            <a asp-controller="Fleet" asp-action="Index" class="sp-nav__item @(ctrl=="Fleet"?"active":"")">
+                <span class="sp-nav__icon">🚚</span><span>Fleet</span>
+            </a>
+            <a asp-controller="Organisations" asp-action="Index" class="sp-nav__item @(ctrl=="Organisations"?"active":"")">
+                <span class="sp-nav__icon">🏢</span><span>Organisations</span>
+            </a>
+            <a asp-controller="Disruptions" asp-action="Index" class="sp-nav__item @(ctrl=="Disruptions"?"active":"")">
+                <span class="sp-nav__icon">⚡</span><span>Disruptions</span>
+            </a>
+        </div>
+
+        <!-- ── Impact ── -->
+        <div class="sp-nav__section">
+            <span class="sp-nav__label">Impact</span>
+            <a asp-controller="Emissions" asp-action="Index" class="sp-nav__item @(ctrl=="Emissions"?"active":"")">
+                <span class="sp-nav__icon">🌿</span><span>Emissions</span>
+            </a>
+            <a asp-controller="Pilot" asp-action="Index" class="sp-nav__item @(ctrl=="Pilot"?"active":"")">
+                <span class="sp-nav__icon">📊</span><span>Pilot Metrics</span>
+            </a>
+            <a asp-controller="Reports" asp-action="Index" class="sp-nav__item @(ctrl=="Reports"?"active":"")">
+                <span class="sp-nav__icon">📋</span><span>Reports</span>
+            </a>
+        </div>
+
+        <!-- ── Port Operations ── -->
+        <div class="sp-nav__section">
+            <span class="sp-nav__label">Port Operations</span>
+            <a asp-controller="Vessels" asp-action="Index" class="sp-nav__item @(ctrl=="Vessels"?"active":"")">
+                <span class="sp-nav__icon">⚓</span><span>Vessels</span>
+            </a>
+            <a asp-controller="Berths" asp-action="Index" class="sp-nav__item @(ctrl=="Berths"?"active":"")">
+                <span class="sp-nav__icon">🗓️</span><span>Berths</span>
+            </a>
+            <a asp-controller="Containers" asp-action="Index" class="sp-nav__item @(ctrl=="Containers"?"active":"")">
+                <span class="sp-nav__icon">📦</span><span>Containers</span>
+            </a>
+            <a asp-controller="Gates" asp-action="Index" class="sp-nav__item @(ctrl=="Gates"?"active":"")">
+                <span class="sp-nav__icon">🚪</span><span>Gates</span>
+            </a>
+            <a asp-controller="Incidents" asp-action="Index" class="sp-nav__item @(ctrl=="Incidents"&&act=="Index"?"active":"")">
+                <span class="sp-nav__icon">⚠️</span><span>Incidents</span>
+            </a>
+            <a asp-controller="Documents" asp-action="Index" class="sp-nav__item @(ctrl=="Documents"?"active":"")">
+                <span class="sp-nav__icon">📄</span><span>Documents</span>
+            </a>
+            <a asp-controller="Analytics" asp-action="Index" class="sp-nav__item @(ctrl=="Analytics"?"active":"")">
+                <span class="sp-nav__icon">📈</span><span>Analytics</span>
+            </a>
+        </div>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <div class="sp-nav__section">
+                <span class="sp-nav__label">Administration</span>
+                <a asp-controller="Admin" asp-action="Index" class="sp-nav__item @(ctrl=="Admin"?"active":"")">
+                    <span class="sp-nav__icon">⚙️</span><span>Admin</span>
+                </a>
+            </div>
+        }
+    </nav>
+
+    <div class="sp-sidebar__footer">
+        <div class="sp-user-card">
+            <div class="sp-user-card__avatar">@(currentUser?.FirstName?.Length > 0 ? currentUser.FirstName[0].ToString() : "?")@(currentUser?.LastName?.Length > 0 ? currentUser.LastName[0].ToString() : "")</div>
+            <div class="sp-user-card__info">
+                <div class="sp-user-card__name">@currentUser?.FullName</div>
+                <div class="sp-user-card__role">@(roles.FirstOrDefault() ?? "User")</div>
+            </div>
+            <form asp-controller="Auth" asp-action="Logout" method="post" style="margin:0">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="sp-user-card__logout" title="Sign out">⏻</button>
+            </form>
+        </div>
+    </div>
+</aside>
+
+<main class="sp-main" id="main">
+    <header class="sp-topbar">
+        <div class="sp-topbar__left">
+            <h1 class="sp-topbar__title">@ViewData["Title"]</h1>
+        </div>
+        <div class="sp-topbar__right">
+            <span class="sp-topbar__badge">SYNTHETIC DATA</span>
+            <span class="sp-topbar__time" id="localTime"></span>
+            <a asp-controller="Auth" asp-action="Profile" class="sp-topbar__profile-link">@currentUser?.FullName</a>
+        </div>
+    </header>
+
+    @if (TempData["Success"] != null)
+    { <div class="sp-alert sp-alert--success" role="alert">✓ @TempData["Success"]</div> }
+    @if (TempData["Warning"] != null)
+    { <div class="sp-alert sp-alert--warning" role="alert">⚠ @TempData["Warning"]</div> }
+    @if (TempData["Info"] != null)
+    { <div class="sp-alert sp-alert--info" role="alert">ℹ @TempData["Info"]</div> }
+
+    <div class="sp-content">@RenderBody()</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="~/js/app.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

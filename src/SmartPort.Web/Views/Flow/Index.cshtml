@@ -1,0 +1,180 @@
+@using SmartPort.Application.Interfaces
+@model FlowIntelligenceSummaryDto
+@{ ViewData["Title"] = "Flow Intelligence"; }
+
+<div class="sp-page-header">
+    <div>
+        <div class="sp-agent-badge"><span>🧠</span> Flow Intelligence Engine</div>
+        <h1>Flow Intelligence</h1>
+        <p style="color:var(--sp-text-muted)">Dispatch risk scoring, congestion analysis, and operational recommendations.</p>
+    </div>
+    <div style="display:flex;gap:.5rem">
+        <a asp-action="Recommendations" class="sp-btn sp-btn--outline">All Recommendations</a>
+        <a asp-action="Index" asp-controller="Disruptions" class="sp-btn sp-btn--outline">Disruptions</a>
+    </div>
+</div>
+
+<!-- KPI Strip -->
+<div class="sp-kpi-grid">
+    <div class="sp-kpi-card @(Model.ActiveTrips > 0 ? "" : "")">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--blue"><i data-feather="truck"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@Model.ActiveTrips</div>
+            <div class="sp-kpi-card__label">Active Dispatch Trips</div>
+            <div class="sp-kpi-card__sub">@Model.WaitingTrucks waiting · @Model.DispatchReliabilityPercent% reliability</div>
+        </div>
+    </div>
+    <div class="sp-kpi-card @(Model.HighRiskTrips > 0 ? "sp-kpi-card--warn" : "")">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--@(Model.HighRiskTrips > 0 ? "red" : "green")"><i data-feather="alert-triangle"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@Model.HighRiskTrips</div>
+            <div class="sp-kpi-card__label">High-Risk Trips</div>
+            <div class="sp-kpi-card__sub">@Model.PendingRecommendations pending recommendations</div>
+        </div>
+    </div>
+    <div class="sp-kpi-card @(Model.ActiveDisruptions > 0 ? "sp-kpi-card--warn" : "")">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--@(Model.ActiveDisruptions > 0 ? "orange" : "green")"><i data-feather="zap"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@Model.ActiveDisruptions</div>
+            <div class="sp-kpi-card__label">Active Disruptions</div>
+            <div class="sp-kpi-card__sub">@Model.RecommendationsToday recommendations today</div>
+        </div>
+    </div>
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--teal"><i data-feather="clock"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@Model.AverageWaitingMinutes:F0 min</div>
+            <div class="sp-kpi-card__label">Avg Waiting Time</div>
+            <div class="sp-kpi-card__sub">@Model.TotalIdlingMinutesToday:F0 min total idling today</div>
+        </div>
+    </div>
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--green"><i data-feather="wind"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@Model.EstimatedCo2Today:F1 kg</div>
+            <div class="sp-kpi-card__label">Est. CO₂ Today</div>
+            <div class="sp-kpi-card__sub">@Model.EstimatedDieselWastedToday:F1 L diesel · synthetic estimate</div>
+        </div>
+    </div>
+</div>
+
+<div class="sp-dashboard-grid">
+
+    <!-- Active Disruptions -->
+    <div class="sp-card">
+        <div class="sp-card__header">
+            <h3 class="sp-card__title">Active Disruptions</h3>
+            <a asp-action="Index" asp-controller="Disruptions" class="sp-card__link">Manage →</a>
+        </div>
+        @if (Model.ActiveDisruptionsList.Any())
+        {
+            <div style="padding:.5rem 0">
+                @foreach (var d in Model.ActiveDisruptionsList)
+                {
+                    var sc = d.Severity switch { SmartPort.Domain.Enums.DisruptionSeverity.Critical => "danger", SmartPort.Domain.Enums.DisruptionSeverity.High => "high", SmartPort.Domain.Enums.DisruptionSeverity.Medium => "warning", _ => "info" };
+                    <div class="sp-alert-item sp-alert-item--@sc">
+                        <div class="sp-alert-item__severity"></div>
+                        <div class="sp-alert-item__body">
+                            <div class="sp-alert-item__title">@d.Title <span class="sp-badge sp-badge--@sc">@d.Severity</span></div>
+                            <div class="sp-alert-item__msg">@(d.AffectedRoute ?? d.AffectedLocation ?? "General area")</div>
+                            <div class="sp-alert-item__meta">@d.DisruptionType · Since @d.StartTime.ToString("HH:mm dd MMM")</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else { <div class="sp-empty sp-empty--success"><i data-feather="check-circle"></i> No active disruptions</div> }
+    </div>
+
+    <!-- High-Risk Trips -->
+    <div class="sp-card">
+        <div class="sp-card__header">
+            <h3 class="sp-card__title">High-Risk Dispatch Trips</h3>
+            <a asp-action="Index" asp-controller="Dispatch" class="sp-card__link">All Trips →</a>
+        </div>
+        @if (Model.HighRiskTripsList.Any())
+        {
+            <table class="sp-table">
+                <thead><tr><th>Vehicle</th><th>Route</th><th>Status</th><th>Risk</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var t in Model.HighRiskTripsList)
+                    {
+                        var rc = t.LatestRiskLevel switch { SmartPort.Domain.Enums.FlowRiskLevel.Critical => "danger", SmartPort.Domain.Enums.FlowRiskLevel.High => "high", _ => "warning" };
+                        <tr>
+                            <td><div class="sp-table__primary sp-table__mono">@t.VehicleRegistration</div><div class="sp-table__secondary">@t.OrganisationName</div></td>
+                            <td><div class="sp-table__primary">@t.RouteName</div><div class="sp-table__secondary">@t.Origin → @t.Destination</div></td>
+                            <td><span class="sp-badge sp-badge--info">@t.Status</span></td>
+                            <td><span class="sp-badge sp-badge--@rc">@(t.LatestRiskLevel?.ToString() ?? "—") @(t.LatestRiskScore.HasValue ? $"({t.LatestRiskScore})" : "")</span></td>
+                            <td><a asp-action="Detail" asp-controller="Dispatch" asp-route-id="@t.Id" class="sp-btn sp-btn--xs sp-btn--outline">View</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else { <div class="sp-empty sp-empty--success"><i data-feather="check-circle"></i> No high-risk trips at this time</div> }
+    </div>
+
+    <!-- Latest Recommendations -->
+    <div class="sp-card sp-card--tall">
+        <div class="sp-card__header">
+            <h3 class="sp-card__title">Latest Recommendations</h3>
+            <a asp-action="Recommendations" class="sp-card__link">All →</a>
+        </div>
+        <div class="sp-rec-list">
+            @foreach (var r in Model.LatestRecommendations)
+            {
+                var rc = r.RiskColourClass;
+                <div class="sp-rec-item sp-rec-item--@rc">
+                    <div class="sp-rec-item__priority"><span class="sp-badge sp-badge--@rc">@r.RiskLevel</span></div>
+                    <div class="sp-rec-item__body">
+                        <div class="sp-rec-item__title">@r.RecommendationType — @(r.TripRoute ?? r.OrganisationName)</div>
+                        <div class="sp-rec-item__summary">@r.RecommendationText</div>
+                        @if (r.ExpectedBenefit != null) { <div class="sp-rec-item__impact">@r.ExpectedBenefit</div> }
+                        <div style="font-size:.75rem;color:var(--sp-text-subtle);margin-top:.25rem">@r.GeneratedAt.ToString("HH:mm dd MMM") · @r.ConfidenceLevel confidence · @(r.IsPending ? "Pending" : r.AcceptedByUser == true ? "✅ Accepted" : "❌ Dismissed")</div>
+                    </div>
+                    @if (r.IsPending)
+                    {
+                        <div style="display:flex;flex-direction:column;gap:.375rem;flex-shrink:0">
+                            <form asp-action="Accept" method="post" asp-route-id="@r.Id">@Html.AntiForgeryToken()<button type="submit" class="sp-btn sp-btn--xs sp-btn--success">Accept</button></form>
+                            <form asp-action="Dismiss" method="post" asp-route-id="@r.Id">@Html.AntiForgeryToken()<button type="submit" class="sp-btn sp-btn--xs sp-btn--outline">Dismiss</button></form>
+                        </div>
+                    }
+                </div>
+            }
+            @if (!Model.LatestRecommendations.Any())
+            { <div class="sp-empty"><i data-feather="cpu"></i> No pending recommendations</div> }
+        </div>
+    </div>
+
+    <!-- Pilot Snapshot -->
+    @if (Model.PilotComparison?.Baseline != null)
+    {
+        var comp = Model.PilotComparison;
+        <div class="sp-card">
+            <div class="sp-card__header">
+                <h3 class="sp-card__title">Pilot Performance Snapshot</h3>
+                <a asp-action="Index" asp-controller="Pilot" class="sp-card__link">Full Report →</a>
+            </div>
+            <div style="padding:1rem 1.25rem">
+                <div class="sp-kpi-grid sp-kpi-grid--sm" style="margin-bottom:0">
+                    <div class="sp-kpi-card">
+                        <div class="sp-kpi-card__body">
+                            <div class="sp-kpi-card__value" style="font-size:1.25rem">@comp.Current.AverageWaitingMinutes:F0 min</div>
+                            <div class="sp-kpi-card__label">Avg Wait (Current)</div>
+                            @if (comp.WaitingMinutesChangePercent.HasValue)
+                            { <div class="sp-kpi-card__sub @(comp.WaitingMinutesChangePercent < 0 ? "sp-text-success" : "sp-text-danger")">@(comp.WaitingMinutesChangePercent > 0 ? "+" : "")@comp.WaitingMinutesChangePercent% vs baseline</div> }
+                        </div>
+                    </div>
+                    <div class="sp-kpi-card">
+                        <div class="sp-kpi-card__body">
+                            <div class="sp-kpi-card__value" style="font-size:1.25rem">@comp.Current.DispatchReliabilityPercent:F1%</div>
+                            <div class="sp-kpi-card__label">Reliability</div>
+                            @if (comp.ReliabilityChangePoints.HasValue)
+                            { <div class="sp-kpi-card__sub @(comp.ReliabilityChangePoints > 0 ? "sp-text-success" : "sp-text-danger")">@(comp.ReliabilityChangePoints > 0 ? "+" : "")@comp.ReliabilityChangePoints pts vs baseline</div> }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,22 @@
+@using SmartPort.Application.Interfaces
+@model SaveOrganisationDto
+@{ ViewData["Title"] = "Edit Organisation"; }
+<div class="sp-form-page">
+  <div class="sp-card sp-card--form">
+    <div class="sp-card__header"><h3 class="sp-card__title">Edit Organisation</h3></div>
+    <form asp-action="Edit" asp-controller="Organisations" asp-route-id="@ViewBag.OrgId" method="post">
+      @Html.AntiForgeryToken()
+      <div class="sp-form__grid sp-form__grid--2">
+        <div class="sp-form__group sp-form__group--full"><label class="sp-form__label">Organisation Name *</label><input asp-for="Name" class="sp-form__input"/></div>
+        <div class="sp-form__group"><label class="sp-form__label">Type</label><select asp-for="OrganisationType" class="sp-form__select">@foreach(var t in Enum.GetValues<SmartPort.Domain.Enums.OrganisationType>()){<option value="@t">@t</option>}</select></div>
+        <div class="sp-form__group"><label class="sp-form__label">Registration Number</label><input asp-for="RegistrationNumber" class="sp-form__input"/></div>
+        <div class="sp-form__group"><label class="sp-form__label">Contact Person</label><input asp-for="ContactPerson" class="sp-form__input"/></div>
+        <div class="sp-form__group"><label class="sp-form__label">Contact Email</label><input asp-for="ContactEmail" class="sp-form__input" type="email"/></div>
+        <div class="sp-form__group"><label class="sp-form__label">Contact Phone</label><input asp-for="ContactPhone" class="sp-form__input"/></div>
+        <div class="sp-form__group sp-form__group--full"><label class="sp-form__label">Address</label><input asp-for="Address" class="sp-form__input"/></div>
+        <div class="sp-form__group"><label class="sp-form__label">Province</label><select asp-for="Province" class="sp-form__select"><option>KwaZulu-Natal</option><option>Gauteng</option><option>Western Cape</option><option>Eastern Cape</option></select></div>
+      </div>
+      <div class="sp-form__footer"><a asp-action="Detail" asp-controller="Organisations" asp-route-id="@ViewBag.OrgId" class="sp-btn sp-btn--outline">Cancel</a><button type="submit" class="sp-btn sp-btn--primary">Save Changes</button></div>
+    </form>
+  </div>
+</div>

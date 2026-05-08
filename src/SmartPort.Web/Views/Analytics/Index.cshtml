@@ -1,0 +1,112 @@
+@{
+    ViewData["Title"] = "Analytics & Reporting";
+    var throughput = ViewBag.Throughput as SmartPort.Application.Interfaces.ThroughputAnalyticsDto;
+    var turnaround = ViewBag.Turnaround as SmartPort.Application.Interfaces.TurnaroundAnalyticsDto;
+    var berth      = ViewBag.Berth      as SmartPort.Application.Interfaces.BerthEfficiencyDto;
+    var yard       = ViewBag.Yard       as SmartPort.Application.Interfaces.YardAnalyticsDto;
+    var filter     = ViewBag.Filter     as SmartPort.Application.Interfaces.AnalyticsFilterDto ?? new();
+}
+<div class="sp-toolbar">
+    <form method="get" class="sp-filter-bar">
+        <label class="sp-form__label" style="margin-bottom:0;align-self:center">From:</label>
+        <input name="FromDate" type="date" value="@filter.FromDate.ToString("yyyy-MM-dd")" class="sp-form__input sp-form__input--sm" />
+        <label class="sp-form__label" style="margin-bottom:0;align-self:center">To:</label>
+        <input name="ToDate" type="date" value="@filter.ToDate.ToString("yyyy-MM-dd")" class="sp-form__input sp-form__input--sm" />
+        <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Apply</button>
+    </form>
+</div>
+
+<div class="sp-kpi-grid">
+    <div class="sp-kpi-card"><div class="sp-kpi-card__icon sp-kpi-card__icon--blue"><i data-feather="package"></i></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@(throughput?.TotalTEU.ToString("N0") ?? "—")</div><div class="sp-kpi-card__label">Total TEU (period)</div><div class="sp-kpi-card__sub">Avg @(throughput?.AverageDailyTEU.ToString("N0")) TEU/day · Peak @(throughput?.PeakDailyTEU.ToString("N0"))</div></div>
+    </div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__icon sp-kpi-card__icon--teal"><i data-feather="clock"></i></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@(turnaround?.AverageTurnaroundHours.ToString("F1") ?? "—") h</div><div class="sp-kpi-card__label">Avg Turnaround</div><div class="sp-kpi-card__sub">Median @(turnaround?.MedianTurnaroundHours.ToString("F1")) h</div></div>
+    </div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__icon sp-kpi-card__icon--green"><i data-feather="activity"></i></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@(turnaround?.AverageCraneProductivity.ToString("F1") ?? "—")</div><div class="sp-kpi-card__label">Crane Moves / Hour</div></div>
+    </div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__icon sp-kpi-card__icon--purple"><i data-feather="map-pin"></i></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@(berth?.AverageUtilisationPercent.ToString("F1") ?? "—")%</div><div class="sp-kpi-card__label">Berth Utilisation</div></div>
+    </div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__icon sp-kpi-card__icon--orange"><i data-feather="grid"></i></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@(yard?.AverageYardDensity.ToString("F1") ?? "—")%</div><div class="sp-kpi-card__label">Avg Yard Density</div><div class="sp-kpi-card__sub">Avg dwell @(yard?.AverageDwellTimeHours.ToString("F0")) h</div></div>
+    </div>
+</div>
+
+<div class="sp-analytics-grid">
+    <div class="sp-card sp-card--chart-lg">
+        <div class="sp-card__header"><h3 class="sp-card__title">Daily Throughput (TEU)</h3></div>
+        <div class="sp-chart-container" style="height:260px"><canvas id="throughputChart"></canvas></div>
+    </div>
+    <div class="sp-card sp-card--chart-lg">
+        <div class="sp-card__header"><h3 class="sp-card__title">Average Turnaround Time (Hours)</h3></div>
+        <div class="sp-chart-container" style="height:260px"><canvas id="turnaroundChart"></canvas></div>
+    </div>
+    <div class="sp-card">
+        <div class="sp-card__header"><h3 class="sp-card__title">Berth Efficiency</h3></div>
+        @if (berth?.ByBerth.Any() == true)
+        {
+            <table class="sp-table">
+                <thead><tr><th>Berth</th><th>Utilisation</th><th>Avg Turnaround</th></tr></thead>
+                <tbody>
+                    @foreach (var b in berth.ByBerth.OrderByDescending(x => x.UtilisationPercent))
+                    {
+                        <tr>
+                            <td><strong>@b.BerthCode</strong></td>
+                            <td>
+                                <div class="sp-progress sp-progress--sm sp-progress--@(b.UtilisationPercent >= 90 ? "critical" : b.UtilisationPercent >= 75 ? "warning" : "normal")" style="display:inline-block;vertical-align:middle;margin-right:.5rem">
+                                    <div class="sp-progress__bar" style="width:@b.UtilisationPercent%"></div>
+                                </div>
+                                @b.UtilisationPercent%
+                            </td>
+                            <td>@b.AverageTurnaroundHours h</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else { <div class="sp-empty">No berth data available.</div> }
+    </div>
+    <div class="sp-card">
+        <div class="sp-card__header"><h3 class="sp-card__title">Yard Density Trend (%)</h3></div>
+        <div class="sp-chart-container" style="height:220px"><canvas id="yardChart"></canvas></div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    function makeChart(id, labels, data, color, label) {
+        var ctx = document.getElementById(id);
+        if (!ctx) return;
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{ label: label, data: data, borderColor: color,
+                    backgroundColor: color.replace('rgb(','rgba(').replace(')',',0.07)'),
+                    borderWidth: 2, fill: true, tension: 0.4, pointRadius: 2 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { maxTicksLimit: 8, color: '#94a3b8', font: { size: 11 } } },
+                    y: { grid: { color: 'rgba(148,163,184,0.12)' }, ticks: { color: '#94a3b8', font: { size: 11 } } }
+                }
+            }
+        });
+    }
+    var tpLabels = [@Html.Raw(string.Join(",", (throughput?.DailyTrend ?? Enumerable.Empty<SmartPort.Application.Interfaces.KpiTrendDto>()).Select(t => $"\"{t.Label}\"")))];
+    var tpData   = [@Html.Raw(string.Join(",", (throughput?.DailyTrend ?? Enumerable.Empty<SmartPort.Application.Interfaces.KpiTrendDto>()).Select(t => t.Value.ToString("F0"))))];
+    var taLabels = [@Html.Raw(string.Join(",", (turnaround?.DailyTrend ?? Enumerable.Empty<SmartPort.Application.Interfaces.KpiTrendDto>()).Select(t => $"\"{t.Label}\"")))];
+    var taData   = [@Html.Raw(string.Join(",", (turnaround?.DailyTrend ?? Enumerable.Empty<SmartPort.Application.Interfaces.KpiTrendDto>()).Select(t => t.Value.ToString("F1"))))];
+    var ydLabels = [@Html.Raw(string.Join(",", (yard?.DailyDensityTrend ?? Enumerable.Empty<SmartPort.Application.Interfaces.KpiTrendDto>()).Select(t => $"\"{t.Label}\"")))];
+    var ydData   = [@Html.Raw(string.Join(",", (yard?.DailyDensityTrend ?? Enumerable.Empty<SmartPort.Application.Interfaces.KpiTrendDto>()).Select(t => t.Value.ToString("F1"))))];
+    makeChart('throughputChart', tpLabels, tpData, 'rgb(59,130,246)', 'TEU');
+    makeChart('turnaroundChart', taLabels, taData, 'rgb(20,184,166)', 'Hours');
+    makeChart('yardChart',       ydLabels, ydData, 'rgb(249,115,22)', 'Density %');
+})();
+</script>
+}

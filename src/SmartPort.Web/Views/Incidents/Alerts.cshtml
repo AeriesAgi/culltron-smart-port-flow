@@ -1,0 +1,41 @@
+@model IEnumerable<SmartPort.Application.Interfaces.AlertDto>
+@{
+    ViewData["Title"] = "Alert Centre";
+    var critical = Model.Where(a => a.Severity == SmartPort.Domain.Enums.IncidentSeverity.Critical).ToList();
+    var high     = Model.Where(a => a.Severity == SmartPort.Domain.Enums.IncidentSeverity.High).ToList();
+    var other    = Model.Where(a => a.Severity == SmartPort.Domain.Enums.IncidentSeverity.Medium || a.Severity == SmartPort.Domain.Enums.IncidentSeverity.Low).ToList();
+}
+<div class="sp-toolbar">
+    <div class="sp-toolbar__meta"><i data-feather="bell"></i> @Model.Count() active alerts</div>
+    <div class="sp-toolbar__actions">
+        <a asp-action="Index"           class="sp-btn sp-btn--sm sp-btn--outline">Incidents</a>
+        <a asp-action="Recommendations" class="sp-btn sp-btn--sm sp-btn--outline">AI Insights</a>
+    </div>
+</div>
+
+<div class="sp-alert-centre">
+    @if (critical.Any())
+    {
+        <h3 class="sp-alert-centre__section-heading sp-alert-centre__section-heading--critical">Critical (@critical.Count)</h3>
+        @foreach (var a in critical) { @await Html.PartialAsync("_AlertCard", a) }
+    }
+    @if (high.Any())
+    {
+        <h3 class="sp-alert-centre__section-heading sp-alert-centre__section-heading--high">High Priority (@high.Count)</h3>
+        @foreach (var a in high) { @await Html.PartialAsync("_AlertCard", a) }
+    }
+    @if (other.Any())
+    {
+        <h3 class="sp-alert-centre__section-heading">Other Alerts (@other.Count)</h3>
+        @foreach (var a in other) { @await Html.PartialAsync("_AlertCard", a) }
+    }
+    @if (!Model.Any())
+    {
+        <div class="sp-card">
+            <div class="sp-empty sp-empty--success">
+                <i data-feather="check-circle"></i>
+                <strong>All clear.</strong><br/>No active alerts at this time.
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,48 @@
+@{ ViewData["Title"] = "System Settings"; }
+<div class="sp-settings-grid">
+    <div class="sp-card">
+        <div class="sp-card__header"><h3 class="sp-card__title">General Configuration</h3></div>
+        <dl class="sp-dl">
+            <dt>Platform Name</dt><dd>SmartPort Operations Platform</dd>
+            <dt>Default Terminal</dt><dd>Durban Container Terminal (DCT)</dd>
+            <dt>Timezone</dt><dd>Africa/Johannesburg (SAST UTC+2)</dd>
+            <dt>Version</dt><dd>1.0.0</dd>
+            <dt>Environment</dt><dd>@(System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production")</dd>
+            <dt>Database</dt><dd>PostgreSQL 16</dd>
+        </dl>
+        <div class="sp-alert sp-alert--info" style="margin:.75rem 1.25rem 1rem">
+            <i data-feather="info"></i> Settings management UI is available in Phase 2. Configuration is managed via <code>appsettings.json</code> and environment variables.
+        </div>
+    </div>
+
+    <div class="sp-card">
+        <div class="sp-card__header"><h3 class="sp-card__title">AI Alert Thresholds</h3></div>
+        <table class="sp-table">
+            <thead><tr><th>Metric</th><th>Threshold</th><th>Triggered Action</th></tr></thead>
+            <tbody>
+                <tr><td>Vessel Anchorage Wait</td><td>&gt; 2 hours</td><td>Generate Berth Reallocation recommendation</td></tr>
+                <tr><td>Gate Queue Count</td><td>&gt; 10 trucks</td><td>Generate Queue Mitigation alert + recommendation</td></tr>
+                <tr><td>Container Dwell Time</td><td>&gt; 72 hours</td><td>Raise dwell alert, flag for agent notification</td></tr>
+                <tr><td>Yard Block Occupancy</td><td>&gt; 85%</td><td>Near-capacity warning on dashboard</td></tr>
+                <tr><td>Yard Block Occupancy</td><td>&gt; 95%</td><td>Critical alert — immediate intervention required</td></tr>
+                <tr><td>Document Overdue</td><td>Past required-by date</td><td>Overdue flag + document chase recommendation</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="sp-card">
+        <div class="sp-card__header"><h3 class="sp-card__title">Integration Status</h3></div>
+        <table class="sp-table">
+            <thead><tr><th>Integration</th><th>Status</th><th>Phase</th><th>Notes</th></tr></thead>
+            <tbody>
+                <tr><td>AIS Vessel Position Feed</td><td><span class="sp-badge sp-badge--muted">Not Connected</span></td><td>Phase 2</td><td>MarineTraffic / exactEarth API</td></tr>
+                <tr><td>SARS Customs EDI</td><td><span class="sp-badge sp-badge--muted">Not Connected</span></td><td>Phase 2</td><td>SARS RLA / EDI Gateway</td></tr>
+                <tr><td>SAWS Weather Advisory</td><td><span class="sp-badge sp-badge--muted">Not Connected</span></td><td>Phase 2</td><td>SAWS API / RSS feed</td></tr>
+                <tr><td>SAMSA Port Authority</td><td><span class="sp-badge sp-badge--muted">Not Connected</span></td><td>Phase 2</td><td>Vessel clearance notifications</td></tr>
+                <tr><td>Navis N4 TOS</td><td><span class="sp-badge sp-badge--muted">Not Connected</span></td><td>Phase 3</td><td>Navis N4 REST API</td></tr>
+                <tr><td>IoT Gate OCR Sensors</td><td><span class="sp-badge sp-badge--muted">Not Connected</span></td><td>Phase 3</td><td>Camera OCR feed for plate/container</td></tr>
+                <tr><td>Email Notifications</td><td><span class="sp-badge sp-badge--muted">Not Connected</span></td><td>Phase 2</td><td>SendGrid / SMTP</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,72 @@
+@model IEnumerable<SmartPort.Application.Interfaces.RecommendationDto>
+@{ ViewData["Title"] = "AI Recommendations"; }
+<div class="sp-toolbar">
+    <div class="sp-toolbar__meta"><i data-feather="cpu"></i> AI-assisted operational intelligence — @Model.Count(r => r.Status == SmartPort.Domain.Enums.RecommendationStatus.Pending) pending</div>
+    <div class="sp-toolbar__actions">
+        <a asp-action="Index"  class="sp-btn sp-btn--sm sp-btn--outline">Incidents</a>
+        <a asp-action="Alerts" class="sp-btn sp-btn--sm sp-btn--outline">Alert Centre</a>
+    </div>
+</div>
+
+<div class="sp-rec-page">
+    @foreach (var r in Model.OrderByDescending(x => x.Priority).ThenByDescending(x => x.CreatedAt))
+    {
+        var priClass = r.Priority.ToString().ToLower();
+        var statClass = r.Status == SmartPort.Domain.Enums.RecommendationStatus.Accepted ? "accepted"
+                      : r.Status == SmartPort.Domain.Enums.RecommendationStatus.Dismissed ? "dismissed" : "pending";
+        <div class="sp-rec-card sp-rec-card--@priClass sp-rec-card--@statClass">
+            <div class="sp-rec-card__header">
+                <span class="sp-badge sp-badge--@priClass">@r.Priority</span>
+                <span class="sp-badge sp-badge--type">@r.Type</span>
+                <span class="sp-badge sp-badge--@(r.Status == SmartPort.Domain.Enums.RecommendationStatus.Accepted ? "success" : "muted")">@r.Status</span>
+                @if (r.IsAIGenerated) { <span class="sp-badge sp-badge--ai">🤖 AI Generated</span> }
+            </div>
+            <h3 class="sp-rec-card__title">@r.Title</h3>
+            <p class="sp-rec-card__summary">@r.Summary</p>
+            @if (!string.IsNullOrEmpty(r.DetailedRationale))
+            {
+                <details class="sp-rec-card__details">
+                    <summary>View detailed rationale</summary>
+                    <div class="sp-rec-card__rationale">@r.DetailedRationale</div>
+                </details>
+            }
+            <div class="sp-rec-card__action-box">
+                <strong>Suggested Action:</strong>
+                <p>@r.SuggestedAction</p>
+            </div>
+            @if (!string.IsNullOrEmpty(r.ImpactEstimate))
+            { <div class="sp-rec-card__impact"><i data-feather="trending-up" style="width:14px;height:14px;vertical-align:-2px"></i> <strong>Est. Impact:</strong> @r.ImpactEstimate</div> }
+            <div class="sp-rec-card__meta">
+                @if (!string.IsNullOrEmpty(r.VesselName)) { <span>Vessel: <strong>@r.VesselName</strong> · </span> }
+                <span>@r.CreatedAt.ToString("dd MMM HH:mm")</span>
+                @if (r.ExpiresAt.HasValue) { <span> · Expires @r.ExpiresAt.Value.ToString("HH:mm dd MMM")</span> }
+            </div>
+            @if (!string.IsNullOrEmpty(r.ActedOnBy))
+            { <div class="sp-rec-card__acted">Actioned by @r.ActedOnBy — @r.ActedOnNotes</div> }
+            @if (r.Status == SmartPort.Domain.Enums.RecommendationStatus.Pending)
+            {
+                <div class="sp-rec-card__footer">
+                    <form asp-action="AcceptRecommendation" asp-route-id="@r.Id" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="notes" value="Accepted via AI Insights panel" />
+                        <button type="submit" class="sp-btn sp-btn--sm sp-btn--success">Accept &amp; Action</button>
+                    </form>
+                    <form asp-action="DismissRecommendation" asp-route-id="@r.Id" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="notes" value="Dismissed" />
+                        <button type="submit" class="sp-btn sp-btn--sm sp-btn--outline">Dismiss</button>
+                    </form>
+                </div>
+            }
+        </div>
+    }
+    @if (!Model.Any())
+    {
+        <div class="sp-card">
+            <div class="sp-empty sp-empty--success">
+                <i data-feather="cpu"></i>
+                <strong>No pending recommendations.</strong><br/>The AI engine has no active suggestions at this time.
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,31 @@
+@model SmartPort.Web.Controllers.UserAdminViewModel
+@{ ViewData["Title"] = Model.FullName; }
+<div class="sp-detail-grid">
+    <div class="sp-detail-main">
+        <div class="sp-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">User Profile</h3></div>
+            <dl class="sp-dl">
+                <dt>Full Name</dt><dd><strong>@Model.FullName</strong></dd>
+                <dt>Email</dt><dd class="sp-table__mono">@Model.Email</dd>
+                <dt>Job Title</dt><dd>@(Model.JobTitle ?? "—")</dd>
+                <dt>Organisation</dt><dd>@(Model.Organisation ?? "—")</dd>
+                <dt>Terminal</dt><dd>@(Model.Terminal ?? "—")</dd>
+                <dt>Roles</dt><dd>@foreach (var r in Model.Roles) { <span class="sp-badge sp-badge--role" style="margin-right:4px">@r</span> }</dd>
+                <dt>Active</dt><dd><span class="sp-badge sp-badge--@(Model.IsActive ? "success" : "muted")">@(Model.IsActive ? "Active" : "Inactive")</span></dd>
+                <dt>Last Login</dt><dd class="sp-table__mono">@(Model.LastLoginAt?.ToString("dd MMM yyyy HH:mm") ?? "Never")</dd>
+            </dl>
+        </div>
+    </div>
+    <div class="sp-detail-sidebar">
+        <div class="sp-card sp-card--actions">
+            <form asp-action="SetUserActive" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="isActive" value="@(!Model.IsActive)" />
+                <button type="submit" class="sp-btn sp-btn--@(Model.IsActive ? "outline" : "success") sp-btn--full">
+                    @(Model.IsActive ? "Deactivate User" : "Activate User")
+                </button>
+            </form>
+            <a asp-action="Index" class="sp-btn sp-btn--outline sp-btn--full" style="margin-top:.5rem">← Back to Users</a>
+        </div>
+    </div>
+</div>

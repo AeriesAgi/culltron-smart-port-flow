@@ -1,0 +1,23 @@
+@model SmartPort.Web.Controllers.ProfileViewModel
+@{ ViewData["Title"] = "My Profile"; }
+<div class="sp-form-page">
+    <div class="sp-card">
+        <div class="sp-card__header"><h3 class="sp-card__title">@Model.FullName</h3></div>
+        <dl class="sp-dl">
+            <dt>Full Name</dt><dd><strong>@Model.FullName</strong></dd>
+            <dt>Email</dt><dd class="sp-table__mono">@Model.Email</dd>
+            <dt>Job Title</dt><dd>@(Model.JobTitle ?? "—")</dd>
+            <dt>Organisation</dt><dd>@(Model.Organisation ?? "—")</dd>
+            <dt>Terminal</dt><dd>@(Model.Terminal ?? "—")</dd>
+            <dt>Contact Number</dt><dd>@(Model.ContactNumber ?? "—")</dd>
+            <dt>Roles</dt><dd>@foreach (var r in Model.Roles) { <span class="sp-badge sp-badge--role" style="margin-right:4px">@r</span> }</dd>
+            <dt>Last Login</dt><dd class="sp-table__mono">@(Model.LastLoginAt?.ToString("dd MMM yyyy HH:mm") ?? "First session")</dd>
+        </dl>
+        <div style="padding:1rem 1.25rem;border-top:1px solid var(--sp-border)">
+            <form asp-action="Logout" asp-controller="Auth" method="post" style="display:inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="sp-btn sp-btn--outline">Sign Out</button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,79 @@
+@model SmartPort.Application.Interfaces.BerthDetailDto
+@{ ViewData["Title"] = $"Berth {Model.Code}"; }
+<div class="sp-detail-grid">
+    <div class="sp-detail-main">
+        <div class="sp-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">Upcoming Assignments</h3><a asp-action="Schedule" class="sp-card__link">Full Schedule →</a></div>
+            @if (Model.UpcomingAssignments.Any())
+            {
+                <table class="sp-table">
+                    <thead><tr><th>Vessel</th><th>Shipping Line</th><th>Planned Arrival</th><th>Planned Departure</th><th>Discharge</th><th>Load</th><th>Cargo Plan</th></tr></thead>
+                    <tbody>
+                        @foreach (var a in Model.UpcomingAssignments)
+                        {
+                            <tr>
+                                <td><a asp-controller="Vessels" asp-action="Detail" asp-route-id="@a.VesselId">@a.VesselName</a></td>
+                                <td>@a.ShippingLine</td>
+                                <td class="sp-table__mono">@a.PlannedArrival.ToString("dd MMM HH:mm")</td>
+                                <td class="sp-table__mono">@a.PlannedDeparture.ToString("dd MMM HH:mm")</td>
+                                <td>@a.PlannedDischarge TEU</td>
+                                <td>@a.PlannedLoad TEU</td>
+                                <td>@(a.CargoPlanApproved ? "✅" : "⏳ Pending")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else { <div class="sp-empty">No upcoming assignments.</div> }
+        </div>
+
+        <div class="sp-card" style="margin-top:1rem">
+            <div class="sp-card__header"><h3 class="sp-card__title">Recent Calls</h3></div>
+            @if (Model.RecentAssignments.Any())
+            {
+                <table class="sp-table">
+                    <thead><tr><th>Vessel</th><th>Actual Arrival</th><th>Actual Departure</th><th>Discharged</th><th>Loaded</th><th>Delay</th></tr></thead>
+                    <tbody>
+                        @foreach (var a in Model.RecentAssignments)
+                        {
+                            <tr>
+                                <td><a asp-controller="Vessels" asp-action="Detail" asp-route-id="@a.VesselId">@a.VesselName</a></td>
+                                <td class="sp-table__mono">@(a.ActualArrival?.ToString("dd MMM HH:mm") ?? a.PlannedArrival.ToString("dd MMM HH:mm"))</td>
+                                <td class="sp-table__mono">@(a.ActualDeparture?.ToString("dd MMM HH:mm") ?? a.PlannedDeparture.ToString("dd MMM HH:mm"))</td>
+                                <td>@a.ActualDischarge / @a.PlannedDischarge</td>
+                                <td>@a.ActualLoad / @a.PlannedLoad</td>
+                                <td>@(a.DelayMinutes.HasValue ? $"+{a.DelayMinutes}m" : "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else { <div class="sp-empty">No recent calls on record.</div> }
+        </div>
+    </div>
+
+    <div class="sp-detail-sidebar">
+        <div class="sp-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">Berth Information</h3></div>
+            <dl class="sp-dl">
+                <dt>Code</dt><dd>@Model.Code</dd>
+                <dt>Name</dt><dd>@Model.Name</dd>
+                <dt>Terminal</dt><dd>@Model.Terminal</dd>
+                <dt>Type</dt><dd>@Model.BerthType</dd>
+                <dt>Status</dt><dd><span class="sp-badge sp-badge--info">@Model.Status</span></dd>
+                <dt>Length</dt><dd>@Model.Length m</dd>
+                <dt>Max Draught</dt><dd>@Model.MaxDraught m</dd>
+                <dt>Cranes</dt><dd>@(Model.HasCranes ? $"{Model.CraneCount} STS cranes" : "None")</dd>
+            </dl>
+        </div>
+        <div class="sp-card" style="margin-top:1rem">
+            <div class="sp-card__header"><h3 class="sp-card__title">Performance (30d)</h3></div>
+            <dl class="sp-dl">
+                <dt>Utilisation</dt><dd>@Model.UtilisationPercent30Day%</dd>
+                <dt>Avg Turnaround</dt><dd>@Model.AverageTurnaroundHours h</dd>
+            </dl>
+        </div>
+        @if (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager"))
+        { <div style="margin-top:1rem"><a asp-action="Assign" class="sp-btn sp-btn--outline sp-btn--full">+ Assign Vessel</a></div> }
+    </div>
+</div>

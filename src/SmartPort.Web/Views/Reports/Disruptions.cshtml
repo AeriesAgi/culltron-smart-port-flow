@@ -1,0 +1,32 @@
+@using SmartPort.Application.Interfaces
+@{ ViewData["Title"] = "Disruption Report"; var all = ViewBag.All as IEnumerable<DisruptionListDto> ?? []; }
+<div class="sp-toolbar"><h2 style="margin:0">Disruption Report — @DateTime.UtcNow.ToString("dd MMM yyyy")</h2><a asp-action="Index" asp-controller="Reports" class="sp-btn sp-btn--sm sp-btn--outline">← Reports</a></div>
+<div class="sp-kpi-grid sp-kpi-grid--sm" style="margin-bottom:1.25rem">
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@all.Count(d => d.IsActive)</div><div class="sp-kpi-card__label">Currently Active</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@all.Count(d => d.Severity == DisruptionSeverity.Critical || d.Severity == DisruptionSeverity.High)</div><div class="sp-kpi-card__label">High / Critical</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@all.Count(d => d.DisruptionType == DisruptionType.LoadShedding)</div><div class="sp-kpi-card__label">Load-Shedding Events</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@all.Count(d => d.DisruptionType == DisruptionType.RoadCongestion)</div><div class="sp-kpi-card__label">Road Congestion</div></div></div>
+</div>
+<div class="sp-card">
+    <div class="sp-card__header"><h3 class="sp-card__title">All Disruption Events</h3></div>
+    <table class="sp-table">
+        <thead><tr><th>Title</th><th>Type</th><th>Severity</th><th>Route</th><th>Start</th><th>End</th><th>Status</th><th>Reported By</th></tr></thead>
+        <tbody>
+            @foreach (var d in all.OrderByDescending(x => x.StartTime))
+            {
+                var sc = d.Severity switch { DisruptionSeverity.Critical => "danger", DisruptionSeverity.High => "high", DisruptionSeverity.Medium => "warning", _ => "info" };
+                <tr>
+                    <td>@d.Title</td>
+                    <td><span class="sp-badge sp-badge--type">@d.DisruptionType</span></td>
+                    <td><span class="sp-badge sp-badge--@sc">@d.Severity</span></td>
+                    <td>@(d.AffectedRoute ?? d.AffectedLocation ?? "—")</td>
+                    <td class="sp-table__mono">@d.StartTime.ToString("dd MMM HH:mm")</td>
+                    <td class="sp-table__mono">@(d.EndTime?.ToString("dd MMM HH:mm") ?? "Ongoing")</td>
+                    <td><span class="sp-badge sp-badge--@(d.IsActive ? "warning" : "muted")">@(d.IsActive ? "Active" : "Resolved")</span></td>
+                    <td>@d.CreatedBy</td>
+                </tr>
+            }
+            @if (!all.Any()) { <tr><td colspan="8" class="sp-table__empty">No disruption events recorded.</td></tr> }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,58 @@
+@model IEnumerable<SmartPort.Application.Interfaces.BerthOccupancyDto>
+@{
+    ViewData["Title"] = "Berth Schedule";
+    var allAssignments = Model.SelectMany(b => b.Assignments).OrderBy(a => a.PlannedArrival).ToList();
+}
+<div class="sp-toolbar">
+    <div class="sp-toolbar__actions">
+        <a asp-controller="Berths" asp-action="Assign" class="sp-btn sp-btn--sm sp-btn--primary">+ New Assignment</a>
+    </div>
+</div>
+
+<div class="sp-card">
+    <div class="sp-card__header"><h3 class="sp-card__title">Berth Planner — Next 7 Days</h3></div>
+    <div class="sp-schedule-timeline">
+        @foreach (var berth in Model)
+        {
+            <div class="sp-schedule-row">
+                <div class="sp-schedule-row__label">@berth.BerthCode</div>
+                <div class="sp-schedule-row__track">
+                    @foreach (var a in berth.Assignments.OrderBy(x => x.PlannedArrival))
+                    {
+                        <div class="sp-schedule-block" title="@a.VesselName · @a.PlannedArrival.ToString("dd MMM HH:mm") → @a.PlannedDeparture.ToString("dd MMM HH:mm")">
+                            <span>@a.VesselName</span>
+                            <span class="sp-schedule-block__times">@a.PlannedArrival.ToString("HH:mm") – @a.PlannedDeparture.ToString("HH:mm")</span>
+                        </div>
+                    }
+                    @if (!berth.Assignments.Any())
+                    { <span style="font-size:.75rem;color:#475569;padding:.25rem">Available</span> }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="sp-card" style="margin-top:1.5rem">
+    <div class="sp-card__header"><h3 class="sp-card__title">All Scheduled Calls</h3></div>
+    <table class="sp-table">
+        <thead><tr><th>Vessel</th><th>Line</th><th>Berth</th><th>Planned Arrival</th><th>Planned Departure</th><th>Discharge (TEU)</th><th>Load (TEU)</th><th>Status</th><th>Cargo Plan</th></tr></thead>
+        <tbody>
+            @foreach (var a in allAssignments)
+            {
+                <tr>
+                    <td><a asp-action="Detail" asp-route-id="@a.VesselId">@a.VesselName</a></td>
+                    <td>@a.ShippingLine</td>
+                    <td><strong>@a.BerthCode</strong></td>
+                    <td class="sp-table__mono">@a.PlannedArrival.ToString("dd MMM HH:mm")</td>
+                    <td class="sp-table__mono">@a.PlannedDeparture.ToString("dd MMM HH:mm")</td>
+                    <td>@a.PlannedDischarge</td>
+                    <td>@a.PlannedLoad</td>
+                    <td><span class="sp-badge sp-badge--info">@a.OperationalStatus</span></td>
+                    <td>@(a.CargoPlanApproved ? "✅ Approved" : "⏳ Pending")</td>
+                </tr>
+            }
+            @if (!allAssignments.Any())
+            { <tr><td colspan="9" class="sp-table__empty">No scheduled calls found.</td></tr> }
+        </tbody>
+    </table>
+</div>
