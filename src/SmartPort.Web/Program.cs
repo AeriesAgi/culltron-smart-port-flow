@@ -86,7 +86,6 @@ builder.Services.AddScoped<IEmissionsSummaryService,       EmissionsSummaryServi
 builder.Services.AddScoped<IAiAgentService,         AiAgentService>();
 builder.Services.AddScoped<ISmartPortCopilotChatService, SmartPortCopilotChatService>();
 builder.Services.AddScoped<IScenarioSimulatorService, ScenarioSimulatorService>();
-builder.Services.AddHttpClient();
 
 // ─── MVC ──────────────────────────────────────────────────────────────────────
 builder.Services.AddControllersWithViews(options =>
