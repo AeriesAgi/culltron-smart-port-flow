@@ -1,0 +1,97 @@
+@using SmartPort.Application.Interfaces
+@model SmartPort.Application.Interfaces.PagedResult<DispatchTripListDto>
+@{
+    ViewData["Title"] = "Dispatch Trips";
+    var filter = ViewBag.Filter as DispatchTripFilterDto ?? new();
+    var orgs   = ViewBag.Organisations as IEnumerable<OrganisationListDto> ?? [];
+}
+<div class="sp-toolbar">
+    <form method="get" class="sp-filter-bar">
+        <select name="OrganisationId" class="sp-form__select sp-form__select--sm">
+            <option value="">All Organisations</option>
+            @foreach (var o in orgs) { <option value="@o.Id" selected="@(filter.OrganisationId == o.Id)">@o.Name</option> }
+        </select>
+        <select name="Status" class="sp-form__select sp-form__select--sm">
+            <option value="">All Status</option>
+            @foreach (var s in Enum.GetValues<SmartPort.Domain.Enums.TripStatus>()) { <option value="@s" selected="@(filter.Status == s)">@s</option> }
+        </select>
+        <input name="SearchTerm" value="@filter.SearchTerm" class="sp-form__input sp-form__input--sm" placeholder="Route or vehicle…" />
+        <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Filter</button>
+        <a asp-action="Index" class="sp-btn sp-btn--sm sp-btn--outline">Reset</a>
+    </form>
+    <div class="sp-toolbar__actions">
+        <a asp-action="Index" asp-controller="Flow" class="sp-btn sp-btn--sm sp-btn--outline">🧠 Flow Intelligence</a>
+        @if (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager") || User.IsInRole("TerminalStaff"))
+        { <a asp-action="Create" class="sp-btn sp-btn--sm sp-btn--primary">+ New Trip</a> }
+    </div>
+</div>
+
+<div class="sp-kpi-grid sp-kpi-grid--sm" style="margin-bottom:1.25rem">
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.TotalCount</div><div class="sp-kpi-card__label">Total Trips</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.Items.Count(t => t.Status == SmartPort.Domain.Enums.TripStatus.Dispatched)</div><div class="sp-kpi-card__label">In Transit</div></div></div>
+    <div class="sp-kpi-card @(Model.Items.Any(t => t.Status == SmartPort.Domain.Enums.TripStatus.Waiting) ? "sp-kpi-card--warn" : "")">
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.Items.Count(t => t.Status == SmartPort.Domain.Enums.TripStatus.Waiting)</div><div class="sp-kpi-card__label">Waiting</div></div>
+    </div>
+    <div class="sp-kpi-card @(Model.Items.Any(t => t.LatestRiskLevel >= SmartPort.Domain.Enums.FlowRiskLevel.High) ? "sp-kpi-card--warn" : "")">
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.Items.Count(t => t.LatestRiskLevel >= SmartPort.Domain.Enums.FlowRiskLevel.High)</div><div class="sp-kpi-card__label">High-Risk</div></div>
+    </div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.Items.Count(t => t.Status == SmartPort.Domain.Enums.TripStatus.Completed)</div><div class="sp-kpi-card__label">Completed</div></div></div>
+</div>
+
+<div class="sp-card">
+    <table class="sp-table">
+        <thead>
+            <tr><th>Vehicle</th><th>Organisation</th><th>Route</th><th>Cargo</th><th>Urgency</th><th>Status</th><th>Risk</th><th>Dispatch</th><th>Arrival Window</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var t in Model.Items)
+            {
+                var sc = t.Status switch {
+                    SmartPort.Domain.Enums.TripStatus.Completed      => "success",
+                    SmartPort.Domain.Enums.TripStatus.Delayed        => "danger",
+                    SmartPort.Domain.Enums.TripStatus.Waiting        => "warning",
+                    SmartPort.Domain.Enums.TripStatus.AtGate         => "info",
+                    SmartPort.Domain.Enums.TripStatus.Dispatched     => "info",
+                    SmartPort.Domain.Enums.TripStatus.RecommendedHold => "warning",
+                    SmartPort.Domain.Enums.TripStatus.ReadyForDispatch => "success",
+                    _ => "muted"
+                };
+                var rc = t.LatestRiskLevel switch {
+                    SmartPort.Domain.Enums.FlowRiskLevel.Critical => "danger",
+                    SmartPort.Domain.Enums.FlowRiskLevel.High     => "high",
+                    SmartPort.Domain.Enums.FlowRiskLevel.Medium   => "warning",
+                    SmartPort.Domain.Enums.FlowRiskLevel.Low      => "success",
+                    _ => "muted"
+                };
+                <tr class="@(t.IsArrivalWindowMissed ? "sp-table__row--danger" : t.Status == SmartPort.Domain.Enums.TripStatus.RecommendedHold ? "sp-table__row--warn" : "")">
+                    <td>
+                        <div class="sp-table__primary sp-table__mono"><a asp-action="Detail" asp-route-id="@t.Id">@t.VehicleRegistration</a></div>
+                        <div class="sp-table__secondary">@(t.DriverName ?? "No driver")</div>
+                    </td>
+                    <td><div class="sp-table__secondary">@t.OrganisationName</div></td>
+                    <td>
+                        <div class="sp-table__primary">@t.RouteName</div>
+                        <div class="sp-table__secondary">@t.Origin → @t.Destination</div>
+                    </td>
+                    <td><span class="sp-badge sp-badge--type">@t.CargoType</span></td>
+                    <td><span class="sp-badge sp-badge--@(t.UrgencyLevel == SmartPort.Domain.Enums.TripUrgencyLevel.Critical ? "danger" : t.UrgencyLevel == SmartPort.Domain.Enums.TripUrgencyLevel.High ? "high" : "type")">@t.UrgencyLevel</span></td>
+                    <td><span class="sp-badge sp-badge--@sc">@t.Status</span></td>
+                    <td>
+                        @if (t.LatestRiskLevel.HasValue)
+                        { <span class="sp-badge sp-badge--@rc">@t.LatestRiskLevel @(t.LatestRiskScore.HasValue ? $"({t.LatestRiskScore})" : "")</span> }
+                        else { <span class="sp-table__secondary">—</span> }
+                    </td>
+                    <td class="sp-table__mono">@t.PlannedDispatchTime.ToString("dd MMM HH:mm")</td>
+                    <td class="sp-table__mono @(t.IsArrivalWindowMissed ? "sp-table__cell--danger" : "")">
+                        by @t.PlannedArrivalWindowEnd.ToString("HH:mm dd MMM")
+                        @if (t.IsArrivalWindowMissed) { <span class="sp-badge sp-badge--danger">MISSED</span> }
+                    </td>
+                    <td><a asp-action="Detail" asp-route-id="@t.Id" class="sp-btn sp-btn--xs sp-btn--outline">View</a></td>
+                </tr>
+            }
+            @if (!Model.Items.Any())
+            { <tr><td colspan="10" class="sp-table__empty">No dispatch trips found. <a asp-action="Create">Create the first trip →</a></td></tr> }
+        </tbody>
+    </table>
+    @await Html.PartialAsync("_Pagination", Model)
+</div>

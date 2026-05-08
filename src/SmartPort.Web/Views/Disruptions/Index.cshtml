@@ -1,0 +1,71 @@
+@{ ViewData["Title"] = "Disruption Response Centre"; }
+
+<div class="sp-toolbar">
+    <div class="sp-toolbar__meta"><i data-feather="zap"></i>
+        <span class="sp-badge sp-badge--danger" style="font-size:.875rem">@((ViewBag.Active as IEnumerable<SmartPort.Application.Interfaces.DisruptionListDto>)?.Count() ?? 0) Active</span>
+        disruption(s) in network
+    </div>
+    @if (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager") || User.IsInRole("TerminalStaff"))
+    { <a asp-action="Create" class="sp-btn sp-btn--sm sp-btn--primary"><i data-feather="plus"></i> Report Disruption</a> }
+</div>
+
+@{
+    var active = ViewBag.Active as IEnumerable<SmartPort.Application.Interfaces.DisruptionListDto> ?? [];
+    var all    = ViewBag.All    as IEnumerable<SmartPort.Application.Interfaces.DisruptionListDto> ?? [];
+}
+
+@if (active.Any())
+{
+    <h3 style="font-size:.8125rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--sp-danger);margin:0 0 .75rem">Active Disruptions (@active.Count())</h3>
+    @foreach (var d in active.OrderByDescending(x => x.Severity))
+    {
+        var sc = d.Severity switch { SmartPort.Domain.Enums.DisruptionSeverity.Critical => "danger", SmartPort.Domain.Enums.DisruptionSeverity.High => "high", SmartPort.Domain.Enums.DisruptionSeverity.Medium => "warning", _ => "info" };
+        <div class="sp-alert-card sp-alert-card--@sc" style="margin-bottom:.75rem">
+            <div class="sp-alert-card__severity-bar"></div>
+            <div class="sp-alert-card__body">
+                <div class="sp-alert-card__header">
+                    <div class="sp-alert-card__title">@d.Title</div>
+                    <div class="sp-alert-card__meta">
+                        <span class="sp-badge sp-badge--@sc">@d.Severity</span>
+                        <span class="sp-badge sp-badge--type">@d.DisruptionType</span>
+                        <span>· Since @d.StartTime.ToString("HH:mm dd MMM")</span>
+                        <span>· By @d.CreatedBy</span>
+                    </div>
+                </div>
+                <p class="sp-alert-card__message">@d.Description</p>
+                @if (!string.IsNullOrEmpty(d.AffectedRoute)) { <div style="font-size:.8125rem;color:var(--sp-text-muted)">📍 Route: @d.AffectedRoute@(!string.IsNullOrEmpty(d.AffectedLocation) ? $" · {d.AffectedLocation}" : "")</div> }
+            </div>
+            @if (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager") || User.IsInRole("TerminalStaff"))
+            {
+                <div class="sp-alert-card__actions">
+                    <form asp-action="Resolve" asp-route-id="@d.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="sp-btn sp-btn--sm sp-btn--success">Resolve</button>
+                    </form>
+                </div>
+            }
+        </div>
+    }
+}
+
+<div class="sp-card" style="margin-top:1.5rem">
+    <div class="sp-card__header"><h3 class="sp-card__title">All Disruption Events (Last 30)</h3></div>
+    <table class="sp-table">
+        <thead><tr><th>Title</th><th>Type</th><th>Severity</th><th>Route / Location</th><th>Start</th><th>End</th><th>Status</th></tr></thead>
+        <tbody>
+            @foreach (var d in all.OrderByDescending(x => x.StartTime))
+            {
+                var sc = d.Severity switch { SmartPort.Domain.Enums.DisruptionSeverity.Critical => "danger", SmartPort.Domain.Enums.DisruptionSeverity.High => "high", SmartPort.Domain.Enums.DisruptionSeverity.Medium => "warning", _ => "info" };
+                <tr class="@(d.IsActive ? "sp-table__row--warn" : "")">
+                    <td><div class="sp-table__primary">@d.Title</div><div class="sp-table__secondary">@d.Description.Substring(0, Math.Min(60, d.Description.Length))…</div></td>
+                    <td><span class="sp-badge sp-badge--type">@d.DisruptionType</span></td>
+                    <td><span class="sp-badge sp-badge--@sc">@d.Severity</span></td>
+                    <td>@(d.AffectedRoute ?? d.AffectedLocation ?? "—")</td>
+                    <td class="sp-table__mono">@d.StartTime.ToString("HH:mm dd MMM")</td>
+                    <td class="sp-table__mono">@(d.EndTime?.ToString("HH:mm dd MMM") ?? "Ongoing")</td>
+                    <td><span class="sp-badge sp-badge--@(d.IsActive ? "warning" : "muted")">@(d.IsActive ? "Active" : "Resolved")</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,39 @@
+@{ Layout = "_LayoutPublic"; ViewData["Title"] = "Pricing"; }
+<section class="sp-section sp-section--white" style="padding-top:6rem">
+    <div class="container">
+        <div class="sp-section__header"><h1>Commercial Packages</h1><p>SmartPort is offered as a SaaS subscription or on-premise deployment. Pricing is based on terminal volume, module selection, and deployment model.</p></div>
+        <div class="sp-pricing-grid">
+            <div class="sp-pricing-card">
+                <div class="sp-pricing-card__tier">Pilot</div>
+                <div class="sp-pricing-card__price">Contact Us</div>
+                <div class="sp-pricing-card__desc">For port authorities and terminal operators evaluating the platform before commercial commitment.</div>
+                <ul class="sp-pricing-card__features">
+                    <li>✓ Full platform access</li><li>✓ Up to 5 users</li><li>✓ 90-day evaluation period</li>
+                    <li>✓ Seeded with your operational data</li><li>✓ Technical onboarding included</li><li>✓ Dedicated support contact</li>
+                </ul>
+                <a asp-controller="Home" asp-action="Contact" class="sp-btn sp-btn--outline sp-btn--full">Enquire About Pilot</a>
+            </div>
+            <div class="sp-pricing-card sp-pricing-card--featured">
+                <div class="sp-pricing-card__tier">Professional</div>
+                <div class="sp-pricing-card__price">R 45 000 / month</div>
+                <div class="sp-pricing-card__desc">For single terminal operators with full operational requirements and up to 20 users.</div>
+                <ul class="sp-pricing-card__features">
+                    <li>✓ All modules included</li><li>✓ Up to 20 users</li><li>✓ AI recommendations engine</li>
+                    <li>✓ Full analytics &amp; reporting</li><li>✓ AIS integration (Phase 2 add-on)</li>
+                    <li>✓ Priority support SLA</li><li>✓ Quarterly review sessions</li>
+                </ul>
+                <a asp-controller="Home" asp-action="Demo" class="sp-btn sp-btn--primary sp-btn--full">Request Demo</a>
+            </div>
+            <div class="sp-pricing-card">
+                <div class="sp-pricing-card__tier">Enterprise</div>
+                <div class="sp-pricing-card__price">Custom</div>
+                <div class="sp-pricing-card__desc">For multi-terminal port authorities and enterprise logistics operators requiring custom deployment.</div>
+                <ul class="sp-pricing-card__features">
+                    <li>✓ Multi-terminal deployment</li><li>✓ Unlimited users</li><li>✓ Custom integrations</li>
+                    <li>✓ On-premise or private cloud</li><li>✓ Dedicated support team</li><li>✓ Guaranteed SLA</li><li>✓ Custom reporting</li>
+                </ul>
+                <a asp-controller="Home" asp-action="Contact" class="sp-btn sp-btn--outline sp-btn--full">Contact Us</a>
+            </div>
+        </div>
+    </div>
+</section>

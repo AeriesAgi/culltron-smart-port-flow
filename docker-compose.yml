@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+
+  db:
+    image: postgres:16-alpine
+    container_name: smartport_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: smartport
+      POSTGRES_USER: smartport
+      POSTGRES_PASSWORD: SmartPort2025!
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smartport -d smartport"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smartport_web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=smartport;Username=smartport;Password=SmartPort2025!;Pooling=true;Minimum Pool Size=2;Maximum Pool Size=20;"
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
+    name: smartport_pgdata

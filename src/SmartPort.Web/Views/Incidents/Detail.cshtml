@@ -1,0 +1,104 @@
+@model SmartPort.Application.Interfaces.IncidentDetailDto
+@{ ViewData["Title"] = Model.ReferenceNumber; }
+<div class="sp-detail-grid">
+    <div class="sp-detail-main">
+        <div class="sp-card sp-card--sev-@Model.Severity.ToString().ToLower()">
+            <div class="sp-incident-hero">
+                <div class="sp-incident-hero__ref">@Model.ReferenceNumber</div>
+                <h2 class="sp-incident-hero__title">@Model.Title</h2>
+                <div class="sp-incident-hero__badges">
+                    <span class="sp-badge sp-badge--@Model.Severity.ToString().ToLower()">@Model.Severity</span>
+                    <span class="sp-badge sp-badge--type">@Model.Category</span>
+                    <span class="sp-badge sp-badge--@(Model.Status == SmartPort.Domain.Enums.IncidentStatus.Resolved ? "success" : Model.Status == SmartPort.Domain.Enums.IncidentStatus.Open ? "danger" : "info")">@Model.Status</span>
+                    @if (Model.IsOverdue) { <span class="sp-badge sp-badge--danger">OVERDUE</span> }
+                </div>
+                <p class="sp-incident-hero__desc">@Model.Description</p>
+            </div>
+        </div>
+
+        @if (Model.Status == SmartPort.Domain.Enums.IncidentStatus.Open && (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager") || User.IsInRole("TerminalStaff")))
+        {
+            <div class="sp-card sp-card--actions" style="margin-top:1rem">
+                <form asp-action="Acknowledge" asp-route-id="@Model.Id" method="post" style="display:inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="sp-btn sp-btn--primary">Acknowledge Incident</button>
+                </form>
+            </div>
+        }
+
+        @if ((Model.Status == SmartPort.Domain.Enums.IncidentStatus.Acknowledged || Model.Status == SmartPort.Domain.Enums.IncidentStatus.InProgress)
+             && (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager") || User.IsInRole("TerminalStaff")))
+        {
+            <div class="sp-card sp-card--form" style="margin-top:1rem">
+                <div class="sp-card__header"><h3 class="sp-card__title">Resolve Incident</h3></div>
+                <form asp-action="Resolve" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="sp-form__group"><label class="sp-form__label">Root Cause *</label><textarea name="RootCause" class="sp-form__textarea" rows="2" required placeholder="Identify the root cause…"></textarea></div>
+                    <div class="sp-form__group"><label class="sp-form__label">Resolution Notes *</label><textarea name="ResolutionNotes" class="sp-form__textarea" rows="3" required placeholder="What actions were taken to resolve this?"></textarea></div>
+                    <div class="sp-form__group"><label class="sp-form__label">Corrective Action</label><textarea name="CorrectiveAction" class="sp-form__textarea" rows="2" placeholder="Preventive or corrective measures going forward…"></textarea></div>
+                    <div class="sp-form__footer">
+                        <button type="submit" class="sp-btn sp-btn--success">Mark as Resolved</button>
+                    </div>
+                </form>
+            </div>
+        }
+
+        @if (Model.Status == SmartPort.Domain.Enums.IncidentStatus.Resolved)
+        {
+            <div class="sp-card" style="margin-top:1rem">
+                <div class="sp-card__header"><h3 class="sp-card__title">Resolution Details</h3></div>
+                <dl class="sp-dl">
+                    <dt>Root Cause</dt><dd>@(Model.RootCause ?? "—")</dd>
+                    <dt>Resolution</dt><dd>@(Model.ResolutionNotes ?? "—")</dd>
+                    <dt>Corrective Action</dt><dd>@(Model.CorrectiveAction ?? "—")</dd>
+                    <dt>Resolved By</dt><dd>@(Model.AcknowledgedBy ?? "—")</dd>
+                    <dt>Resolved At</dt><dd class="sp-table__mono">@(Model.AcknowledgedAt?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
+                </dl>
+            </div>
+        }
+
+        <div class="sp-card" style="margin-top:1rem">
+            <div class="sp-card__header"><h3 class="sp-card__title">Activity Log</h3></div>
+            @if (Model.Updates.Any())
+            {
+                <div class="sp-timeline">
+                    @foreach (var u in Model.Updates)
+                    {
+                        <div class="sp-timeline__item">
+                            <div class="sp-timeline__dot"></div>
+                            <div class="sp-timeline__body">
+                                <div class="sp-timeline__meta">
+                                    <strong>@u.UpdatedBy</strong> · @u.CreatedAt.ToString("dd MMM yyyy HH:mm") · <span class="sp-badge sp-badge--info">@u.NewStatus</span>
+                                </div>
+                                <div class="sp-timeline__note">@u.Note</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else { <div class="sp-empty">No activity log entries yet.</div> }
+        </div>
+    </div>
+
+    <div class="sp-detail-sidebar">
+        <div class="sp-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">Incident Details</h3></div>
+            <dl class="sp-dl">
+                <dt>Reference</dt><dd class="sp-table__mono">@Model.ReferenceNumber</dd>
+                <dt>Category</dt><dd>@Model.Category</dd>
+                <dt>Severity</dt><dd><span class="sp-badge sp-badge--@Model.Severity.ToString().ToLower()">@Model.Severity</span></dd>
+                <dt>Status</dt><dd><span class="sp-badge sp-badge--info">@Model.Status</span></dd>
+                <dt>Location</dt><dd>@(Model.Location ?? "—")</dd>
+                <dt>Terminal</dt><dd>@(Model.Terminal ?? "—")</dd>
+                <dt>Related Vessel</dt><dd>@(Model.VesselName ?? "—")</dd>
+                <dt>Reported By</dt><dd>@Model.ReportedBy</dd>
+                <dt>Acknowledged By</dt><dd>@(Model.AcknowledgedBy ?? "—")</dd>
+                <dt>Assigned To</dt><dd>@(Model.AssignedTo ?? "—")</dd>
+                <dt>Occurred</dt><dd class="sp-table__mono">@Model.OccurredAt.ToString("dd MMM yyyy HH:mm")</dd>
+                <dt>Acknowledged</dt><dd class="sp-table__mono">@(Model.AcknowledgedAt?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
+                <dt>Target</dt><dd class="@(Model.IsOverdue ? "sp-table__cell--danger" : "") sp-table__mono">@(Model.TargetResolutionTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
+                @if (Model.IsOverdue) { <dt></dt><dd class="sp-table__cell--danger"><strong>⚠ OVERDUE</strong></dd> }
+            </dl>
+        </div>
+    </div>
+</div>

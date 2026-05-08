@@ -1,0 +1,58 @@
+@model SmartPort.Application.Interfaces.PagedResult<SmartPort.Application.Interfaces.IncidentListDto>
+@{
+    ViewData["Title"] = "Incident Management";
+    var filter = ViewBag.Filter as SmartPort.Application.Interfaces.IncidentFilterDto ?? new();
+}
+<div class="sp-toolbar">
+    <form method="get" class="sp-filter-bar">
+        <input name="SearchTerm" value="@filter.SearchTerm" class="sp-form__input sp-form__input--sm" placeholder="Reference, title…" />
+        <select name="Status" class="sp-form__select sp-form__select--sm">
+            <option value="">All Status</option>
+            @foreach (var s in Enum.GetValues<SmartPort.Domain.Enums.IncidentStatus>()) { <option value="@s" selected="@(filter.Status == s)">@s</option> }
+        </select>
+        <select name="Severity" class="sp-form__select sp-form__select--sm">
+            <option value="">All Severity</option>
+            @foreach (var s in Enum.GetValues<SmartPort.Domain.Enums.IncidentSeverity>()) { <option value="@s" selected="@(filter.Severity == s)">@s</option> }
+        </select>
+        <select name="Category" class="sp-form__select sp-form__select--sm">
+            <option value="">All Categories</option>
+            @foreach (var c in Enum.GetValues<SmartPort.Domain.Enums.IncidentCategory>()) { <option value="@c" selected="@(filter.Category == c)">@c</option> }
+        </select>
+        <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Filter</button>
+        <a asp-action="Index" class="sp-btn sp-btn--sm sp-btn--outline">Reset</a>
+    </form>
+    <div class="sp-toolbar__actions">
+        <a asp-action="Alerts"          class="sp-btn sp-btn--sm sp-btn--outline">Alert Centre</a>
+        <a asp-action="Recommendations" class="sp-btn sp-btn--sm sp-btn--outline">AI Insights</a>
+        @if (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager") || User.IsInRole("TerminalStaff"))
+        { <a asp-action="Create" class="sp-btn sp-btn--sm sp-btn--primary">+ Raise Incident</a> }
+    </div>
+</div>
+<div class="sp-card">
+    <table class="sp-table">
+        <thead><tr><th>Reference</th><th>Title</th><th>Category</th><th>Severity</th><th>Status</th><th>Location</th><th>Reported By</th><th>Occurred</th><th>Target</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var i in Model.Items)
+            {
+                var sevClass = i.Severity.ToString().ToLower();
+                var statClass = i.Status == SmartPort.Domain.Enums.IncidentStatus.Resolved ? "success"
+                    : i.Status == SmartPort.Domain.Enums.IncidentStatus.Open ? "danger" : "info";
+                <tr class="@(i.IsOverdue ? "sp-table__row--danger" : i.Severity == SmartPort.Domain.Enums.IncidentSeverity.Critical && i.Status != SmartPort.Domain.Enums.IncidentStatus.Resolved ? "sp-table__row--critical" : "")">
+                    <td class="sp-table__mono"><a asp-action="Detail" asp-route-id="@i.Id">@i.ReferenceNumber</a></td>
+                    <td><div class="sp-table__primary">@i.Title</div><div class="sp-table__secondary">@i.VesselName</div></td>
+                    <td><span class="sp-badge sp-badge--type">@i.Category</span></td>
+                    <td><span class="sp-badge sp-badge--@sevClass">@i.Severity</span></td>
+                    <td><span class="sp-badge sp-badge--@statClass">@i.Status</span></td>
+                    <td>@(i.Location ?? i.Terminal ?? "—")</td>
+                    <td>@i.ReportedBy</td>
+                    <td class="sp-table__mono">@i.OccurredAt.ToString("dd MMM HH:mm")</td>
+                    <td class="@(i.IsOverdue ? "sp-table__cell--danger" : "")">@(i.TargetResolutionTime?.ToString("dd MMM HH:mm") ?? "—")</td>
+                    <td><a asp-action="Detail" asp-route-id="@i.Id" class="sp-btn sp-btn--xs sp-btn--outline">View</a></td>
+                </tr>
+            }
+            @if (!Model.Items.Any())
+            { <tr><td colspan="10" class="sp-table__empty">No incidents match the filter.</td></tr> }
+        </tbody>
+    </table>
+    @await Html.PartialAsync("_Pagination", Model)
+</div>

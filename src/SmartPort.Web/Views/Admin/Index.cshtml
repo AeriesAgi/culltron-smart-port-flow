@@ -1,0 +1,37 @@
+@model IEnumerable<SmartPort.Web.Controllers.UserAdminViewModel>
+@{ ViewData["Title"] = "User Management"; }
+<div class="sp-toolbar">
+    <div class="sp-toolbar__actions">
+        <a asp-action="Roles"    class="sp-btn sp-btn--sm sp-btn--outline">Roles & Permissions</a>
+        <a asp-action="Settings" class="sp-btn sp-btn--sm sp-btn--outline">System Settings</a>
+    </div>
+</div>
+<div class="sp-card">
+    <div class="sp-card__header"><h3 class="sp-card__title">Platform Users</h3><span class="sp-card__meta">@Model.Count() users</span></div>
+    <table class="sp-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role(s)</th><th>Job Title</th><th>Organisation</th><th>Terminal</th><th>Last Login</th><th>Active</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var u in Model.OrderBy(x => x.FullName))
+            {
+                <tr class="@(!u.IsActive ? "sp-table__row--muted" : "")">
+                    <td><strong>@u.FullName</strong></td>
+                    <td class="sp-table__mono">@u.Email</td>
+                    <td>@foreach (var r in u.Roles) { <span class="sp-badge sp-badge--role" style="margin-right:3px">@r</span> }</td>
+                    <td>@(u.JobTitle ?? "—")</td>
+                    <td>@(u.Organisation ?? "—")</td>
+                    <td>@(u.Terminal ?? "—")</td>
+                    <td class="sp-table__mono">@(u.LastLoginAt?.ToString("dd MMM HH:mm") ?? "Never")</td>
+                    <td><span class="sp-badge sp-badge--@(u.IsActive ? "success" : "muted")">@(u.IsActive ? "Active" : "Inactive")</span></td>
+                    <td style="display:flex;gap:.25rem">
+                        <a asp-action="UserDetail" asp-route-id="@u.Id" class="sp-btn sp-btn--xs sp-btn--outline">View</a>
+                        <form asp-action="SetUserActive" asp-route-id="@u.Id" method="post" style="display:inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="isActive" value="@(!u.IsActive)" />
+                            <button type="submit" class="sp-btn sp-btn--xs sp-btn--@(u.IsActive ? "outline" : "success")">@(u.IsActive ? "Deactivate" : "Activate")</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

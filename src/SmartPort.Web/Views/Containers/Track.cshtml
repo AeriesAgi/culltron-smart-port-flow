@@ -1,0 +1,65 @@
+@{ ViewData["Title"] = "Container Tracker"; }
+<div class="sp-track-page">
+    <div class="sp-card sp-card--track-search">
+        <h2>Track a Container</h2>
+        <p>Enter an ISO 6346 container number to see its current status and location within the terminal.</p>
+        <form method="get" class="sp-track-form">
+            <input name="number" value="@ViewBag.SearchNumber" class="sp-form__input sp-form__input--lg" placeholder="e.g. MAEU2345678" maxlength="11" style="text-transform:uppercase;min-width:240px" />
+            <button type="submit" class="sp-btn sp-btn--primary sp-btn--lg">Track</button>
+        </form>
+    </div>
+
+    @if (ViewBag.SearchNumber != null)
+    {
+        @if (ViewBag.Result is SmartPort.Application.Interfaces.ContainerDetailDto c)
+        {
+            <div class="sp-card sp-card--track-result" style="margin-top:1.5rem">
+                <div class="sp-track-result__header">
+                    <div class="sp-track-result__number">@c.ContainerNumber</div>
+                    <span class="sp-badge sp-badge--info sp-badge--lg">@c.Status</span>
+                    <span class="sp-badge sp-badge--type">@((int)c.Size)ft @c.ContainerType</span>
+                    @if (c.IsDwellAlertRaised) { <span class="sp-badge sp-badge--warning">⏱ Dwell Alert</span> }
+                    @if (c.IsOnHold)           { <span class="sp-badge sp-badge--danger">🔒 On Hold</span> }
+                    @if (c.IsHazardous)        { <span class="sp-badge sp-badge--danger">⚠ HAZ</span> }
+                    @if (c.IsReefer)           { <span class="sp-badge sp-badge--info">❄ Reefer</span> }
+                </div>
+
+                @if (c.IsHazardous) { <div class="sp-alert sp-alert--danger" style="margin-bottom:1rem"><i data-feather="alert-triangle"></i> Hazardous — IMDG Class @c.HazardClass</div> }
+                @if (c.IsReefer)    { <div class="sp-alert sp-alert--info"   style="margin-bottom:1rem"><i data-feather="thermometer"></i> Reefer — Set temp: @c.ReeferSetTemp°C</div> }
+                @if (c.IsOnHold)    { <div class="sp-alert sp-alert--warning" style="margin-bottom:1rem"><i data-feather="lock"></i> On hold: @(c.HoldReason ?? "Contact terminal")</div> }
+
+                <div class="sp-track-result__grid">
+                    <dl class="sp-dl">
+                        <dt>Shipping Line</dt><dd>@(c.ShippingLine ?? "—")</dd>
+                        <dt>Direction</dt><dd>@c.Direction</dd>
+                        <dt>Vessel</dt><dd>@(c.VesselName ?? "—")</dd>
+                        <dt>Port of Loading</dt><dd>@(c.PortOfLoading ?? "—")</dd>
+                        <dt>Port of Discharge</dt><dd>@(c.PortOfDischarge ?? "—")</dd>
+                        <dt>Final Destination</dt><dd>@(c.FinalDestination ?? "—")</dd>
+                    </dl>
+                    <dl class="sp-dl">
+                        <dt>Customs Status</dt><dd><span class="sp-badge sp-badge--@(c.CustomsStatus == SmartPort.Domain.Enums.ComplianceStatus.Compliant ? "success" : "warning")">@c.CustomsStatus</span></dd>
+                        <dt>Customs Ref</dt><dd class="sp-table__mono">@(c.CustomsReferenceNumber ?? "—")</dd>
+                        <dt>Gross Weight</dt><dd>@(c.GrossWeightKg.HasValue ? $"{c.GrossWeightKg:N0} kg" : "—")</dd>
+                    </dl>
+                    <dl class="sp-dl">
+                        <dt>Yard Location</dt><dd class="sp-table__mono">@(c.YardBlockCode != null ? $"Block {c.YardBlockCode} · {c.YardSlot}" : "Not in yard")</dd>
+                        <dt>Gate In</dt><dd class="sp-table__mono">@(c.GateInDateTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
+                        <dt>Gate Out</dt><dd class="sp-table__mono">@(c.GateOutDateTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
+                        <dt>Dwell Time</dt><dd class="@(c.IsDwellAlertRaised ? "sp-table__cell--danger" : "")">@(c.DwellTimeHours.HasValue ? $"{c.DwellTimeHours:F0} hours" : "—")</dd>
+                        <dt>Free Time Limit</dt><dd>@(c.FreeTimeLimitHours.HasValue ? $"{c.FreeTimeLimitHours}h" : "72h")</dd>
+                    </dl>
+                </div>
+                <div style="margin-top:1rem">
+                    <a asp-action="Detail" asp-route-id="@c.Id" class="sp-btn sp-btn--outline">View Full Record →</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="sp-card" style="margin-top:1.5rem">
+                <div class="sp-empty">No container found for number: <strong class="sp-table__mono">@ViewBag.SearchNumber</strong>. Check the number and try again.</div>
+            </div>
+        }
+    }
+</div>

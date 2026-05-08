@@ -1,0 +1,55 @@
+@model IEnumerable<SmartPort.Application.Interfaces.BerthStatusDto>
+@{ ViewData["Title"] = "Berth Management"; }
+<div class="sp-toolbar">
+    <div class="sp-toolbar__actions">
+        <a asp-action="Schedule" class="sp-btn sp-btn--sm sp-btn--outline">Schedule View</a>
+        @if (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager"))
+        { <a asp-action="Assign" class="sp-btn sp-btn--sm sp-btn--primary">+ Assign Berth</a> }
+    </div>
+</div>
+
+<div class="sp-kpi-grid sp-kpi-grid--sm" style="margin-bottom:1.5rem">
+    @{ var occ = Model.Count(b => b.Status == SmartPort.Domain.Enums.BerthStatus.Occupied);
+       var avail = Model.Count(b => b.Status == SmartPort.Domain.Enums.BerthStatus.Available);
+       var maint = Model.Count(b => b.Status == SmartPort.Domain.Enums.BerthStatus.UnderMaintenance);
+       var total = Model.Count();
+    }
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@occ</div><div class="sp-kpi-card__label">Occupied</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@avail</div><div class="sp-kpi-card__label">Available</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@maint</div><div class="sp-kpi-card__label">Maintenance</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@(total > 0 ? $"{occ * 100 / total}%" : "—")</div><div class="sp-kpi-card__label">Utilisation</div></div></div>
+</div>
+
+<div class="sp-berth-cards">
+    @foreach (var b in Model)
+    {
+        var sc = b.Status switch {
+            SmartPort.Domain.Enums.BerthStatus.Occupied => "occupied",
+            SmartPort.Domain.Enums.BerthStatus.Reserved => "reserved",
+            SmartPort.Domain.Enums.BerthStatus.UnderMaintenance => "maintenance",
+            _ => "available"
+        };
+        <div class="sp-berth-card sp-berth-card--@sc">
+            <div class="sp-berth-card__header">
+                <div class="sp-berth-card__code">@b.Code</div>
+                <span class="sp-badge sp-badge--@sc">@b.Status</span>
+            </div>
+            <div class="sp-berth-card__name">@b.Name</div>
+            <div class="sp-berth-card__terminal">@b.Terminal</div>
+            @if (b.CurrentVesselName != null)
+            {
+                <div class="sp-berth-card__vessel"><i data-feather="anchor" style="width:14px;height:14px"></i> @b.CurrentVesselName</div>
+                @if (b.CurrentVesselETD.HasValue)
+                { <div class="sp-berth-card__etd">ETD @b.CurrentVesselETD.Value.ToString("HH:mm dd MMM")</div> }
+            }
+            <div class="sp-berth-card__specs">@b.Length m · max draught @b.MaxDraught m@(b.HasCranes ? $" · {b.CraneCount} cranes" : "")</div>
+            <div class="sp-berth-card__utilisation">
+                <div class="sp-progress sp-progress--sm" style="display:inline-block;width:60px;vertical-align:middle">
+                    <div class="sp-progress__bar" style="width:@b.UtilisationPercent30Day%"></div>
+                </div>
+                <span>@b.UtilisationPercent30Day% util (30d)</span>
+            </div>
+            <a asp-action="Detail" asp-route-id="@b.Id" class="sp-btn sp-btn--xs sp-btn--outline" style="margin-top:.75rem">View Detail</a>
+        </div>
+    }
+</div>

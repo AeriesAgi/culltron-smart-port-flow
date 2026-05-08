@@ -1,0 +1,61 @@
+@using SmartPort.Application.Interfaces
+@model FleetVehicleDetailDto
+@{ ViewData["Title"] = Model.RegistrationNumber; }
+<div class="sp-detail-grid">
+  <div class="sp-detail-main">
+    <div class="sp-card">
+      <div class="sp-card__header">
+        <h3 class="sp-card__title">Recent Dispatch Trips</h3>
+        <a asp-action="Create" asp-controller="Dispatch" class="sp-card__link">+ New Trip</a>
+      </div>
+      @if(Model.RecentTrips.Any())
+      {
+        <table class="sp-table">
+          <thead><tr><th>Route</th><th>Origin → Destination</th><th>Status</th><th>Urgency</th><th>Dispatch Time</th><th></th></tr></thead>
+          <tbody>
+            @foreach(var t in Model.RecentTrips)
+            {
+              var sc=t.Status switch{SmartPort.Domain.Enums.TripStatus.Completed=>"success",SmartPort.Domain.Enums.TripStatus.Delayed=>"danger",SmartPort.Domain.Enums.TripStatus.Waiting=>"warning",SmartPort.Domain.Enums.TripStatus.AtGate=>"info",SmartPort.Domain.Enums.TripStatus.Dispatched=>"info",_=>"muted"};
+              <tr>
+                <td>@t.RouteName</td>
+                <td><span style="font-size:.8125rem">@t.Origin → @t.Destination</span></td>
+                <td><span class="sp-badge sp-badge--@sc">@t.Status</span></td>
+                <td><span class="sp-badge sp-badge--type">@t.UrgencyLevel</span></td>
+                <td class="sp-table__mono">@t.PlannedDispatchTime.ToString("dd MMM HH:mm")</td>
+                <td><a asp-action="Detail" asp-controller="Dispatch" asp-route-id="@t.Id" class="sp-btn sp-btn--xs sp-btn--outline">View</a></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+      else{<div class="sp-empty">No dispatch trips recorded for this vehicle.</div>}
+    </div>
+  </div>
+  <div class="sp-detail-sidebar">
+    <div class="sp-card">
+      <div class="sp-card__header"><h3 class="sp-card__title">Vehicle Details</h3></div>
+      <dl class="sp-dl">
+        <dt>Registration</dt><dd class="sp-table__mono"><strong>@Model.RegistrationNumber</strong></dd>
+        <dt>Fleet Number</dt><dd>@(Model.FleetNumber??"—")</dd>
+        <dt>Organisation</dt><dd>@Model.OrganisationName</dd>
+        <dt>Vehicle Type</dt><dd>@Model.VehicleType</dd>
+        <dt>Cargo Type</dt><dd><span class="sp-badge sp-badge--type">@Model.CargoType</span></dd>
+        <dt>Capacity</dt><dd>@(Model.CapacityTons.HasValue?$"{Model.CapacityTons:F0} tonnes":"—")</dd>
+        <dt>Status</dt><dd>
+          @{var sc=Model.Status switch{SmartPort.Domain.Enums.FleetVehicleStatus.Dispatched=>"info",SmartPort.Domain.Enums.FleetVehicleStatus.Waiting=>"warning",SmartPort.Domain.Enums.FleetVehicleStatus.AtGate=>"success",SmartPort.Domain.Enums.FleetVehicleStatus.Delayed=>"danger",SmartPort.Domain.Enums.FleetVehicleStatus.Available=>"success",_=>"muted"};}
+          <span class="sp-badge sp-badge--@sc">@Model.Status</span>
+        </dd>
+        <dt>Location</dt><dd>@(Model.CurrentLocation??"—")</dd>
+        <dt>Active</dt><dd><span class="sp-badge sp-badge--@(Model.IsActive?"success":"muted")">@(Model.IsActive?"Yes":"No")</span></dd>
+        <dt>Registered</dt><dd class="sp-table__mono">@Model.CreatedAt.ToString("dd MMM yyyy")</dd>
+      </dl>
+    </div>
+    @if(User.IsInRole("Admin")||User.IsInRole("PortOperationsManager"))
+    {
+      <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:.5rem">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="sp-btn sp-btn--outline sp-btn--full">Edit Vehicle</a>
+        <a asp-action="Create" asp-controller="Dispatch" class="sp-btn sp-btn--primary sp-btn--full">+ Dispatch This Vehicle</a>
+      </div>
+    }
+  </div>
+</div>

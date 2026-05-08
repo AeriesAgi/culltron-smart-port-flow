@@ -1,0 +1,62 @@
+@using SmartPort.Application.Interfaces
+@model SaveDisruptionDto
+@{ ViewData["Title"] = "Report Disruption"; }
+<div class="sp-form-page">
+    <div class="sp-card sp-card--form">
+        <div class="sp-card__header"><h3 class="sp-card__title">Report New Disruption</h3></div>
+        <form asp-action="Create" asp-controller="Disruptions" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="sp-form__errors"></div>
+            <div class="sp-form__grid sp-form__grid--2">
+                <div class="sp-form__group">
+                    <label class="sp-form__label">Disruption Type *</label>
+                    <select asp-for="DisruptionType" class="sp-form__select">
+                        @foreach (var t in Enum.GetValues<SmartPort.Domain.Enums.DisruptionType>()) { <option value="@t">@t</option> }
+                    </select>
+                </div>
+                <div class="sp-form__group">
+                    <label class="sp-form__label">Severity *</label>
+                    <select asp-for="Severity" class="sp-form__select">
+                        @foreach (var s in Enum.GetValues<SmartPort.Domain.Enums.DisruptionSeverity>()) { <option value="@s">@s</option> }
+                    </select>
+                </div>
+                <div class="sp-form__group sp-form__group--full">
+                    <label class="sp-form__label">Title *</label>
+                    <input asp-for="Title" class="sp-form__input" placeholder="e.g. Gate 1 Processing Delays" />
+                </div>
+                <div class="sp-form__group sp-form__group--full">
+                    <label class="sp-form__label">Description *</label>
+                    <textarea asp-for="Description" class="sp-form__textarea" rows="3" placeholder="Describe what is happening and the expected impact…"></textarea>
+                </div>
+                <div class="sp-form__group">
+                    <label class="sp-form__label">Affected Route</label>
+                    <select asp-for="AffectedRoute" class="sp-form__select">
+                        <option value="">— Select route —</option>
+                        <option>Bayhead Road Corridor</option>
+                        <option>Durban Container Terminal Access</option>
+                        <option>Island View / Bluff Route</option>
+                        <option>N2 South Freight Corridor</option>
+                        <option>Richards Bay Industrial Corridor</option>
+                        <option>Cato Ridge Inland Link</option>
+                    </select>
+                </div>
+                <div class="sp-form__group">
+                    <label class="sp-form__label">Affected Location</label>
+                    <input asp-for="AffectedLocation" class="sp-form__input" placeholder="e.g. DCT Gate 1, Bayhead Depot" />
+                </div>
+                <div class="sp-form__group">
+                    <label class="sp-form__label">Start Time *</label>
+                    <input asp-for="StartTime" class="sp-form__input" type="datetime-local" />
+                </div>
+                <div class="sp-form__group">
+                    <label class="sp-form__label">Estimated End Time (optional)</label>
+                    <input asp-for="EndTime" class="sp-form__input" type="datetime-local" />
+                </div>
+            </div>
+            <div class="sp-form__footer">
+                <a asp-action="Index" asp-controller="Disruptions" class="sp-btn sp-btn--outline">Cancel</a>
+                <button type="submit" class="sp-btn sp-btn--primary">Report Disruption</button>
+            </div>
+        </form>
+    </div>
+</div>
