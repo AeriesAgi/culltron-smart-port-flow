@@ -84,6 +84,7 @@ builder.Services.AddScoped<IEmissionsSummaryService,       EmissionsSummaryServi
 
 // ─── Hackathon features ───────────────────────────────────────────────────────
 builder.Services.AddScoped<IAiAgentService,         AiAgentService>();
+builder.Services.AddScoped<ISmartPortCopilotChatService, SmartPortCopilotChatService>();
 builder.Services.AddScoped<IScenarioSimulatorService, ScenarioSimulatorService>();
 builder.Services.AddHttpClient();
 

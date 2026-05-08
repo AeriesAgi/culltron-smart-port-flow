@@ -74,6 +74,21 @@ The copilot analyzes synthetic demo port state and generates explainable answers
 
 Each recommendation/answer is intended to surface the operational reason, suggested action, expected impact, confidence/risk context and decision-audit friendly data points.
 
+
+### Local SmartPort Copilot Chat
+
+The `/copilot` page is a flagship premium chat-style operator assistant. It does **not** call external AI APIs. Instead, it uses local deterministic intent routing over seeded/demo operational context. Operators can ask about biggest risk, truck idling, berth attention, gate bottlenecks, load-shedding, CO₂ savings, action plans and demo narration. Each response includes:
+
+- short summary
+- affected area and urgency/severity
+- operational reasoning
+- recommended action
+- expected impact
+- confidence score
+- emissions/idling impact
+- load-shedding/energy impact
+- buttons to related pages such as Dashboard, Simulator, Emissions, Recommendations and Audit reports
+
 ### Scenario simulation
 
 Run what-if simulations for:
@@ -185,10 +200,10 @@ docker compose up --build
 2. **Login** as `ops.manager@smartport.co.za`.
 3. **Dashboard** — show premium KPI cards, vessel/gate/yard health and live operational context.
 4. **AI Agent / Copilot Command Center** — ask: “What should the operations manager prioritise right now?”
-5. **Flow Recommendations / Audit** — show explainable recommendations, statuses and decision history.
+5. **Copilot Chat** — use prompt chips such as “Biggest risk”, “Reduce idling”, “Gate bottleneck” and “2-minute demo summary”.
 6. **Scenario Simulation** — run “Load-Shedding Stage 4 at 16:00” or “Durban High Congestion”.
-7. **Emissions** — show idling, diesel cost and avoidable CO₂ estimates.
-8. **Disruptions** — connect load-shedding/road/gate disruptions to operational risk.
+7. **Emissions / Energy** — show idling, diesel cost, avoidable CO₂ estimates and disruption response.
+8. **Flow Recommendations / Audit** — show explainable recommendations, statuses, accept/dismiss actions and decision history.
 9. **Close** with roadmap: live integrations, real telemetry, predictive ML and digital-twin optimization.
 
 ---
@@ -201,8 +216,8 @@ docker compose up --build
 **0:20–0:45 — Landing and dashboard**  
 “Here is the enterprise landing page and main operations dashboard. The system is seeded with live-looking vessels, berths, gates, trucks, incidents and emissions estimates, so judges can see the port state immediately.”
 
-**0:45–1:25 — Copilot**  
-“The AI Agent / Copilot Command Center uses deterministic local heuristics. No paid AI APIs are required. It explains why congestion is happening, which area is affected, the recommended operator action, confidence/risk context and expected impact.”
+**0:45–1:25 — Copilot Command Center and Chat**
+“The AI Agent and Copilot Chat use deterministic local heuristics. No paid AI APIs are required. The chat page feels like an enterprise AI assistant, but every answer is generated locally with explainable reasoning, confidence, expected impact, emissions impact, energy impact and buttons to the relevant operational pages.”
 
 **1:25–1:55 — Simulation**  
 “Now we run a load-shedding and peak-hour truck spike scenario. The simulator recalculates gate delay risk, berth risk, energy disruption risk, waiting time, idling minutes, diesel cost and CO₂.”

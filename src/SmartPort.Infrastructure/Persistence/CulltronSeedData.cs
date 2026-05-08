@@ -340,8 +340,8 @@ public static class CulltronSeedData
                 PlannedArrivalWindowStart = now.AddDays(-2).AddHours(7), PlannedArrivalWindowEnd = now.AddDays(-2).AddHours(8),
                 ActualArrivalTime = now.AddDays(-2).AddHours(7.3), GateInTime = now.AddDays(-2).AddHours(7.4), GateOutTime = now.AddDays(-2).AddHours(8.2),
                 Status = TripStatus.Completed, CreatedAt = now.AddDays(-2), CreatedBy = "System"
-            }
-        );
+            },
+        };
 
         db.DispatchTrips.AddRange(trips);
         await db.SaveChangesAsync();
