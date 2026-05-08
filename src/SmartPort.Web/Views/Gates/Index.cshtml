@@ -1,0 +1,45 @@
+@model IEnumerable<SmartPort.Application.Interfaces.GateStatusDto>
+@{ ViewData["Title"] = "Gate Operations"; }
+<div class="sp-toolbar">
+    <div class="sp-toolbar__actions">
+        <a asp-action="Trucks" class="sp-btn sp-btn--sm sp-btn--outline">Truck Queue</a>
+        <a asp-action="Transactions" class="sp-btn sp-btn--sm sp-btn--outline">Transactions</a>
+    </div>
+</div>
+
+<div class="sp-kpi-grid sp-kpi-grid--sm" style="margin-bottom:1.5rem">
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.Count(g => g.IsOperational)</div><div class="sp-kpi-card__label">Gates Operational</div></div></div>
+    <div class="sp-kpi-card @(Model.Sum(g => g.CurrentQueueCount) > 20 ? "sp-kpi-card--warn" : "")">
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.Sum(g => g.CurrentQueueCount)</div><div class="sp-kpi-card__label">Total Queue</div></div>
+    </div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@(Model.Any() ? $"{Model.Average(g => g.AverageProcessingMinutes):F0} min" : "—")</div><div class="sp-kpi-card__label">Avg Processing Time</div></div></div>
+</div>
+
+<div class="sp-gate-cards">
+    @foreach (var g in Model)
+    {
+        var sc = !g.IsOperational ? "offline" : g.CurrentQueueCount >= 10 ? "critical" : g.CurrentQueueCount >= 6 ? "busy" : "normal";
+        <div class="sp-gate-card sp-gate-card--@sc">
+            <div class="sp-gate-card__header">
+                <div class="sp-gate-card__code">@g.Code</div>
+                <span class="sp-badge sp-badge--@(!g.IsOperational ? "danger" : "success")">@(g.IsOperational ? "Operational" : "Offline")</span>
+            </div>
+            <div class="sp-gate-card__name">@g.Name</div>
+            <div class="sp-gate-card__type">
+                @(g.IsEntryGate && g.IsExitGate ? "Entry / Exit" : g.IsEntryGate ? "Entry" : "Exit")
+                · @g.LaneCount @(g.LaneCount == 1 ? "lane" : "lanes")
+                @if (g.HasOCR) { <span> · OCR</span> }
+            </div>
+            <div class="sp-gate-card__queue">
+                <div class="sp-gate-card__queue-count @(g.CurrentQueueCount >= 10 ? "sp-gate-card__queue-count--critical" : "")">@g.CurrentQueueCount</div>
+                <div class="sp-gate-card__queue-label">trucks in queue</div>
+            </div>
+            <div class="sp-gate-card__wait">
+                Est. wait: <strong>@g.EstimatedWaitMinutes min</strong>
+                · Avg: @g.AverageProcessingMinutes min/truck
+            </div>
+            @if (g.CurrentQueueCount >= 10)
+            { <div class="sp-gate-card__alert"><i data-feather="alert-triangle"></i> Queue threshold exceeded — consider activating additional lanes</div> }
+        </div>
+    }
+</div>

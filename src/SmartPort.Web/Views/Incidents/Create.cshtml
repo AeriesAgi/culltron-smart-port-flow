@@ -1,0 +1,54 @@
+@model SmartPort.Application.Interfaces.CreateIncidentDto
+@{ ViewData["Title"] = "Raise Incident"; }
+<div class="sp-form-page">
+    <div class="sp-card sp-card--form">
+        <div class="sp-card__header"><h3 class="sp-card__title">Raise New Incident</h3></div>
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="sp-form__errors"></div>
+            <div class="sp-form__grid sp-form__grid--2">
+                <div class="sp-form__group sp-form__group--full">
+                    <label asp-for="Title" class="sp-form__label">Title *</label>
+                    <input asp-for="Title" class="sp-form__input" placeholder="Brief description of the incident" />
+                    <span asp-validation-for="Title" class="sp-form__error"></span>
+                </div>
+                <div class="sp-form__group sp-form__group--full">
+                    <label asp-for="Description" class="sp-form__label">Description *</label>
+                    <textarea asp-for="Description" class="sp-form__textarea" rows="4" placeholder="Detailed description of what occurred, where, and immediate impact…"></textarea>
+                </div>
+                <div class="sp-form__group">
+                    <label asp-for="Category" class="sp-form__label">Category *</label>
+                    <select asp-for="Category" class="sp-form__select">
+                        @foreach (var c in Enum.GetValues<SmartPort.Domain.Enums.IncidentCategory>()) { <option value="@c">@c</option> }
+                    </select>
+                </div>
+                <div class="sp-form__group">
+                    <label asp-for="Severity" class="sp-form__label">Severity *</label>
+                    <select asp-for="Severity" class="sp-form__select">
+                        @foreach (var s in Enum.GetValues<SmartPort.Domain.Enums.IncidentSeverity>()) { <option value="@s">@s</option> }
+                    </select>
+                </div>
+                <div class="sp-form__group">
+                    <label asp-for="Location" class="sp-form__label">Location</label>
+                    <input asp-for="Location" class="sp-form__input" placeholder="e.g. DCT Berth 1, Block A, Gate 1" />
+                </div>
+                <div class="sp-form__group">
+                    <label asp-for="Terminal" class="sp-form__label">Terminal</label>
+                    <input asp-for="Terminal" class="sp-form__input" placeholder="e.g. DCT, MPT" />
+                </div>
+                <div class="sp-form__group">
+                    <label asp-for="AssignedTo" class="sp-form__label">Assign To</label>
+                    <input asp-for="AssignedTo" class="sp-form__input" placeholder="Name or team" />
+                </div>
+                <div class="sp-form__group">
+                    <label asp-for="TargetResolutionTime" class="sp-form__label">Target Resolution (UTC)</label>
+                    <input asp-for="TargetResolutionTime" class="sp-form__input" type="datetime-local" />
+                </div>
+            </div>
+            <div class="sp-form__footer">
+                <a asp-action="Index" class="sp-btn sp-btn--outline">Cancel</a>
+                <button type="submit" class="sp-btn sp-btn--primary">Raise Incident</button>
+            </div>
+        </form>
+    </div>
+</div>

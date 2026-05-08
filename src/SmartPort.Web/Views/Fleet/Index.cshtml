@@ -1,0 +1,51 @@
+@using SmartPort.Application.Interfaces
+@model SmartPort.Application.Interfaces.PagedResult<FleetVehicleListDto>
+@{ ViewData["Title"] = "Fleet Management"; var filter = ViewBag.Filter as FleetVehicleFilterDto ?? new(); var orgs = ViewBag.Organisations as IEnumerable<OrganisationListDto> ?? []; }
+<div class="sp-toolbar">
+  <form method="get" class="sp-filter-bar">
+    <input name="SearchTerm" value="@filter.SearchTerm" class="sp-form__input sp-form__input--sm" placeholder="Registration or fleet #…"/>
+    <select name="OrganisationId" class="sp-form__select sp-form__select--sm">
+      <option value="">All Organisations</option>
+      @foreach(var o in orgs){<option value="@o.Id" selected="@(filter.OrganisationId==o.Id)">@o.Name</option>}
+    </select>
+    <select name="Status" class="sp-form__select sp-form__select--sm">
+      <option value="">All Status</option>
+      @foreach(var s in Enum.GetValues<SmartPort.Domain.Enums.FleetVehicleStatus>()){<option value="@s" selected="@(filter.Status==s)">@s</option>}
+    </select>
+    <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Filter</button>
+    <a asp-action="Index" class="sp-btn sp-btn--sm sp-btn--outline">Reset</a>
+  </form>
+  <div class="sp-toolbar__actions">
+    @if(User.IsInRole("Admin")||User.IsInRole("PortOperationsManager")){<a asp-action="Create" class="sp-btn sp-btn--sm sp-btn--primary">+ Register Vehicle</a>}
+  </div>
+</div>
+<div class="sp-kpi-grid sp-kpi-grid--sm" style="margin-bottom:1.25rem">
+  <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.TotalCount</div><div class="sp-kpi-card__label">Total Vehicles</div></div></div>
+  <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.Items.Count(v=>v.Status==SmartPort.Domain.Enums.FleetVehicleStatus.Dispatched)</div><div class="sp-kpi-card__label">Dispatched</div></div></div>
+  <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.Items.Count(v=>v.Status==SmartPort.Domain.Enums.FleetVehicleStatus.Waiting)</div><div class="sp-kpi-card__label">Waiting</div></div></div>
+  <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.Items.Count(v=>v.Status==SmartPort.Domain.Enums.FleetVehicleStatus.Available)</div><div class="sp-kpi-card__label">Available</div></div></div>
+</div>
+<div class="sp-card">
+  <table class="sp-table">
+    <thead><tr><th>Registration</th><th>Fleet #</th><th>Organisation</th><th>Type</th><th>Cargo Type</th><th>Capacity</th><th>Status</th><th>Location</th><th></th></tr></thead>
+    <tbody>
+      @foreach(var v in Model.Items)
+      {
+        var sc = v.Status switch{SmartPort.Domain.Enums.FleetVehicleStatus.Dispatched=>"info",SmartPort.Domain.Enums.FleetVehicleStatus.Waiting=>"warning",SmartPort.Domain.Enums.FleetVehicleStatus.AtGate=>"success",SmartPort.Domain.Enums.FleetVehicleStatus.Delayed=>"danger",SmartPort.Domain.Enums.FleetVehicleStatus.Available=>"success",SmartPort.Domain.Enums.FleetVehicleStatus.OutOfService=>"muted",_=>"muted"};
+        <tr>
+          <td><div class="sp-table__primary sp-table__mono"><a asp-action="Detail" asp-route-id="@v.Id">@v.RegistrationNumber</a></div></td>
+          <td class="sp-table__mono">@(v.FleetNumber??"—")</td>
+          <td>@v.OrganisationName</td>
+          <td><span class="sp-badge sp-badge--type">@v.VehicleType</span></td>
+          <td><span class="sp-badge sp-badge--type">@v.CargoType</span></td>
+          <td>@(v.CapacityTons.HasValue?$"{v.CapacityTons:F0}t":"—")</td>
+          <td><span class="sp-badge sp-badge--@sc">@v.Status</span></td>
+          <td style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">@(v.CurrentLocation??"—")</td>
+          <td><a asp-action="Detail" asp-route-id="@v.Id" class="sp-btn sp-btn--xs sp-btn--outline">View</a></td>
+        </tr>
+      }
+      @if(!Model.Items.Any()){<tr><td colspan="9" class="sp-table__empty">No vehicles found.</td></tr>}
+    </tbody>
+  </table>
+  @await Html.PartialAsync("_Pagination", Model)
+</div>

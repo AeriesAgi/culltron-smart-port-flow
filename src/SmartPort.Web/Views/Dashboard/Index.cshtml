@@ -1,0 +1,296 @@
+@model SmartPort.Application.Interfaces.DashboardSummaryDto
+@{
+    ViewData["Title"] = "Operations Dashboard";
+}
+
+<!-- ─── KPI Banner ─────────────────────────────────────────────────────── -->
+<div class="sp-kpi-grid">
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--blue"><i data-feather="anchor"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@Model.VesselsInPort</div>
+            <div class="sp-kpi-card__label">Vessels In Port</div>
+            <div class="sp-kpi-card__sub">@Model.VesselsExpectedToday arriving today · @Model.VesselsAtAnchor at anchor</div>
+        </div>
+    </div>
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--teal"><i data-feather="map-pin"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@Model.BerthUtilisationPercent%</div>
+            <div class="sp-kpi-card__label">Berth Utilisation</div>
+            <div class="sp-kpi-card__sub">@Model.BerthsOccupied occupied · @Model.BerthsAvailable available · @Model.BerthsUnderMaintenance maintenance</div>
+        </div>
+    </div>
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--green"><i data-feather="package"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@Model.ThroughputTodayTEU.ToString("N0") TEU</div>
+            <div class="sp-kpi-card__label">Today's Throughput</div>
+            <div class="sp-kpi-card__sub">@Model.ContainersInYard in yard · @Model.DwellAlertContainers dwell alerts</div>
+        </div>
+    </div>
+    <div class="sp-kpi-card @(Model.CriticalIncidents > 0 ? "sp-kpi-card--danger" : "")">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--@(Model.CriticalIncidents > 0 ? "red" : "orange")"><i data-feather="alert-triangle"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@Model.OpenIncidents</div>
+            <div class="sp-kpi-card__label">Open Incidents</div>
+            <div class="sp-kpi-card__sub">@Model.CriticalIncidents critical · @Model.ActiveAlerts active alerts</div>
+        </div>
+    </div>
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--purple"><i data-feather="clock"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@Model.AverageTurnaroundHours h</div>
+            <div class="sp-kpi-card__label">Avg Turnaround</div>
+            <div class="sp-kpi-card__sub">Crane productivity @Model.CraneProductivity moves/hr</div>
+        </div>
+    </div>
+    <div class="sp-kpi-card @(Model.TrucksInQueue > 10 ? "sp-kpi-card--warn" : "")">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--@(Model.TrucksInQueue > 10 ? "yellow" : "blue")"><i data-feather="truck"></i></div>
+        <div class="sp-kpi-card__body">
+            <div class="sp-kpi-card__value">@Model.TrucksInQueue</div>
+            <div class="sp-kpi-card__label">Trucks in Queue</div>
+            <div class="sp-kpi-card__sub">@Model.TrucksInYard in yard · @Model.GatesOperational gates open · avg @Model.TruckTurnaroundMinutes min</div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Main Grid ──────────────────────────────────────────────────────── -->
+<div class="sp-dashboard-grid">
+
+    <!-- Vessels In Port -->
+    <div class="sp-card sp-card--tall">
+        <div class="sp-card__header">
+            <h3 class="sp-card__title">Vessels In Port</h3>
+            <a asp-controller="Vessels" asp-action="Index" class="sp-card__link">View all →</a>
+        </div>
+        <div class="sp-vessel-list">
+            @foreach (var v in Model.VesselsInPortList)
+            {
+                <div class="sp-vessel-row">
+                    <div class="sp-vessel-row__flag" title="@v.FlagCode">@v.FlagCode</div>
+                    <div class="sp-vessel-row__body">
+                        <div class="sp-vessel-row__name">
+                            <a asp-controller="Vessels" asp-action="Detail" asp-route-id="@v.Id">@v.Name</a>
+                        </div>
+                        <div class="sp-vessel-row__meta">@v.ShippingLine · @v.VoyageNumber</div>
+                    </div>
+                    <div class="sp-vessel-row__right">
+                        <span class="sp-badge sp-badge--@(v.Status.ToString().ToLower().Replace("cargo","").Replace("operations","ops"))">@v.Status</span>
+                        @if (v.ETD.HasValue)
+                        {
+                            <div class="sp-vessel-row__etd">ETD @v.ETD.Value.ToString("HH:mm dd MMM")</div>
+                        }
+                        @if (v.DelayMinutes.HasValue && v.DelayMinutes > 0)
+                        {
+                            <span class="sp-badge sp-badge--warning">+@v.DelayMinutes min delay</span>
+                        }
+                    </div>
+                </div>
+            }
+            @if (!Model.VesselsInPortList.Any())
+            {
+                <div class="sp-empty">No vessels currently in port</div>
+            }
+        </div>
+        <div class="sp-card__header sp-card__header--sub">
+            <h3 class="sp-card__title">Expected Arrivals</h3>
+            <a asp-controller="Vessels" asp-action="Index" class="sp-card__link">Schedule →</a>
+        </div>
+        <div class="sp-vessel-list">
+            @foreach (var v in Model.ArrivingVessels)
+            {
+                <div class="sp-vessel-row">
+                    <div class="sp-vessel-row__flag">@v.FlagCode</div>
+                    <div class="sp-vessel-row__body">
+                        <a asp-controller="Vessels" asp-action="Detail" asp-route-id="@v.Id" class="sp-vessel-row__name">@v.Name</a>
+                        <div class="sp-vessel-row__meta">@v.ShippingLine</div>
+                    </div>
+                    <div class="sp-vessel-row__right">
+                        <span class="sp-badge sp-badge--@(v.Status == VesselStatus.AtAnchor ? "warning" : "info")">@v.Status</span>
+                        @if (v.ETA.HasValue)
+                        {
+                            <div class="sp-vessel-row__etd">ETA @v.ETA.Value.ToString("HH:mm dd MMM")</div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Throughput Chart -->
+    <div class="sp-card">
+        <div class="sp-card__header">
+            <h3 class="sp-card__title">TEU Throughput — 14 Day Trend</h3>
+            <a asp-controller="Analytics" asp-action="Index" class="sp-card__link">Analytics →</a>
+        </div>
+        <div class="sp-chart-container">
+            <canvas id="throughputChart" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- Berth Occupancy -->
+    <div class="sp-card">
+        <div class="sp-card__header">
+            <h3 class="sp-card__title">Berth Status</h3>
+            <a asp-controller="Berths" asp-action="Index" class="sp-card__link">Berth Planner →</a>
+        </div>
+        <div class="sp-berth-grid">
+            @foreach (var b in Model.BerthStatuses)
+            {
+                var statusClass = b.Status switch {
+                    BerthStatus.Occupied => "occupied",
+                    BerthStatus.Reserved => "reserved",
+                    BerthStatus.UnderMaintenance => "maintenance",
+                    _ => "available"
+                };
+                <div class="sp-berth-tile sp-berth-tile--@statusClass" title="@b.Name">
+                    <div class="sp-berth-tile__code">@b.Code</div>
+                    <div class="sp-berth-tile__status">@b.Status</div>
+                    @if (b.CurrentVesselName != null)
+                    {
+                        <div class="sp-berth-tile__vessel">@b.CurrentVesselName</div>
+                        @if (b.CurrentVesselETD.HasValue)
+                        {
+                            <div class="sp-berth-tile__etd">ETD @b.CurrentVesselETD.Value.ToString("HH:mm")</div>
+                        }
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Yard Blocks -->
+    <div class="sp-card">
+        <div class="sp-card__header">
+            <h3 class="sp-card__title">Yard Occupancy</h3>
+            <a asp-controller="Containers" asp-action="Yard" class="sp-card__link">Yard Detail →</a>
+        </div>
+        <div class="sp-yard-blocks">
+            @foreach (var y in Model.YardBlockStatuses)
+            {
+                var fillClass = y.IsCritical ? "critical" : y.IsNearCapacity ? "warning" : "normal";
+                <div class="sp-yard-block">
+                    <div class="sp-yard-block__header">
+                        <span class="sp-yard-block__code">Block @y.BlockCode</span>
+                        <span class="sp-yard-block__zone">@y.Zone</span>
+                        @if (y.IsReeferBlock) { <span class="sp-badge sp-badge--info" style="font-size:10px">❄ Reefer</span> }
+                        @if (y.IsHazardousBlock) { <span class="sp-badge sp-badge--danger" style="font-size:10px">⚠ Hazmat</span> }
+                    </div>
+                    <div class="sp-progress sp-progress--@fillClass">
+                        <div class="sp-progress__bar" style="width:@y.OccupancyPercent%"></div>
+                    </div>
+                    <div class="sp-yard-block__meta">
+                        @y.CurrentOccupancyTEU / @y.TotalCapacityTEU TEU · @y.OccupancyPercent%
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Active Alerts -->
+    <div class="sp-card">
+        <div class="sp-card__header">
+            <h3 class="sp-card__title">Active Alerts</h3>
+            <a asp-controller="Incidents" asp-action="Alerts" class="sp-card__link">View all →</a>
+        </div>
+        <div class="sp-alert-list">
+            @foreach (var alert in Model.ActiveAlertsList)
+            {
+                var sevClass = alert.Severity switch {
+                    IncidentSeverity.Critical => "critical",
+                    IncidentSeverity.High => "high",
+                    IncidentSeverity.Medium => "medium",
+                    _ => "low"
+                };
+                <div class="sp-alert-item sp-alert-item--@sevClass">
+                    <div class="sp-alert-item__severity"></div>
+                    <div class="sp-alert-item__body">
+                        <div class="sp-alert-item__title">@alert.Title</div>
+                        <div class="sp-alert-item__msg">@alert.Message.Substring(0, Math.Min(alert.Message.Length, 100))…</div>
+                        <div class="sp-alert-item__meta">@alert.Severity · @alert.CreatedAt.ToString("HH:mm dd MMM")</div>
+                    </div>
+                </div>
+            }
+            @if (!Model.ActiveAlertsList.Any())
+            {
+                <div class="sp-empty sp-empty--success"><i data-feather="check-circle"></i> No active alerts</div>
+            }
+        </div>
+    </div>
+
+    <!-- AI Recommendations -->
+    <div class="sp-card">
+        <div class="sp-card__header">
+            <h3 class="sp-card__title"><i data-feather="cpu" style="width:16px;height:16px;vertical-align:-2px"></i> AI Recommendations</h3>
+            <a asp-controller="Incidents" asp-action="Recommendations" class="sp-card__link">View all →</a>
+        </div>
+        <div class="sp-rec-list">
+            @foreach (var rec in Model.TopRecommendations)
+            {
+                var priClass = rec.Priority switch {
+                    IncidentSeverity.Critical => "critical",
+                    IncidentSeverity.High => "high",
+                    IncidentSeverity.Medium => "medium",
+                    _ => "low"
+                };
+                <div class="sp-rec-item sp-rec-item--@priClass">
+                    <div class="sp-rec-item__priority">@rec.Priority</div>
+                    <div class="sp-rec-item__body">
+                        <div class="sp-rec-item__title">@rec.Title</div>
+                        <div class="sp-rec-item__summary">@rec.Summary</div>
+                        @if (rec.ImpactEstimate != null)
+                        {
+                            <div class="sp-rec-item__impact">Impact: @rec.ImpactEstimate</div>
+                        }
+                    </div>
+                    <a asp-controller="Incidents" asp-action="Recommendations" class="sp-btn sp-btn--sm sp-btn--outline">Review →</a>
+                </div>
+            }
+            @if (!Model.TopRecommendations.Any())
+            {
+                <div class="sp-empty"><i data-feather="cpu"></i> No pending recommendations</div>
+            }
+        </div>
+    </div>
+
+</div><!-- /.sp-dashboard-grid -->
+
+@section Scripts {
+<script>
+// ─── Throughput Chart ────────────────────────────────────────────────────────
+(function() {
+    var labels = [@Html.Raw(string.Join(",", Model.ThroughputTrend.Select(t => $"\"{t.Label}\"")))];
+    var data   = [@Html.Raw(string.Join(",", Model.ThroughputTrend.Select(t => t.Value.ToString("F0"))))];
+
+    var ctx = document.getElementById('throughputChart');
+    if (!ctx) return;
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'TEU',
+                data: data,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59,130,246,0.08)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { maxTicksLimit: 7, color: '#94a3b8', font: { size: 11 } } },
+                y: { grid: { color: 'rgba(148,163,184,0.12)' }, ticks: { color: '#94a3b8', font: { size: 11 } } }
+            }
+        }
+    });
+})();
+</script>
+}

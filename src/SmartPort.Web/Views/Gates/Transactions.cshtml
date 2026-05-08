@@ -1,0 +1,38 @@
+@model IEnumerable<SmartPort.Application.Interfaces.GateTransactionDto>
+@{ ViewData["Title"] = "Gate Transactions"; }
+<div class="sp-toolbar">
+    <div class="sp-toolbar__actions">
+        <a asp-action="Index"  class="sp-btn sp-btn--sm sp-btn--outline">Gate Status</a>
+        <a asp-action="Trucks" class="sp-btn sp-btn--sm sp-btn--outline">Truck Queue</a>
+    </div>
+</div>
+<div class="sp-card">
+    <div class="sp-card__header"><h3 class="sp-card__title">Recent Gate Transactions</h3><span class="sp-card__meta">Last 100 entries</span></div>
+    <table class="sp-table">
+        <thead><tr><th>Time</th><th>Gate</th><th>Registration</th><th>Transporter</th><th>Type</th><th>Container</th><th>Status</th><th>Docs OK</th><th>Exception</th></tr></thead>
+        <tbody>
+            @foreach (var t in Model)
+            {
+                var sc = t.Status switch {
+                    SmartPort.Domain.Enums.GateTransactionStatus.Approved  => "success",
+                    SmartPort.Domain.Enums.GateTransactionStatus.Rejected  => "danger",
+                    SmartPort.Domain.Enums.GateTransactionStatus.Exception => "danger",
+                    _ => "info"
+                };
+                <tr class="@(t.Status == SmartPort.Domain.Enums.GateTransactionStatus.Exception || t.Status == SmartPort.Domain.Enums.GateTransactionStatus.Rejected ? "sp-table__row--danger" : "")">
+                    <td class="sp-table__mono">@t.TransactionTime.ToString("dd MMM HH:mm:ss")</td>
+                    <td><strong>@t.GateCode</strong></td>
+                    <td class="sp-table__mono">@t.TruckRegistration</td>
+                    <td>@t.TransporterName</td>
+                    <td><span class="sp-badge sp-badge--@(t.TransactionType == SmartPort.Domain.Enums.GateTransactionType.Entry ? "green" : "muted")">@t.TransactionType</span></td>
+                    <td class="sp-table__mono">@(t.ContainerNumber ?? "—")</td>
+                    <td><span class="sp-badge sp-badge--@sc">@t.Status</span></td>
+                    <td>@(t.DocumentsVerified ? "✅" : "❌")</td>
+                    <td>@(t.ExceptionReason ?? "—")</td>
+                </tr>
+            }
+            @if (!Model.Any())
+            { <tr><td colspan="9" class="sp-table__empty">No transactions found.</td></tr> }
+        </tbody>
+    </table>
+</div>

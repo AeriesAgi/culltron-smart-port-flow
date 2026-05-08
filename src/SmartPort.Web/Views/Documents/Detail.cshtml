@@ -1,0 +1,58 @@
+@model SmartPort.Application.Interfaces.DocumentDetailDto
+@{ ViewData["Title"] = Model.DocumentNumber; }
+<div class="sp-detail-grid">
+    <div class="sp-detail-main">
+        <div class="sp-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">@Model.Title</h3></div>
+            @if (Model.IsOverdue)  { <div class="sp-alert sp-alert--danger"  style="margin:.75rem 1.25rem 0"><i data-feather="alert-circle"></i> This document is <strong>overdue</strong>. Required by @Model.RequiredByDate?.ToString("dd MMM yyyy HH:mm").</div> }
+            @if (Model.IsExpired)  { <div class="sp-alert sp-alert--warning" style="margin:.75rem 1.25rem 0"><i data-feather="clock"></i> This document <strong>expired</strong> on @Model.ExpiryDate?.ToString("dd MMM yyyy").</div> }
+            @if (Model.Status == SmartPort.Domain.Enums.DocumentStatus.Rejected && !string.IsNullOrEmpty(Model.RejectionReason))
+            { <div class="sp-alert sp-alert--danger" style="margin:.75rem 1.25rem 0"><i data-feather="x-circle"></i> Rejected: @Model.RejectionReason</div> }
+        </div>
+
+        @if (User.IsInRole("Admin") || User.IsInRole("PortOperationsManager"))
+        {
+            <div class="sp-card sp-card--actions" style="margin-top:1rem">
+                @if (Model.Status != SmartPort.Domain.Enums.DocumentStatus.Approved)
+                {
+                    <form asp-action="Approve" asp-route-id="@Model.Id" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="sp-btn sp-btn--success">Approve</button>
+                    </form>
+                }
+                @if (Model.Status != SmartPort.Domain.Enums.DocumentStatus.Rejected)
+                {
+                    <form asp-action="Reject" asp-route-id="@Model.Id" method="post" style="display:inline;margin-left:.5rem">
+                        @Html.AntiForgeryToken()
+                        <input type="text" name="reason" placeholder="Rejection reason" class="sp-form__input sp-form__input--sm" style="min-width:220px" required />
+                        <button type="submit" class="sp-btn sp-btn--danger">Reject</button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+    <div class="sp-detail-sidebar">
+        <div class="sp-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">Document Details</h3></div>
+            <dl class="sp-dl">
+                <dt>Number</dt><dd class="sp-table__mono">@Model.DocumentNumber</dd>
+                <dt>Type</dt><dd><span class="sp-badge sp-badge--type">@Model.DocumentType</span></dd>
+                <dt>Status</dt><dd><span class="sp-badge sp-badge--@(Model.Status == SmartPort.Domain.Enums.DocumentStatus.Approved ? "success" : Model.Status == SmartPort.Domain.Enums.DocumentStatus.Rejected ? "danger" : "warning")">@Model.Status</span></dd>
+                <dt>Compliance</dt><dd><span class="sp-badge sp-badge--@(Model.ComplianceStatus == SmartPort.Domain.Enums.ComplianceStatus.Compliant ? "success" : "warning")">@Model.ComplianceStatus</span></dd>
+                <dt>Issuing Authority</dt><dd>@Model.IssuingAuthority</dd>
+                <dt>Submitted By</dt><dd>@(string.IsNullOrEmpty(Model.SubmittedBy) ? "Not submitted" : Model.SubmittedBy)</dd>
+                <dt>Reviewed By</dt><dd>@(Model.ReviewedBy ?? "—")</dd>
+                <dt>Approved By</dt><dd>@(Model.ApprovedBy ?? "—")</dd>
+                <dt>Vessel</dt><dd>@(Model.VesselName ?? "—")</dd>
+                <dt>Issued</dt><dd>@(Model.IssuedDate?.ToString("dd MMM yyyy") ?? "—")</dd>
+                <dt>Submitted</dt><dd>@(Model.SubmittedDate?.ToString("dd MMM yyyy") ?? "—")</dd>
+                <dt>Approved</dt><dd>@(Model.ApprovedDate?.ToString("dd MMM yyyy") ?? "—")</dd>
+                <dt>Required By</dt><dd class="@(Model.IsOverdue ? "sp-table__cell--danger" : "")">@(Model.RequiredByDate?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
+                <dt>Expiry</dt><dd class="@(Model.IsExpired ? "sp-table__cell--danger" : "")">@(Model.ExpiryDate?.ToString("dd MMM yyyy") ?? "—")</dd>
+                @if (!string.IsNullOrEmpty(Model.Notes)) { <dt>Notes</dt><dd>@Model.Notes</dd> }
+                @if (!string.IsNullOrEmpty(Model.FileName)) { <dt>File</dt><dd>@Model.FileName</dd> }
+            </dl>
+        </div>
+        <div style="margin-top:.75rem"><a asp-action="Index" class="sp-btn sp-btn--outline sp-btn--full">← Document List</a></div>
+    </div>
+</div>

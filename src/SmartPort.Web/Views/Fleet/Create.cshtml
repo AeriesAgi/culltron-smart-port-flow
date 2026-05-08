@@ -1,0 +1,47 @@
+@using SmartPort.Application.Interfaces
+@model SaveFleetVehicleDto
+@{ ViewData["Title"] = "Register Vehicle"; var orgs = ViewBag.Organisations as IEnumerable<OrganisationListDto> ?? []; }
+<div class="sp-form-page">
+  <div class="sp-card sp-card--form">
+    <div class="sp-card__header"><h3 class="sp-card__title">Register Fleet Vehicle</h3></div>
+    <form asp-action="Create" asp-controller="Fleet" method="post">
+      @Html.AntiForgeryToken()
+      <div asp-validation-summary="ModelOnly" class="sp-form__errors"></div>
+      <div class="sp-form__grid sp-form__grid--2">
+        <div class="sp-form__group">
+          <label class="sp-form__label">Organisation *</label>
+          <select asp-for="OrganisationId" class="sp-form__select">
+            <option value="">— Select organisation —</option>
+            @foreach(var o in orgs){<option value="@o.Id">@o.Name</option>}
+          </select>
+        </div>
+        <div class="sp-form__group"><label class="sp-form__label">Registration Number *</label><input asp-for="RegistrationNumber" class="sp-form__input" placeholder="e.g. ND 114 427" style="text-transform:uppercase"/><span asp-validation-for="RegistrationNumber" class="sp-form__error"></span></div>
+        <div class="sp-form__group"><label class="sp-form__label">Fleet Number</label><input asp-for="FleetNumber" class="sp-form__input" placeholder="e.g. BFC-001"/></div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Vehicle Type *</label>
+          <select asp-for="VehicleType" class="sp-form__select">
+            @foreach(var t in Enum.GetValues<SmartPort.Domain.Enums.FleetVehicleType>()){<option value="@t">@t</option>}
+          </select>
+        </div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Cargo Type *</label>
+          <select asp-for="CargoType" class="sp-form__select">
+            @foreach(var t in Enum.GetValues<SmartPort.Domain.Enums.FleetCargoType>()){<option value="@t">@t</option>}
+          </select>
+        </div>
+        <div class="sp-form__group"><label class="sp-form__label">Capacity (tonnes)</label><input asp-for="CapacityTons" class="sp-form__input" type="number" step="0.5" placeholder="30"/></div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Current Status</label>
+          <select asp-for="Status" class="sp-form__select">
+            @foreach(var s in Enum.GetValues<SmartPort.Domain.Enums.FleetVehicleStatus>()){<option value="@s">@s</option>}
+          </select>
+        </div>
+        <div class="sp-form__group"><label class="sp-form__label">Current Location</label><input asp-for="CurrentLocation" class="sp-form__input" placeholder="e.g. Bayhead Depot"/></div>
+      </div>
+      <div class="sp-form__footer">
+        <a asp-action="Index" asp-controller="Fleet" class="sp-btn sp-btn--outline">Cancel</a>
+        <button type="submit" class="sp-btn sp-btn--primary">Register Vehicle</button>
+      </div>
+    </form>
+  </div>
+</div>

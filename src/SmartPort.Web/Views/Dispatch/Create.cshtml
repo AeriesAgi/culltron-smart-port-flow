@@ -1,0 +1,76 @@
+@using SmartPort.Application.Interfaces
+@using SmartPort.Domain.Entities
+@model SaveDispatchTripDto
+@{
+    ViewData["Title"] = "New Dispatch Trip";
+    var orgs    = ViewBag.Organisations as IEnumerable<OrganisationListDto> ?? [];
+    var vehicles = (ViewBag.Vehicles as SmartPort.Application.Interfaces.PagedResult<FleetVehicleListDto>)?.Items ?? [];
+    var drivers = ViewBag.Drivers as IEnumerable<Driver> ?? [];
+}
+<div class="sp-form-page">
+  <div class="sp-card sp-card--form">
+    <div class="sp-card__header"><h3 class="sp-card__title">Create Dispatch Trip</h3></div>
+    <form asp-action="Create" asp-controller="Dispatch" method="post">
+      @Html.AntiForgeryToken()
+      <div asp-validation-summary="ModelOnly" class="sp-form__errors"></div>
+      <div class="sp-form__grid sp-form__grid--2">
+        <div class="sp-form__group">
+          <label class="sp-form__label">Organisation *</label>
+          <select asp-for="OrganisationId" class="sp-form__select" id="orgSelect">
+            <option value="">— Select organisation —</option>
+            @foreach (var o in orgs) { <option value="@o.Id">@o.Name</option> }
+          </select>
+        </div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Vehicle *</label>
+          <select asp-for="FleetVehicleId" class="sp-form__select">
+            <option value="">— Select vehicle —</option>
+            @foreach (var v in vehicles) { <option value="@v.Id">@v.RegistrationNumber — @v.OrganisationName (@v.Status)</option> }
+          </select>
+        </div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Driver (optional)</label>
+          <select asp-for="DriverId" class="sp-form__select">
+            <option value="">— No driver assigned —</option>
+            @foreach (var d in drivers) { <option value="@d.Id">@d.FullName</option> }
+          </select>
+        </div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Route *</label>
+          <select asp-for="RouteName" class="sp-form__select">
+            <option value="">— Select route —</option>
+            <option>Bayhead Road Corridor</option>
+            <option>Durban Container Terminal Access</option>
+            <option>Island View / Bluff Route</option>
+            <option>N2 South Freight Corridor</option>
+            <option>Richards Bay Industrial Corridor</option>
+            <option>Cato Ridge Inland Link</option>
+          </select>
+        </div>
+        <div class="sp-form__group"><label class="sp-form__label">Origin *</label><input asp-for="Origin" class="sp-form__input" placeholder="e.g. Bayhead Depot, Durban South"/><span asp-validation-for="Origin" class="sp-form__error"></span></div>
+        <div class="sp-form__group"><label class="sp-form__label">Destination *</label><input asp-for="Destination" class="sp-form__input" placeholder="e.g. Durban Container Terminal"/><span asp-validation-for="Destination" class="sp-form__error"></span></div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Cargo Type *</label>
+          <select asp-for="CargoType" class="sp-form__select">
+            @foreach (var t in Enum.GetValues<SmartPort.Domain.Enums.FleetCargoType>()) { <option value="@t">@t</option> }
+          </select>
+        </div>
+        <div class="sp-form__group">
+          <label class="sp-form__label">Urgency Level *</label>
+          <select asp-for="UrgencyLevel" class="sp-form__select">
+            @foreach (var u in Enum.GetValues<SmartPort.Domain.Enums.TripUrgencyLevel>()) { <option value="@u">@u</option> }
+          </select>
+        </div>
+        <div class="sp-form__group sp-form__group--full"><label class="sp-form__label">Cargo Description</label><input asp-for="CargoDescription" class="sp-form__input" placeholder="e.g. Import containers — general cargo, 2 x 40ft"/></div>
+        <div class="sp-form__group"><label class="sp-form__label">Planned Dispatch Time *</label><input asp-for="PlannedDispatchTime" class="sp-form__input" type="datetime-local"/></div>
+        <div class="sp-form__group"><label class="sp-form__label">Arrival Window Start *</label><input asp-for="PlannedArrivalWindowStart" class="sp-form__input" type="datetime-local"/></div>
+        <div class="sp-form__group"><label class="sp-form__label">Arrival Window End *</label><input asp-for="PlannedArrivalWindowEnd" class="sp-form__input" type="datetime-local"/></div>
+        <div class="sp-form__group sp-form__group--full"><label class="sp-form__label">Notes</label><textarea asp-for="Notes" class="sp-form__textarea" rows="2" placeholder="Any special instructions or context…"></textarea></div>
+      </div>
+      <div class="sp-form__footer">
+        <a asp-action="Index" asp-controller="Dispatch" class="sp-btn sp-btn--outline">Cancel</a>
+        <button type="submit" class="sp-btn sp-btn--primary">Create Trip</button>
+      </div>
+    </form>
+  </div>
+</div>

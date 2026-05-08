@@ -1,0 +1,32 @@
+@model IEnumerable<SmartPort.Application.Interfaces.BerthAssignmentDto>
+@{ ViewData["Title"] = "Berth Schedule"; }
+<div class="sp-toolbar">
+    <div class="sp-toolbar__actions">
+        <a asp-action="Assign" class="sp-btn sp-btn--sm sp-btn--primary">+ New Assignment</a>
+    </div>
+</div>
+<div class="sp-card">
+    <div class="sp-card__header"><h3 class="sp-card__title">All Berth Assignments — ±7 Days</h3></div>
+    <table class="sp-table">
+        <thead><tr><th>Vessel</th><th>Line</th><th>Berth</th><th>Planned Arrival</th><th>Planned Departure</th><th>Actual Arrival</th><th>Discharge</th><th>Load</th><th>Status</th><th>Delay</th></tr></thead>
+        <tbody>
+            @foreach (var a in Model.OrderBy(x => x.PlannedArrival))
+            {
+                <tr class="@(a.DelayMinutes > 0 ? "sp-table__row--warn" : "")">
+                    <td><a asp-controller="Vessels" asp-action="Detail" asp-route-id="@a.VesselId">@a.VesselName</a></td>
+                    <td>@a.ShippingLine</td>
+                    <td><strong>@a.BerthCode</strong></td>
+                    <td class="sp-table__mono">@a.PlannedArrival.ToString("dd MMM HH:mm")</td>
+                    <td class="sp-table__mono">@a.PlannedDeparture.ToString("dd MMM HH:mm")</td>
+                    <td class="sp-table__mono">@(a.ActualArrival?.ToString("dd MMM HH:mm") ?? "—")</td>
+                    <td>@a.PlannedDischarge TEU</td>
+                    <td>@a.PlannedLoad TEU</td>
+                    <td><span class="sp-badge sp-badge--info">@a.OperationalStatus</span></td>
+                    <td>@(a.DelayMinutes.HasValue ? $"+{a.DelayMinutes}m" : "—")</td>
+                </tr>
+            }
+            @if (!Model.Any())
+            { <tr><td colspan="10" class="sp-table__empty">No assignments in the selected window.</td></tr> }
+        </tbody>
+    </table>
+</div>
