@@ -105,6 +105,7 @@ public class AiAgentService : IAiAgentService
         var vessels    = await _db.Vessels.Where(v => !v.IsDeleted).ToListAsync();
         var berths     = await _db.Berths.Where(b => !b.IsDeleted).ToListAsync();
         var containers = await _db.Containers.Where(c => !c.IsDeleted).ToListAsync();
+        var yardBlocks = await _db.YardBlocks.Where(y => !y.IsDeleted).ToListAsync();
         var gates      = await _db.Gates.Where(g => !g.IsDeleted).ToListAsync();
         var incidents  = await _db.Incidents.Where(i => !i.IsDeleted).ToListAsync();
         var alerts     = await _db.Alerts.Where(a => !a.IsDeleted).ToListAsync();
@@ -116,8 +117,10 @@ public class AiAgentService : IAiAgentService
             .Where(m => m.MetricDate >= DateTime.UtcNow.AddDays(-7)).ToListAsync();
 
         var activeDisrupts = disrupts.Where(d => d.IsActive).ToList();
-        var totalCap  = (decimal)berths.Sum(b => b.TotalCapacityTEU > 0 ? b.TotalCapacityTEU : 3000);
-        var occupied  = (decimal)containers.Count(c => c.Status == ContainerStatus.InYard);
+        var totalCap  = (decimal)yardBlocks.Sum(y => y.TotalCapacityTEU);
+        var occupied  = yardBlocks.Any()
+            ? (decimal)yardBlocks.Sum(y => y.CurrentOccupancyTEU)
+            : containers.Count(c => c.Status == ContainerStatus.InYard);
         var berthsOcc = berths.Count(b => b.Status == BerthStatus.Occupied);
         var avgTurnaround = metrics.Where(m => m.MetricType == "AverageTurnaroundHours").Any()
             ? metrics.Where(m => m.MetricType == "AverageTurnaroundHours").Average(m => m.Value)

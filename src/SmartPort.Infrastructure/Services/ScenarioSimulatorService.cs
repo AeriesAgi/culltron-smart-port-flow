@@ -213,7 +213,7 @@ public class ScenarioSimulatorService : IScenarioSimulatorService
         if (input.BerthOccupancyIncreasePercent > 0)
         {
             berthScore += (int)(input.BerthOccupancyIncreasePercent * 1.2);
-            var simBerthUtil = Math.Min(100, baseBerthUtil + input.BerthOccupancyIncreasePercent);
+            var simBerthUtil = Math.Min(100m, baseBerthUtil + input.BerthOccupancyIncreasePercent);
             factors.Add($"Berth utilisation rises to {simBerthUtil:F0}% — anchor queue pressure increases");
             if (simBerthUtil > 90)
                 warnings.Add($"CRITICAL: Berth utilisation at {simBerthUtil:F0}% — incoming vessels will experience extended anchorage waiting");
@@ -233,7 +233,7 @@ public class ScenarioSimulatorService : IScenarioSimulatorService
         {
             yardScore += (int)(input.ContainerBacklogIncreasePercent * 0.9);
             gateScore += (int)(input.ContainerBacklogIncreasePercent * 0.4);
-            var simYard = Math.Min(100, baseYardPct + input.ContainerBacklogIncreasePercent * 0.7);
+            var simYard = Math.Min(100m, baseYardPct + input.ContainerBacklogIncreasePercent * 0.7m);
             factors.Add($"Container backlog +{input.ContainerBacklogIncreasePercent}% — yard density rises to approx {simYard:F0}%");
             if (simYard > 90)
                 warnings.Add($"CRITICAL: Yard density approaching {simYard:F0}% — receiving operations may be suspended");

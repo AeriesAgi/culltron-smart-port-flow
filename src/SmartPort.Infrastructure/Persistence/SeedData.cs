@@ -118,12 +118,11 @@ public static class SeedData
             new() { BlockCode = "C", Terminal = "Durban Container Terminal", Zone = "Export",  Rows = 6, Bays = 38, Tiers = 4, TotalCapacityTEU = 912,  CurrentOccupancyTEU = 550, IsReeferBlock = false },
             new() { BlockCode = "D", Terminal = "Durban Container Terminal", Zone = "Export",  Rows = 6, Bays = 38, Tiers = 4, TotalCapacityTEU = 912,  CurrentOccupancyTEU = 610, IsReeferBlock = false },
             new() { BlockCode = "E", Terminal = "Durban Container Terminal", Zone = "Empty",   Rows = 5, Bays = 30, Tiers = 5, TotalCapacityTEU = 750,  CurrentOccupancyTEU = 320, IsReeferBlock = false },
-            new() { BlockCode = "R", Terminal = "Durban Container Terminal", Zone = "Reefer",  Rows = 4, Bays = 20, Tiers = 3, TotalCapacityTEU = 240,  CurrentOccupancyTEU = 195, IsReeferBlock = true,  HasReeferPlugs = true },
+            new() { BlockCode = "R", Terminal = "Durban Container Terminal", Zone = "Reefer",  Rows = 4, Bays = 20, Tiers = 3, TotalCapacityTEU = 240,  CurrentOccupancyTEU = 195, IsReeferBlock = true },
             new() { BlockCode = "H", Terminal = "Durban Container Terminal", Zone = "Hazmat",  Rows = 3, Bays = 15, Tiers = 2, TotalCapacityTEU = 90,   CurrentOccupancyTEU = 42,  IsHazardousBlock = true },
             new() { BlockCode = "T", Terminal = "Durban Container Terminal", Zone = "Transit", Rows = 4, Bays = 25, Tiers = 3, TotalCapacityTEU = 300,  CurrentOccupancyTEU = 180, IsReeferBlock = false },
         };
 
-        // Add HasReeferPlugs to YardBlock entity via property extension for R block
         context.YardBlocks.AddRange(blocks);
         await context.SaveChangesAsync();
     }
@@ -381,7 +380,7 @@ public static class SeedData
             metrics.Add(new OperationalMetric { MetricDate = date, MetricType = "AverageTurnaroundHours", Terminal = terminal, Value = (decimal)(Math.Round(32 + rng.NextDouble() * 8 - 4, 1)), Unit = "Hours" });
             metrics.Add(new OperationalMetric { MetricDate = date, MetricType = "BerthUtilisationPercent", Terminal = terminal, Value = (decimal)(Math.Round(78 + rng.NextDouble() * 15, 1)), Unit = "Percent" });
             metrics.Add(new OperationalMetric { MetricDate = date, MetricType = "CraneProductivity",      Terminal = terminal, Value = (decimal)(Math.Round(24 + rng.NextDouble() * 6, 1)), Unit = "MovesPerHour" });
-            metrics.Add(new OperationalMetric { MetricDate = date, MetricType = "TruckTurnaround",        Terminal = terminal, Value = (decimal)(Math.Round(45 + rng.Next(-10, 30))), Unit = "Minutes" });
+            metrics.Add(new OperationalMetric { MetricDate = date, MetricType = "TruckTurnaround",        Terminal = terminal, Value = 45 + rng.Next(-10, 30), Unit = "Minutes" });
             metrics.Add(new OperationalMetric { MetricDate = date, MetricType = "YardDensity",            Terminal = terminal, Value = (decimal)(Math.Round(72 + rng.NextDouble() * 15, 1)), Unit = "Percent" });
             metrics.Add(new OperationalMetric { MetricDate = date, MetricType = "VesselsServed",          Terminal = terminal, Value = rng.Next(3, 7), Unit = "Count" });
             metrics.Add(new OperationalMetric { MetricDate = date, MetricType = "DelayedVessels",         Terminal = terminal, Value = rng.Next(0, 3), Unit = "Count" });
