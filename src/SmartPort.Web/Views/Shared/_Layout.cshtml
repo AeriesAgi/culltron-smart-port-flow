@@ -62,6 +62,9 @@
             <a asp-controller="Fleet" asp-action="Index" class="sp-nav__item @(ctrl=="Fleet"?"active":"")">
                 <span class="sp-nav__icon">🚚</span><span>Fleet</span>
             </a>
+            <a asp-controller="TruckTracking" asp-action="Index" class="sp-nav__item @(ctrl=="TruckTracking"?"active":"")">
+                <span class="sp-nav__icon">📡</span><span>Truck Tracking</span>
+            </a>
             <a asp-controller="Organisations" asp-action="Index" class="sp-nav__item @(ctrl=="Organisations"?"active":"")">
                 <span class="sp-nav__icon">🏢</span><span>Organisations</span>
             </a>
@@ -157,6 +160,13 @@
 
     <div class="sp-content">@RenderBody()</div>
 </main>
+
+@if (ctrl is "Dashboard" or "Agent" or "Simulator" or "TruckTracking" or "Emissions")
+{
+    <a class="sp-ai-help-orb" asp-controller="Copilot" asp-action="Index" asp-route-prompt="What is the biggest risk right now?">
+        <span>✦</span><strong>Ask SmartPort Copilot</strong>
+    </a>
+}
 
 <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
