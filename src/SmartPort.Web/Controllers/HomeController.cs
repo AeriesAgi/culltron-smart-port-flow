@@ -63,6 +63,11 @@ public class HomeController : Controller
         Response.StatusCode = statusCode;
         return View("Error", statusCode);
     }
+
+    // AMD page route
+    // GET /about-amd
+    [Route("about-amd")]
+    public IActionResult AboutAmd() => View("~/Views/Home/AboutAmd.cshtml");
 }
 
 public class ContactFormModel
@@ -77,7 +82,3 @@ public class ContactFormModel
     [System.ComponentModel.DataAnnotations.Required]
     public string Message { get; set; } = string.Empty;
 }
-    // AMD page route
-    // GET /about-amd
-    [Route("about-amd")]
-    public IActionResult AboutAmd() => View("~/Views/Home/AboutAmd.cshtml");
