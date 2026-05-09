@@ -121,7 +121,7 @@
                 <dt>ATA</dt><dd class="sp-table__mono">@(Model.ActualTimeOfArrival?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
                 <dt>ETD</dt><dd class="sp-table__mono">@(Model.ETD?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
                 <dt>ATD</dt><dd class="sp-table__mono">@(Model.ActualTimeOfDeparture?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
-                @if (Model.TurnaroundHours.HasValue) { <dt>Turnaround</dt><dd>@Model.TurnaroundHours.Value.ToString("F1") h</dd> }
+                @if (Model.TurnaroundHours.HasValue) { <dt>Turnaround</dt><dd>@($"{Model.TurnaroundHours.Value:F1} h")</dd> }
                 @if (Model.DelayMinutes > 0) { <dt>Delay</dt><dd class="sp-table__cell--danger">+@Model.DelayMinutes min</dd> }
             </dl>
         </div>

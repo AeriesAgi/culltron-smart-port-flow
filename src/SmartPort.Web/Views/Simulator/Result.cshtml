@@ -53,7 +53,7 @@
     <div class="sp-kpi-card @(Model.WaitingTimeIncreasePct > 50 ? "sp-kpi-card--warn" : "")">
       <div class="sp-kpi-card__icon sp-kpi-card__icon--teal"><i data-feather="clock"></i></div>
       <div class="sp-kpi-card__body">
-        <div class="sp-kpi-card__value">@Model.EstimatedWaitingTimeMinutes:F0 min</div>
+        <div class="sp-kpi-card__value">@($"{Model.EstimatedWaitingTimeMinutes:F0} min")</div>
         <div class="sp-kpi-card__label">Est. Waiting Time</div>
         <div class="sp-kpi-card__sub">Baseline: @Model.BaselineWaitingMinutes min (+@Model.WaitingTimeIncreasePct%)</div>
       </div>
@@ -61,9 +61,9 @@
     <div class="sp-kpi-card">
       <div class="sp-kpi-card__icon sp-kpi-card__icon--green"><i data-feather="wind"></i></div>
       <div class="sp-kpi-card__body">
-        <div class="sp-kpi-card__value">@Model.EstimatedCo2Kg:F1 kg</div>
+        <div class="sp-kpi-card__value">@($"{Model.EstimatedCo2Kg:F1} kg")</div>
         <div class="sp-kpi-card__label">Est. CO₂ (scenario)</div>
-        <div class="sp-kpi-card__sub">Diesel: @Model.EstimatedDieselLitres:F1 L · R@Model.EstimatedFuelCostRand:F0</div>
+        <div class="sp-kpi-card__sub">Diesel: @($"{Model.EstimatedDieselLitres:F1} L") · @($"R{Model.EstimatedFuelCostRand:N0}")</div>
       </div>
     </div>
   </div>
