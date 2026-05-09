@@ -98,7 +98,7 @@ public class TruckTrackingService : ITruckTrackingService
             CurrentCheckpoint = checkpoint,
             EtaMinutesToGate = eta,
             QueueStatus = risk >= 78 ? "Gate queue saturated" : risk >= 58 ? "Queue building" : "Flowing",
-            IdlingMinutes = Math.Round(idling, 0),
+            IdlingMinutes = (int)Math.Round(Convert.ToDouble(idling), 0),
             EstimatedCo2Kg = Math.Round(idling / 60m * 3.0m * 2.68m, 1),
             DelayRiskScore = risk,
             Status = status,
