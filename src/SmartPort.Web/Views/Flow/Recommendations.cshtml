@@ -32,8 +32,8 @@
                 <span>@r.GeneratedAt.ToString("HH:mm dd MMM")</span>
                 @if (r.CongestionScore.HasValue) { <span> · Congestion score: @r.CongestionScore/100</span> }
             </div>
-            @if (r.AcceptedByUser != null && !string.IsNullOrEmpty(r.ActedOnBy))
-            { <div class="sp-rec-card__acted">@statusLabel by @r.ActedOnBy · @r.AcceptedAt?.ToString("HH:mm dd MMM") — @r.UserFeedback</div> }
+            @if (r.AcceptedByUser != null)
+            { <div class="sp-rec-card__acted">@statusLabel · @r.AcceptedAt?.ToString("HH:mm dd MMM") — @(r.UserFeedback ?? "No feedback provided")</div> }
             @if (r.IsPending)
             {
                 <div class="sp-rec-card__footer">

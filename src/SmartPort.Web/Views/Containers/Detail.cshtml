@@ -7,10 +7,10 @@
                 <h3 class="sp-card__title sp-table__mono">@Model.ContainerNumber</h3>
                 <div style="display:flex;gap:.5rem;flex-wrap:wrap">
                     <span class="sp-badge sp-badge--info">@Model.Status</span>
-                    @if (c.IsDwellAlertRaised) { <span class="sp-badge sp-badge--warning">⏱ Dwell Alert</span> }
-                    @if (c.IsOnHold)           { <span class="sp-badge sp-badge--danger">🔒 On Hold</span> }
-                    @if (c.IsHazardous)        { <span class="sp-badge sp-badge--danger">⚠ Hazardous</span> }
-                    @if (c.IsReefer)           { <span class="sp-badge sp-badge--info">❄ Reefer</span> }
+                    @if (Model.IsDwellAlertRaised) { <span class="sp-badge sp-badge--warning">⏱ Dwell Alert</span> }
+                    @if (Model.IsOnHold)           { <span class="sp-badge sp-badge--danger">🔒 On Hold</span> }
+                    @if (Model.IsHazardous)        { <span class="sp-badge sp-badge--danger">⚠ Hazardous</span> }
+                    @if (Model.IsReefer)           { <span class="sp-badge sp-badge--info">❄ Reefer</span> }
                 </div>
             </div>
             @if (Model.IsHazardous) { <div class="sp-alert sp-alert--danger" style="margin:.75rem 1.25rem 0"><i data-feather="alert-triangle"></i> Hazardous cargo — IMDG Class @Model.HazardClass</div> }

@@ -42,8 +42,8 @@
         <dt>Cargo Type</dt><dd><span class="sp-badge sp-badge--type">@Model.CargoType</span></dd>
         <dt>Capacity</dt><dd>@(Model.CapacityTons.HasValue?$"{Model.CapacityTons:F0} tonnes":"—")</dd>
         <dt>Status</dt><dd>
-          @{var sc=Model.Status switch{SmartPort.Domain.Enums.FleetVehicleStatus.Dispatched=>"info",SmartPort.Domain.Enums.FleetVehicleStatus.Waiting=>"warning",SmartPort.Domain.Enums.FleetVehicleStatus.AtGate=>"success",SmartPort.Domain.Enums.FleetVehicleStatus.Delayed=>"danger",SmartPort.Domain.Enums.FleetVehicleStatus.Available=>"success",_=>"muted"};}
-          <span class="sp-badge sp-badge--@sc">@Model.Status</span>
+          @{var vehicleStatusClass=Model.Status switch{SmartPort.Domain.Enums.FleetVehicleStatus.Dispatched=>"info",SmartPort.Domain.Enums.FleetVehicleStatus.Waiting=>"warning",SmartPort.Domain.Enums.FleetVehicleStatus.AtGate=>"success",SmartPort.Domain.Enums.FleetVehicleStatus.Delayed=>"danger",SmartPort.Domain.Enums.FleetVehicleStatus.Available=>"success",_=>"muted"};}
+          <span class="sp-badge sp-badge--@vehicleStatusClass">@Model.Status</span>
         </dd>
         <dt>Location</dt><dd>@(Model.CurrentLocation??"—")</dd>
         <dt>Active</dt><dd><span class="sp-badge sp-badge--@(Model.IsActive?"success":"muted")">@(Model.IsActive?"Yes":"No")</span></dd>
