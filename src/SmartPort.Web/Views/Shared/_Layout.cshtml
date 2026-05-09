@@ -35,15 +35,15 @@
 
         <!-- ── AI / Core ── -->
         <div class="sp-nav__section">
-            <span class="sp-nav__label">AI Agent</span>
+            <span class="sp-nav__label">AI Command</span>
             <a asp-controller="Dashboard" asp-action="Index" class="sp-nav__item @(ctrl=="Dashboard"?"active":"")">
                 <span class="sp-nav__icon">⬡</span><span>Command Centre</span>
             </a>
             <a asp-controller="Agent" asp-action="Index" class="sp-nav__item @(ctrl=="Agent"?"active":"")">
-                <span class="sp-nav__icon">🤖</span><span>AI Agent</span>
+                <span class="sp-nav__icon">🤖</span><span>AI Command Centre</span>
             </a>
             <a asp-controller="Copilot" asp-action="Index" class="sp-nav__item @(ctrl=="Copilot"?"active":"")">
-                <span class="sp-nav__icon">✦</span><span>Copilot Chat</span>
+                <span class="sp-nav__icon">✦</span><span>SmartPort Copilot Chat</span>
             </a>
             <a asp-controller="Simulator" asp-action="Index" class="sp-nav__item @(ctrl=="Simulator"?"active":"")">
                 <span class="sp-nav__icon">🔬</span><span>Simulator</span>
@@ -169,14 +169,15 @@
         "Simulator" => new[] { "Explain this scenario.", "What action should operators take?", "Generate an operator action plan." },
         "Emissions" => new[] { "How much CO2 can we save?", "Which trucks are causing avoidable idling?", "How can we reduce truck idling?" },
         "Flow" => new[] { "Summarise recommendations.", "Generate an operator action plan.", "Explain current congestion." },
-        _ => new[] { "What is the biggest risk right now?", "Explain congestion.", "Generate operator action plan." }
+        "Agent" => new[] { "Prepare shift brief.", "What should operators do first?", "Explain top risk." },
+        _ => new[] { "What is the biggest risk right now?", "Explain current congestion.", "Generate operator action plan." }
     };
     <button type="button" class="sp-ai-help-orb" id="aiHelpOrb" aria-controls="aiHelpDrawer" aria-expanded="false">
         <span>✦</span><strong>Ask SmartPort Copilot</strong>
     </button>
     <aside class="sp-ai-help-drawer" id="aiHelpDrawer" aria-hidden="true">
         <div class="sp-ai-help-drawer__head">
-            <div><strong>Ask about this page</strong><small>Local deterministic Copilot</small></div>
+            <div><strong>Ask about this page</strong><small>@ViewData["Title"] · Local deterministic Copilot</small></div>
             <button type="button" id="aiHelpClose" aria-label="Close Copilot helper">×</button>
         </div>
         <div class="sp-ai-help-drawer__badges"><span>Offline-safe</span><span>Synthetic demo data</span><span>No external AI API</span></div>

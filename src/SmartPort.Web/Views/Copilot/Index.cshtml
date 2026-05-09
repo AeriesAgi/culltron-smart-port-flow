@@ -1,6 +1,6 @@
 @model CopilotChatPageModel
 @{
-    ViewData["Title"] = "Copilot Chat";
+    ViewData["Title"] = "SmartPort Copilot Chat";
     var ctx = Model.Context;
     var initialPrompt = Model.CurrentPrompt ?? string.Empty;
 }
@@ -9,8 +9,8 @@
     <div class="sp-copilot-hero">
         <div>
             <div class="sp-agent-badge"><span class="sp-live-dot"></span> SmartPort Copilot — Local deterministic operations assistant</div>
-            <h1>Ask the port. Get an action plan.</h1>
-            <p>AJAX-powered, scope-limited operator assistance for truck ETA, gate queues, berth pressure, yard congestion, emissions, load-shedding, scenarios and decision audit — with no external AI APIs.</p>
+            <h1>SmartPort Copilot Chat</h1>
+            <p>Conversational assistant for scoped smart-port questions. AJAX-powered, scope-limited operator assistance for truck ETA, gate queues, berth pressure, yard congestion, emissions, load-shedding, scenarios and decision audit — with no external AI APIs.</p>
         </div>
         <div class="sp-copilot-orb" aria-hidden="true"><span></span></div>
     </div>
@@ -54,9 +54,9 @@
                 </div>
             </div>
 
-            <form asp-action="Ask" asp-controller="Copilot" method="post" class="sp-copilot-form" id="copilotForm" data-initial-prompt="@initialPrompt">
+            <form asp-action="AskJson" asp-controller="Copilot" method="post" class="sp-copilot-form" id="copilotForm" data-initial-prompt="@initialPrompt">
                 @Html.AntiForgeryToken()
-                <textarea name="prompt" class="sp-copilot-input sp-copilot-textarea" id="copilotInput" rows="2" placeholder="Command: ask about truck ETA, gate queue, berth pressure, CO₂ savings or an operator action plan…" autocomplete="off">@initialPrompt</textarea>
+                <textarea name="prompt" class="sp-copilot-input sp-copilot-textarea" id="copilotInput" rows="2" placeholder="Command: ask about truck ETA, gate queue, berth pressure, CO₂ savings or an operator action plan…" autocomplete="off"></textarea>
                 <div class="sp-copilot-compose-actions">
                     <button type="submit" class="sp-btn sp-btn--primary" id="copilotSend">Send Command</button>
                     <button type="button" class="sp-btn sp-btn--outline" id="copilotClear">Clear</button>
@@ -78,7 +78,7 @@
 
             <div class="sp-card sp-judge-card">
                 <div class="sp-card__header"><h3 class="sp-card__title">Judge Demo Path</h3></div>
-                <p>Landing → Dashboard → AI Agent → Copilot Chat → Truck Tracking → Scenario Simulator → Emissions → Recommendations</p>
+                <p>Landing → Dashboard → AI Command Centre → SmartPort Copilot Chat → Truck Tracking → Scenario Simulator → Emissions → Recommendations</p>
             </div>
 
             <div class="sp-card">
@@ -193,9 +193,9 @@
   }
   function compactAssistantHtml(data, toneClass) {
     return `<div class="sp-copilot-avatar">AI</div><div class="sp-copilot-bubble ${toneClass}">
-      <strong>${escapeHtml(data.summary)}</strong>
-      <p>${escapeHtml(data.operationalReasoning || data.recommendedAction)}</p>
-      <div class="sp-copilot-mini-topics">${Object.entries(topicPrompts).slice(0, 6).map(([label, prompt]) => `<button type="button" data-prompt="${escapeHtml(prompt)}">${escapeHtml(label)}</button>`).join('')}</div>
+      <strong>${escapeHtml(data.title || data.summary)}</strong>
+      <p>${escapeHtml(data.shortAnswer || data.operationalReasoning || data.recommendedAction)}</p>
+      <div class="sp-copilot-mini-topics">${((data.topicChips && data.topicChips.length) ? data.topicChips : Object.entries(topicPrompts).slice(0, 6).map(([label, prompt]) => ({ label, prompt }))).map(c => `<button type="button" data-prompt="${escapeHtml(c.prompt)}">${escapeHtml(c.label)}</button>`).join('')}</div>
     </div>`;
   }
   function detailedAssistantHtml(data) {
@@ -217,7 +217,8 @@
         <section><h3>Energy impact</h3><p>${escapeHtml(data.energyImpact)}</p></section>
       </div>
       <div class="sp-copilot-action-row">${links}</div>
-      <div class="sp-copilot-timestamp">Generated ${escapeHtml(data.generatedAt)} UTC · Synthetic demo data · Local deterministic response</div>
+      <div class="sp-copilot-mini-topics">${(data.suggestedFollowUps || []).map(p => `<button type="button" data-prompt="${escapeHtml(p)}">${escapeHtml(p)}</button>`).join('')}</div>
+      <div class="sp-copilot-timestamp">Generated ${escapeHtml(data.generatedAt)} UTC · ${escapeHtml(data.dataNote || 'Synthetic demo data · Local deterministic response')}</div>
     </div>`;
   }
   function urgencyTone(urgency) {
@@ -270,7 +271,12 @@
   });
   const initialPrompt = form?.getAttribute('data-initial-prompt') || '';
   if (initialPrompt && !history.some(x => x.role === 'user' && x.text.toLowerCase() === initialPrompt.toLowerCase())) {
-    setTimeout(() => sendPrompt(initialPrompt), 250);
+    setTimeout(() => {
+      sendPrompt(initialPrompt);
+      if (window.history?.replaceState) window.history.replaceState({}, document.title, '/Copilot');
+    }, 250);
+  } else if (initialPrompt && window.history?.replaceState) {
+    window.history.replaceState({}, document.title, '/Copilot');
   }
   input?.focus();
 })();

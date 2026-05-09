@@ -20,20 +20,21 @@ public class CopilotController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Ask(string prompt)
     {
-        var model = await _chat.BuildPageAsync(prompt);
         if (IsJsonRequest())
         {
-            return Json(ToJson(model.Response));
+            var response = string.IsNullOrWhiteSpace(prompt) ? null : await _chat.GenerateResponseAsync(prompt);
+            return Json(ToJson(response));
         }
 
+        var model = await _chat.BuildPageAsync(prompt);
         return View("Index", model);
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AskJson(string prompt)
     {
-        var model = await _chat.BuildPageAsync(prompt);
-        return Json(ToJson(model.Response));
+        var response = string.IsNullOrWhiteSpace(prompt) ? null : await _chat.GenerateResponseAsync(prompt);
+        return Json(ToJson(response));
     }
 
     private bool IsJsonRequest() =>
@@ -46,7 +47,10 @@ public class CopilotController : Controller
         {
             return new
             {
+                messageType = "compact",
+                title = "SmartPort Copilot",
                 summary = "I did not receive a prompt. Try asking about truck queues, ETA tracking, gate pressure, emissions or recommendations.",
+                shortAnswer = "Choose a topic chip or type a scoped smart-port operations question.",
                 intent = "empty",
                 urgency = "Low",
                 confidence = 100,
@@ -56,7 +60,10 @@ public class CopilotController : Controller
                 expectedImpact = "Keeps the demo focused and safe.",
                 emissionsImpact = "Synthetic demo data is used when operational context is requested.",
                 energyImpact = "No live external systems are queried.",
+                dataNote = "Synthetic demo data · local deterministic response",
                 actionLinks = Array.Empty<object>(),
+                suggestedFollowUps = new[] { "What is the biggest risk right now?", "Which trucks should be held outside the port?" },
+                topicChips = Array.Empty<object>(),
                 generatedAt = DateTime.UtcNow.ToString("HH:mm:ss"),
                 isOutOfScope = false,
                 isSmallTalk = true,
@@ -65,13 +72,16 @@ public class CopilotController : Controller
         }
 
         var intent = response.Intent.ToLowerInvariant();
-        var isSmallTalk = intent.Contains("greeting") || intent.Contains("help");
-        var isOutOfScope = intent.Contains("out-of-scope") || intent.Contains("safety");
-        var isVague = intent.Contains("vague");
+        var isSmallTalk = response.IsSmallTalk || intent.Contains("greeting") || intent.Contains("help");
+        var isOutOfScope = response.IsOutOfScope || intent.Contains("out-of-scope") || intent.Contains("safety");
+        var isVague = response.IsVagueButRelated || intent.Contains("vague");
 
         return new
         {
+            messageType = response.MessageType,
+            title = response.Title,
             summary = response.Summary,
+            shortAnswer = response.ShortAnswer,
             intent = response.Intent,
             urgency = response.Severity,
             confidence = response.ConfidenceScore,
@@ -81,12 +91,16 @@ public class CopilotController : Controller
             expectedImpact = response.ExpectedImpact,
             emissionsImpact = response.EmissionsImpact,
             energyImpact = response.EnergyImpact,
+            dataNote = response.DataNote,
             actionLinks = response.ActionCards.Select(a => new { title = a.Title, description = a.Description, url = a.Url, icon = a.Icon }),
+            suggestedFollowUps = response.SuggestedFollowUps,
+            topicChips = response.TopicChips.Select(c => new { label = c.Label, prompt = c.Prompt, icon = c.Icon }),
             metricBadges = response.MetricBadges.Select(b => new { label = b.Label, value = b.Value, tone = b.Tone }),
             generatedAt = response.GeneratedAt.ToString("HH:mm:ss"),
             isOutOfScope,
             isSmallTalk,
-            isVagueButRelated = isVague
+            isVagueButRelated = isVague,
+            isOperational = response.IsOperational
         };
     }
 }
