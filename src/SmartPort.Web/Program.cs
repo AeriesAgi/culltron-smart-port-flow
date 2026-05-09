@@ -88,6 +88,13 @@ builder.Services.AddScoped<ISmartPortIntelligenceService, SmartPortIntelligenceS
 builder.Services.AddScoped<ISmartPortCopilotChatService, SmartPortCopilotChatService>();
 builder.Services.AddScoped<ITruckTrackingService, TruckTrackingService>();
 builder.Services.AddScoped<IScenarioSimulatorService, ScenarioSimulatorService>();
+builder.Services.AddScoped<ITruckTelematicsProvider, DemoTruckTelematicsProvider>();
+builder.Services.AddScoped<IGpsTrackingProvider, DemoGpsTrackingProvider>();
+builder.Services.AddScoped<IGateSystemProvider, DemoGateSystemProvider>();
+builder.Services.AddScoped<IPortOperationsProvider, DemoPortOperationsProvider>();
+builder.Services.AddScoped<IEnergyDisruptionProvider, DemoEnergyDisruptionProvider>();
+builder.Services.AddScoped<IEmissionsFactorProvider, DemoEmissionsFactorProvider>();
+builder.Services.AddScoped<IExternalIntegrationHealthService, DemoExternalIntegrationHealthService>();
 
 // ─── MVC ──────────────────────────────────────────────────────────────────────
 builder.Services.AddControllersWithViews(options =>

@@ -115,13 +115,19 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         new() { Icon = "🧭", Label = "Action plan", Prompt = "Generate an operator action plan." },
         new() { Icon = "🌿", Label = "CO₂ savings", Prompt = "How much CO2 can we save?" },
         new() { Icon = "🚪", Label = "Gate bottleneck", Prompt = "Which gate is becoming a bottleneck?" },
-        new() { Icon = "🎬", Label = "Demo summary", Prompt = "Prepare a 2-minute demo summary." }
+        new() { Icon = "📈", Label = "Business impact", Prompt = "What is the business impact?" },
+        new() { Icon = "🌍", Label = "NCIC alignment", Prompt = "Explain NCIC alignment." },
+        new() { Icon = "🗺️", Label = "90-day pilot", Prompt = "What would a 90-day pilot look like?" },
+        new() { Icon = "🔌", Label = "Integrations", Prompt = "What integrations are required?" },
+        new() { Icon = "🎬", Label = "Grant summary", Prompt = "Prepare a 2-minute grant summary." }
     };
 
     private static List<string> SupportedTopics() => new()
     {
         "Truck queues", "Truck tracking / ETA", "Gate bottlenecks", "Berth pressure", "Yard congestion",
-        "Emissions / CO₂", "Load-shedding disruption", "Scenario simulation", "Recommendations", "Demo summary"
+        "Emissions / CO₂", "Load-shedding disruption", "Scenario simulation", "Recommendations", "Audit / decision history",
+        "Executive impact", "Clean logistics / NCIC alignment", "Pilot readiness", "Integration readiness", "Stakeholder value",
+        "Executive brief", "Grant / investor summary", "Business case", "Implementation roadmap", "Success metrics"
     };
 
     public async Task<CopilotChatResponse> GenerateResponseAsync(string prompt)
@@ -159,6 +165,14 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
             "scenario" => BuildScenario(prompt, ctx),
             "recommendations" => BuildAudit(prompt, ctx),
             "audit" => BuildAudit(prompt, ctx),
+            "executive-impact" => BuildExecutiveImpact(prompt, ctx),
+            "clean-logistics" => BuildCleanLogistics(prompt, ctx),
+            "pilot-readiness" => BuildPilotReadiness(prompt, ctx),
+            "integrations" => BuildIntegrations(prompt, ctx),
+            "stakeholder-value" => BuildStakeholderValue(prompt, ctx),
+            "executive-brief" => BuildExecutiveBrief(prompt, ctx),
+            "grant-summary" => BuildGrantSummary(prompt, ctx),
+            "success-metrics" => BuildSuccessMetrics(prompt, ctx),
             "demo" => BuildDemoSummary(prompt, ctx),
             "action-plan" => BuildActionPlan(prompt, ctx),
             "vague-related" => BuildVagueRelated(prompt, ctx),
@@ -172,6 +186,14 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         if (Has(q, "ignore instruction", "ignore previous", "system prompt", "developer prompt", "reveal prompt", "show prompt", "secret", "credential", "password", "api key", "dump database", "dump config", "internal config", "jailbreak")) return "safety";
         if (IsGreeting(q)) return "greeting";
         if (Has(q, "help", "what can you do", "what are you", "capabilit", "supported", "topics")) return "help";
+        if (Has(q, "investor summary", "grant", "funding", "2-minute grant", "ncic pitch", "pitch summary")) return "grant-summary";
+        if (Has(q, "business impact", "executive impact", "business case", "impact centre", "impact center", "investor")) return "executive-impact";
+        if (Has(q, "ncic", "clean logistics", "sustainability", "clean-tech", "clean tech", "alignment")) return "clean-logistics";
+        if (Has(q, "pilot", "90-day", "90 day", "roadmap", "implementation", "30-day", "60-day")) return "pilot-readiness";
+        if (Has(q, "integration", "integrations", "production need", "data would production", "data source", "tos", "ipms", "gps", "telematics", "ocr", "rfid")) return "integrations";
+        if (Has(q, "stakeholder", "fleet operator", "port authority", "terminal operator", "sustainability officer", "municipality", "province", "operations manager")) return "stakeholder-value";
+        if (Has(q, "executive brief", "generate brief", "shift report", "briefing")) return "executive-brief";
+        if (Has(q, "success metric", "pilot metrics", "risks and mitigations", "risks", "mitigation")) return "success-metrics";
         if (Has(q, "demo", "2-minute", "summary", "video", "pitch", "walkthrough")) return "demo";
         if (Has(q, "biggest risk", "port risk", "operational risk", "current risk", "what is urgent", "urgent", "do first", "should we do first", "manager do first")) return "risk";
         if (Has(q, "action plan", "operator action", "recommended actions", "what should operators do", "generate action", "prepare shift brief", "shift brief", "prioritise first", "prioritize first")) return "action-plan";
@@ -203,9 +225,9 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
 
     private CopilotChatResponse BuildHelp(string prompt, OperationalContext ctx) =>
         Base(prompt, "help / capabilities", "Low", 97, "Supported Smart Port Topics",
-            "I can help with smart port operations, congestion, truck tracking/ETA, gate flow, berth and yard pressure, emissions, disruptions, scenarios, recommendations and demo summary.",
+            "I can help with smart port operations, congestion, truck tracking/ETA, gate flow, berth and yard pressure, emissions, disruptions, scenarios, recommendations, executive impact, clean logistics / NCIC alignment, pilot readiness, integrations, stakeholder value and grant/investor summaries.",
             "The assistant uses deterministic topic routing and refuses unrelated, unsafe or secret-seeking prompts.",
-            "Choose a topic chip or ask: trucks on queue, track delayed trucks, how much CO₂ can we save, or generate an operator action plan.",
+            "Choose a topic chip or ask: trucks on queue, track delayed trucks, explain NCIC alignment, what integrations are required, or prepare a 2-minute grant summary.",
             "You get consistent explainable outputs with summary, reasoning, action, impact, confidence, affected area and links.",
             "All figures are based on synthetic demo data.",
             "Local-only processing keeps the competition demo safe and repeatable.",
@@ -381,6 +403,87 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
             ctx.LoadSheddingActive ? "Energy-related recommendations should be prioritized in the audit trail." : "Energy state can be captured through scenario-generated recommendation notes.",
             new() { new() { Icon = "🧠", Title = "Recommendations", Description = "Review active recommendations.", Url = "/flow/recommendations" }, new() { Icon = "📋", Title = "Audit Report", Description = "Open recommendation history.", Url = "/reports/recommendations" } });
 
+
+    private CopilotChatResponse BuildExecutiveImpact(string prompt, OperationalContext ctx) =>
+        Base(prompt, "executive impact", "Medium", 92, "Executive Impact Centre",
+            $"Business impact is the ability to reduce avoidable idling, improve truck release timing and give stakeholders an auditable shift-level action plan. Current demo exposure is {ctx.TotalIdlingMinutesToday:F0} idling minutes and {ctx.EstimatedCo2Today:F1} kg CO₂.",
+            "The response is deterministic and uses synthetic demo data from queues, berth/yard pressure, disruptions and recommendations. Savings are indicative and not verified outcomes.",
+            "Open the Executive Impact Centre, review the assumptions panel, then generate an Executive Brief for the pilot conversation.",
+            "Creates a credible value narrative for judges, NCIC reviewers, funders and pilot stakeholders without claiming live operational deployment.",
+            "Indicative reduction opportunity comes from dispatch metering and hold-outside-port decisions, not verified emissions accounting.",
+            ctx.LoadSheddingActive ? "Energy disruption strengthens the business case for resilience planning." : "Energy scenarios can be modelled before a disruption window.",
+            BusinessActions());
+
+    private CopilotChatResponse BuildCleanLogistics(string prompt, OperationalContext ctx) =>
+        Base(prompt, "clean logistics / NCIC alignment", "Medium", 93, "Clean Logistics Impact",
+            "NCIC alignment is the clean-logistics direction: reduce avoidable truck idling, diesel waste and congestion through explainable local decision support.",
+            "Culltron Smart Port Flow demonstrates queue intelligence, ETA tracking, hold-outside-port recommendations, scenario simulation, emissions/idling estimates and audit-style operator plans using synthetic data.",
+            "Use the Clean Logistics Impact page to frame the problem, solution, pilot outcomes and demo-first advantage.",
+            "Positions the platform as a pilot-ready direction for cleaner, more resilient logistics while keeping claims realistic.",
+            $"Current demo emissions context: {ctx.EstimatedCo2Today:F1} kg CO₂ from idling; estimates are indicative and not verified outcomes.",
+            ctx.LoadSheddingActive ? "Load-shedding is part of the clean logistics story because energy disruption increases queue and idling risk." : "The simulator can show energy disruption resilience without live feeds.",
+            BusinessActions());
+
+    private CopilotChatResponse BuildPilotReadiness(string prompt, OperationalContext ctx) =>
+        Base(prompt, "pilot readiness", "Medium", 91, "Pilot Readiness",
+            "A 90-day pilot would move from 30-day setup, to 60-day integration prototype, to 90-day operational pilot with daily shift briefs, recommendations, scenario simulation and impact reporting.",
+            "The current demonstrator is demo-safe: synthetic data, no paid external AI API and integration adapters disabled/demo-backed by default.",
+            "Confirm pilot site and stakeholders, identify data owners, validate baseline metrics, then prototype approved gate, telematics, berth/vessel, energy and emissions-factor integrations.",
+            "Shows Culltron has thought beyond the demo while avoiding false claims of live port deployment.",
+            "Pilot metrics should include idling, diesel cost and CO₂ avoided as indicative or partner-validated measures.",
+            "Energy schedules are a required pilot data source for resilience testing.",
+            new() { new() { Icon = "🗺️", Title = "Pilot Readiness", Description = "Open 30/60/90-day roadmap.", Url = "/PilotReadiness" }, new() { Icon = "🤝", Title = "Stakeholders", Description = "Review persona value.", Url = "/Stakeholders" }, new() { Icon = "🧾", Title = "Executive Brief", Description = "Generate stakeholder brief.", Url = "/Brief" } });
+
+    private CopilotChatResponse BuildIntegrations(string prompt, OperationalContext ctx) =>
+        Base(prompt, "integration readiness", "Medium", 90, "Integration Readiness",
+            "Production would require partner-approved TOS/IPMS or port-operations data, gate OCR/RFID, truck GPS/telematics, fleet dispatch, energy/load-shedding schedules, emissions factors, incident logs and reporting/export pathways.",
+            "The app includes integration-ready interfaces with deterministic demo providers active by default, so the demo runs without internet, API keys or external systems.",
+            "Use the Integration Readiness wall to discuss data needed, business value, complexity and risk per integration.",
+            "Creates a credible technical path from demonstrator to pilot without claiming live integration.",
+            "Emissions factors would need partner-approved assumptions or verified datasets in production.",
+            "Energy data is treated as a future integration source, not a live feed in demo mode.",
+            new() { new() { Icon = "🔌", Title = "Integration Wall", Description = "Open Pilot Readiness integrations.", Url = "/PilotReadiness#integration-readiness" }, new() { Icon = "📈", Title = "Impact", Description = "See value from integrations.", Url = "/Impact" } });
+
+    private CopilotChatResponse BuildStakeholderValue(string prompt, OperationalContext ctx) =>
+        Base(prompt, "stakeholder value", "Medium", 89, "Stakeholder Value",
+            "Fleet operators get hold/release guidance and lower avoidable idling; port authorities get congestion visibility and clean-logistics reporting; sustainability officers get indicative idling and CO₂ evidence.",
+            "Each persona maps pain points to existing modules: command centre, tracking, simulator, impact reporting, recommendations and executive brief.",
+            "Open Stakeholder Value and select the persona relevant to the meeting.",
+            "Helps turn the demo into a pilot discussion with clear stakeholder-specific value.",
+            "Sustainability value remains indicative until production data and validated factors are connected.",
+            "Municipal/provincial value includes resilience during energy disruption and congestion visibility.",
+            new() { new() { Icon = "🤝", Title = "Stakeholder Value", Description = "Open persona cards.", Url = "/Stakeholders" }, new() { Icon = "📡", Title = "Truck Tracking", Description = "Fleet operator value.", Url = "/TruckTracking" } });
+
+    private CopilotChatResponse BuildExecutiveBrief(string prompt, OperationalContext ctx) =>
+        Base(prompt, "executive brief", "Medium", 92, "Executive Brief",
+            $"Executive brief: current demo state has {ctx.VesselsInPort} vessels in port, {ctx.TrucksInQueue} queued trucks, {ctx.BerthUtilisationPct:F0}% berth utilisation, {ctx.YardOccupancyPct:F1}% yard occupancy and {ctx.ActiveDisruptions} disruptions.",
+            "The brief is deterministic and print-friendly; it includes top risk, queue state, delayed/held trucks, gate/berth/yard pressure, idling estimate, recommended action plan and demo disclaimer.",
+            "Open /Brief, print/save as PDF, or copy the brief into the meeting notes.",
+            "Useful for judges, grant reviewers, pilot stakeholders and shift handover.",
+            $"Indicative emissions/idling: {ctx.TotalIdlingMinutesToday:F0} minutes and {ctx.EstimatedCo2Today:F1} kg CO₂.",
+            ctx.LoadSheddingActive ? "Include active energy risk in the handover." : "Include the energy integration readiness note.",
+            new() { new() { Icon = "🧾", Title = "Executive Brief", Description = "Open print-friendly brief.", Url = "/Brief" }, new() { Icon = "📈", Title = "Impact Centre", Description = "Show executive KPIs.", Url = "/Impact" } });
+
+    private CopilotChatResponse BuildGrantSummary(string prompt, OperationalContext ctx) =>
+        Base(prompt, "grant / investor summary", "Medium", 91, "Grant / Investor Summary",
+            "Culltron Smart Port Flow is a pilot-ready smart-port demonstrator for cleaner logistics: local deterministic intelligence turns synthetic port, queue, ETA, disruption and emissions signals into explainable operator actions.",
+            "The value proposition is reduced avoidable idling, better truck flow, improved resilience during energy disruption, transparent recommendations and a clear integration pathway for future production pilots.",
+            "Use a 2-minute narrative: problem, solution, demo-safe architecture, indicative impact, 90-day pilot plan, required integrations and stakeholder value.",
+            "Gives grant and investor audiences a realistic path from demonstrator to partner-validated pilot.",
+            "Emissions outcomes are potential/indicative until validated with production data and approved factors.",
+            "Energy resilience is addressed through scenario planning and future energy data integration.",
+            BusinessActions());
+
+    private CopilotChatResponse BuildSuccessMetrics(string prompt, OperationalContext ctx) =>
+        Base(prompt, "success metrics / risks", "Medium", 88, "Pilot Success Metrics",
+            "Pilot success metrics should include truck waiting-time reduction, queue-length reduction, idling reduction, CO₂ avoided, diesel cost avoided, average turnaround time, recommendation adoption, operator response time and disruption recovery time.",
+            "Risks include data availability, operator adoption, integration complexity, network/power reliability, change management, data quality and stakeholder alignment.",
+            "Mitigate by starting with synthetic/demo workflow validation, agreeing baseline metrics, connecting one data source at a time and reviewing operator feedback weekly.",
+            "Keeps the pilot measurable, auditable and realistic.",
+            "CO₂ avoided should be reported as indicative until a partner-validated methodology exists.",
+            "Energy disruption recovery time should be tracked during load-shedding scenarios or approved data feeds.",
+            new() { new() { Icon = "🗺️", Title = "Pilot Readiness", Description = "Open metrics and risks.", Url = "/PilotReadiness" }, new() { Icon = "📈", Title = "Impact", Description = "Open value dashboard.", Url = "/Impact" } });
+
     private CopilotChatResponse BuildDemoSummary(string prompt, OperationalContext ctx) =>
         Base(prompt, "demo", "Medium", 94, "Competition Demo Narrative",
             "Culltron Smart Port Flow is a local deterministic Smart Port Copilot that converts synthetic port telemetry into explainable operator actions.",
@@ -435,6 +538,15 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         new() { Icon = "🧠", Title = "Recommendations", Description = "Review/accept actions.", Url = "/flow/recommendations" },
         new() { Icon = "🔬", Title = "Simulator", Description = "Model what-if pressure.", Url = "/simulator" },
         new() { Icon = "🌿", Title = "Emissions", Description = "Quantify idling impact.", Url = "/emissions" }
+    };
+
+    private static List<CopilotActionCard> BusinessActions() => new()
+    {
+        new() { Icon = "📈", Title = "Executive Impact", Description = "Open business impact KPIs.", Url = "/Impact" },
+        new() { Icon = "🌍", Title = "Clean Logistics", Description = "Review NCIC-style alignment.", Url = "/CleanLogistics" },
+        new() { Icon = "🗺️", Title = "Pilot Readiness", Description = "Open 30/60/90-day plan.", Url = "/PilotReadiness" },
+        new() { Icon = "🤝", Title = "Stakeholders", Description = "Review stakeholder value.", Url = "/Stakeholders" },
+        new() { Icon = "🧾", Title = "Executive Brief", Description = "Generate print-friendly brief.", Url = "/Brief" }
     };
 
     private static bool Has(string text, params string[] terms) => terms.Any(term => text.Contains(term));

@@ -33,84 +33,52 @@
 
     <nav class="sp-nav" role="navigation">
 
-        <!-- ── AI / Core ── -->
+        <!-- ── Command ── -->
         <div class="sp-nav__section">
-            <span class="sp-nav__label">AI Command</span>
-            <a asp-controller="Dashboard" asp-action="Index" class="sp-nav__item @(ctrl=="Dashboard"?"active":"")">
-                <span class="sp-nav__icon">⬡</span><span>Command Centre</span>
-            </a>
-            <a asp-controller="Agent" asp-action="Index" class="sp-nav__item @(ctrl=="Agent"?"active":"")">
-                <span class="sp-nav__icon">🤖</span><span>AI Command Centre</span>
-            </a>
-            <a asp-controller="Copilot" asp-action="Index" class="sp-nav__item @(ctrl=="Copilot"?"active":"")">
-                <span class="sp-nav__icon">✦</span><span>SmartPort Copilot Chat</span>
-            </a>
-            <a asp-controller="Simulator" asp-action="Index" class="sp-nav__item @(ctrl=="Simulator"?"active":"")">
-                <span class="sp-nav__icon">🔬</span><span>Simulator</span>
-            </a>
-            <a asp-controller="Flow" asp-action="Index" class="sp-nav__item @(ctrl=="Flow"?"active":"")">
-                <span class="sp-nav__icon">🧠</span><span>Flow Intelligence</span>
-            </a>
+            <span class="sp-nav__label">Command</span>
+            <a asp-controller="Dashboard" asp-action="Index" class="sp-nav__item @(ctrl=="Dashboard"?"active":"")"><span class="sp-nav__icon">⬡</span><span>Dashboard</span></a>
+            <a asp-controller="Agent" asp-action="Index" class="sp-nav__item @(ctrl=="Agent"?"active":"")"><span class="sp-nav__icon">🤖</span><span>AI Command Centre</span></a>
+            <a asp-controller="Copilot" asp-action="Index" class="sp-nav__item @(ctrl=="Copilot"?"active":"")"><span class="sp-nav__icon">✦</span><span>SmartPort Copilot Chat</span></a>
         </div>
 
-        <!-- ── Dispatch & Fleet ── -->
+        <!-- ── Operations ── -->
         <div class="sp-nav__section">
-            <span class="sp-nav__label">Logistics</span>
-            <a asp-controller="Dispatch" asp-action="Index" class="sp-nav__item @(ctrl=="Dispatch"?"active":"")">
-                <span class="sp-nav__icon">🚛</span><span>Dispatch Trips</span>
-            </a>
-            <a asp-controller="Fleet" asp-action="Index" class="sp-nav__item @(ctrl=="Fleet"?"active":"")">
-                <span class="sp-nav__icon">🚚</span><span>Fleet</span>
-            </a>
-            <a asp-controller="TruckTracking" asp-action="Index" class="sp-nav__item @(ctrl=="TruckTracking"?"active":"")">
-                <span class="sp-nav__icon">📡</span><span>Truck Tracking</span>
-            </a>
-            <a asp-controller="Organisations" asp-action="Index" class="sp-nav__item @(ctrl=="Organisations"?"active":"")">
-                <span class="sp-nav__icon">🏢</span><span>Organisations</span>
-            </a>
-            <a asp-controller="Disruptions" asp-action="Index" class="sp-nav__item @(ctrl=="Disruptions"?"active":"")">
-                <span class="sp-nav__icon">⚡</span><span>Disruptions</span>
-            </a>
+            <span class="sp-nav__label">Operations</span>
+            <a asp-controller="TruckTracking" asp-action="Index" class="sp-nav__item @(ctrl=="TruckTracking"?"active":"")"><span class="sp-nav__icon">📡</span><span>Truck Tracking</span></a>
+            <a asp-controller="Simulator" asp-action="Index" class="sp-nav__item @(ctrl=="Simulator"?"active":"")"><span class="sp-nav__icon">🔬</span><span>Scenario Simulator</span></a>
+            <a asp-controller="Incidents" asp-action="Index" class="sp-nav__item @(ctrl=="Incidents"&&act=="Index"?"active":"")"><span class="sp-nav__icon">⚠️</span><span>Incidents</span></a>
+            <a asp-controller="Flow" asp-action="Recommendations" class="sp-nav__item @(ctrl=="Flow"?"active":"")"><span class="sp-nav__icon">🧠</span><span>Recommendations</span></a>
+            <a asp-controller="Dispatch" asp-action="Index" class="sp-nav__item @(ctrl=="Dispatch"?"active":"")"><span class="sp-nav__icon">🚛</span><span>Dispatch Trips</span></a>
+            <a asp-controller="Disruptions" asp-action="Index" class="sp-nav__item @(ctrl=="Disruptions"?"active":"")"><span class="sp-nav__icon">⚡</span><span>Disruptions</span></a>
         </div>
 
         <!-- ── Impact ── -->
         <div class="sp-nav__section">
             <span class="sp-nav__label">Impact</span>
-            <a asp-controller="Emissions" asp-action="Index" class="sp-nav__item @(ctrl=="Emissions"?"active":"")">
-                <span class="sp-nav__icon">🌿</span><span>Emissions</span>
-            </a>
-            <a asp-controller="Pilot" asp-action="Index" class="sp-nav__item @(ctrl=="Pilot"?"active":"")">
-                <span class="sp-nav__icon">📊</span><span>Pilot Metrics</span>
-            </a>
-            <a asp-controller="Reports" asp-action="Index" class="sp-nav__item @(ctrl=="Reports"?"active":"")">
-                <span class="sp-nav__icon">📋</span><span>Reports</span>
-            </a>
+            <a asp-controller="Impact" asp-action="Index" class="sp-nav__item @(ctrl=="Impact"?"active":"")"><span class="sp-nav__icon">📈</span><span>Executive Impact Centre</span></a>
+            <a asp-controller="CleanLogistics" asp-action="Index" class="sp-nav__item @(ctrl=="CleanLogistics"?"active":"")"><span class="sp-nav__icon">🌍</span><span>Clean Logistics Impact</span></a>
+            <a asp-controller="Emissions" asp-action="Index" class="sp-nav__item @(ctrl=="Emissions"?"active":"")"><span class="sp-nav__icon">🌿</span><span>Emissions</span></a>
+            <a asp-controller="Brief" asp-action="Index" class="sp-nav__item @(ctrl=="Brief"?"active":"")"><span class="sp-nav__icon">🧾</span><span>Executive Brief</span></a>
+            <a asp-controller="Reports" asp-action="Index" class="sp-nav__item @(ctrl=="Reports"?"active":"")"><span class="sp-nav__icon">📋</span><span>Reports</span></a>
         </div>
 
-        <!-- ── Port Operations ── -->
+        <!-- ── Pilot ── -->
         <div class="sp-nav__section">
-            <span class="sp-nav__label">Port Operations</span>
-            <a asp-controller="Vessels" asp-action="Index" class="sp-nav__item @(ctrl=="Vessels"?"active":"")">
-                <span class="sp-nav__icon">⚓</span><span>Vessels</span>
-            </a>
-            <a asp-controller="Berths" asp-action="Index" class="sp-nav__item @(ctrl=="Berths"?"active":"")">
-                <span class="sp-nav__icon">🗓️</span><span>Berths</span>
-            </a>
-            <a asp-controller="Containers" asp-action="Index" class="sp-nav__item @(ctrl=="Containers"?"active":"")">
-                <span class="sp-nav__icon">📦</span><span>Containers</span>
-            </a>
-            <a asp-controller="Gates" asp-action="Index" class="sp-nav__item @(ctrl=="Gates"?"active":"")">
-                <span class="sp-nav__icon">🚪</span><span>Gates</span>
-            </a>
-            <a asp-controller="Incidents" asp-action="Index" class="sp-nav__item @(ctrl=="Incidents"&&act=="Index"?"active":"")">
-                <span class="sp-nav__icon">⚠️</span><span>Incidents</span>
-            </a>
-            <a asp-controller="Documents" asp-action="Index" class="sp-nav__item @(ctrl=="Documents"?"active":"")">
-                <span class="sp-nav__icon">📄</span><span>Documents</span>
-            </a>
-            <a asp-controller="Analytics" asp-action="Index" class="sp-nav__item @(ctrl=="Analytics"?"active":"")">
-                <span class="sp-nav__icon">📈</span><span>Analytics</span>
-            </a>
+            <span class="sp-nav__label">Pilot</span>
+            <a asp-controller="PilotReadiness" asp-action="Index" class="sp-nav__item @(ctrl=="PilotReadiness"?"active":"")"><span class="sp-nav__icon">🗺️</span><span>Pilot Readiness</span></a>
+            <a asp-controller="Stakeholders" asp-action="Index" class="sp-nav__item @(ctrl=="Stakeholders"?"active":"")"><span class="sp-nav__icon">🤝</span><span>Stakeholder Value</span></a>
+            <a asp-controller="Pilot" asp-action="Index" class="sp-nav__item @(ctrl=="Pilot"?"active":"")"><span class="sp-nav__icon">📊</span><span>Pilot Metrics</span></a>
+        </div>
+
+        <!-- ── Core Records ── -->
+        <div class="sp-nav__section">
+            <span class="sp-nav__label">Core Records</span>
+            <a asp-controller="Vessels" asp-action="Index" class="sp-nav__item @(ctrl=="Vessels"?"active":"")"><span class="sp-nav__icon">⚓</span><span>Vessels</span></a>
+            <a asp-controller="Berths" asp-action="Index" class="sp-nav__item @(ctrl=="Berths"?"active":"")"><span class="sp-nav__icon">🗓️</span><span>Berths</span></a>
+            <a asp-controller="Containers" asp-action="Index" class="sp-nav__item @(ctrl=="Containers"?"active":"")"><span class="sp-nav__icon">📦</span><span>Containers</span></a>
+            <a asp-controller="Gates" asp-action="Index" class="sp-nav__item @(ctrl=="Gates"?"active":"")"><span class="sp-nav__icon">🚪</span><span>Gates</span></a>
+            <a asp-controller="Fleet" asp-action="Index" class="sp-nav__item @(ctrl=="Fleet"?"active":"")"><span class="sp-nav__icon">🚚</span><span>Fleet</span></a>
+            <a asp-controller="Organisations" asp-action="Index" class="sp-nav__item @(ctrl=="Organisations"?"active":"")"><span class="sp-nav__icon">🏢</span><span>Organisations</span></a>
         </div>
 
         @if (User.IsInRole("Admin"))

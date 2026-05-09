@@ -1,0 +1,35 @@
+@{
+    ViewData["Title"] = "Clean Logistics Impact";
+    var cards = new[] {
+        new { Title = "Problem", Body = "Truck idling, port congestion, berth/gate bottlenecks, diesel waste and load-shedding disruption reduce flow visibility and create avoidable emissions exposure." },
+        new { Title = "Solution", Body = "Culltron Smart Port Flow uses local deterministic AI, truck queue intelligence, ETA tracking, hold-outside-port recommendations and scenario simulation to turn pressure signals into action plans." },
+        new { Title = "Clean impact", Body = "The demonstrator makes avoidable idling visible, estimates CO₂ and diesel-saving opportunities, and supports cleaner logistics flow through better dispatch timing." },
+        new { Title = "Pilot value", Body = "Synthetic demo data works now; production integrations would connect later to partner-approved TOS/IPMS, gate systems, telematics and energy data." },
+        new { Title = "NCIC fit", Body = "The platform aligns with clean logistics, emissions-reduction potential, operational resilience and explainable decision support without claiming live deployment or verified outcomes." }
+    };
+}
+<section class="sp-business-hero sp-premium-panel">
+    <div>
+        <div class="sp-agent-badge"><span class="sp-live-dot"></span> Clean logistics demonstrator · NCIC alignment</div>
+        <h1>Clean Logistics Impact</h1>
+        <p>Culltron Smart Port Flow positions smart-port operations as a clean logistics decision-support problem: reduce avoidable idling, coordinate truck release and improve resilience during disruptions.</p>
+        <div class="sp-command-actions">
+            <a class="sp-btn sp-btn--primary" asp-controller="Impact" asp-action="Index">Open Impact Centre</a>
+            <a class="sp-btn sp-btn--outline" asp-controller="PilotReadiness" asp-action="Index">90-day Pilot Roadmap</a>
+        </div>
+    </div>
+</section>
+<section class="sp-story-grid">
+@foreach (var card in cards)
+{
+    <article class="sp-business-card sp-story-card"><span>@card.Title</span><p>@card.Body</p></article>
+}
+</section>
+<section class="sp-card">
+    <div class="sp-card__header"><h3 class="sp-card__title">Realistic claim boundary</h3><span class="sp-card__meta">demo-safe</span></div>
+    <div class="sp-assumption-grid">
+        <div><strong>Demonstrator</strong><span>Current app uses synthetic demo data and local deterministic logic.</span></div>
+        <div><strong>Indicative impact</strong><span>Emissions/fuel estimates are explainable assumptions, not verified outcomes.</span></div>
+        <div><strong>Pilot-ready direction</strong><span>Production integrations would connect to partner-approved TOS/IPMS, gate, telematics, energy and emissions-factor data.</span></div>
+    </div>
+</section>

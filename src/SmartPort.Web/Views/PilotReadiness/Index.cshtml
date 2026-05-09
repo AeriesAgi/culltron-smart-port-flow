@@ -1,0 +1,40 @@
+@using SmartPort.Application.Interfaces
+@{
+    ViewData["Title"] = "Pilot Readiness";
+    var integrations = ViewBag.Integrations as IReadOnlyList<IntegrationProviderStatus> ?? Array.Empty<IntegrationProviderStatus>();
+    var timeline = new[] {
+        new { Title = "30-day pilot setup", Steps = new[] { "Confirm pilot site", "Define stakeholders", "Identify data owners", "Collect sample operational data", "Configure demo KPIs", "Validate workflows", "Define baseline metrics" } },
+        new { Title = "60-day integration prototype", Steps = new[] { "Connect gate/queue data", "Connect telematics or dispatch data", "Connect berth/vessel schedule data", "Validate emissions assumptions", "Connect disruption feeds", "Operator feedback cycle" } },
+        new { Title = "90-day operational pilot", Steps = new[] { "Daily shift brief", "Operator recommendations", "Scenario simulation", "Emissions/idling reporting", "Decision audit review", "Adoption review", "Pilot success report" } }
+    };
+    var metrics = new[] { "Truck waiting time reduction", "Queue length reduction", "Idling reduction", "CO₂ avoided", "Diesel cost avoided", "Average turnaround time", "Recommendation adoption rate", "Operator response time", "Disruption recovery time" };
+    var risks = new[] { "Data availability", "Operator adoption", "Integration complexity", "Network/power reliability", "Change management", "Data quality", "Stakeholder alignment" };
+}
+<section class="sp-business-hero sp-premium-panel"><div><div class="sp-agent-badge"><span class="sp-live-dot"></span> Pilot plan · production integrations disabled in demo</div><h1>Pilot Readiness</h1><p>A practical 30/60/90-day roadmap for moving the demonstrator toward a controlled pilot without claiming live production integration.</p></div></section>
+<section class="sp-timeline-grid">
+@foreach (var phase in timeline)
+{
+    <article class="sp-card sp-roadmap-card"><h3>@phase.Title</h3><ol>@foreach (var item in phase.Steps){<li>@item</li>}</ol></article>
+}
+</section>
+<section class="sp-card" id="integration-readiness">
+    <div class="sp-card__header"><h3 class="sp-card__title">Integration Readiness</h3><span class="sp-card__meta">adapters demo-backed by default</span></div>
+    <div class="sp-integration-grid">
+    @foreach (var item in integrations)
+    {
+        <article class="sp-integration-card">
+            <h4>@item.Name</h4>
+            <div class="sp-badge-row">@foreach (var badge in item.Badges.Take(4)){<span>@badge</span>}</div>
+            <p><strong>Demo status:</strong> @item.DemoStatus</p>
+            <p><strong>Production status:</strong> @item.ProductionStatus</p>
+            <p><strong>Data needed:</strong> @item.DataNeeded</p>
+            <p><strong>Business value:</strong> @item.BusinessValue</p>
+            <small>Risk: @item.RiskLevel · Complexity: @item.Complexity · @item.Adapter</small>
+        </article>
+    }
+    </div>
+</section>
+<section class="sp-command-layout">
+    <article class="sp-card"><h3>Success metrics</h3><div class="sp-chip-cloud">@foreach (var m in metrics){<span>@m</span>}</div></article>
+    <article class="sp-card"><h3>Risks and mitigation</h3><div class="sp-chip-cloud">@foreach (var r in risks){<span>@r · mitigation plan</span>}</div></article>
+</section>
