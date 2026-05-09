@@ -47,20 +47,20 @@
       <article class="sp-command-tile sp-command-tile--@berthSeverity">
         <span class="sp-command-tile__signal"></span>
         <div class="sp-command-tile__eyebrow">Berth Intelligence</div>
-        <strong>@context.BerthUtilisationPct:F0% berth utilisation</strong>
+        <strong>@($"{context.BerthUtilisationPct:F0}% berth utilisation")</strong>
         <p>Prioritise delayed vessels and resolve anchor pressure before it cascades into yard congestion.</p>
       </article>
       <article class="sp-command-tile sp-command-tile--@yardSeverity">
         <span class="sp-command-tile__signal"></span>
         <div class="sp-command-tile__eyebrow">Yard Pressure Intelligence</div>
-        <strong>@context.YardOccupancyPct:F1% yard occupancy</strong>
+        <strong>@($"{context.YardOccupancyPct:F1}% yard occupancy")</strong>
         <p>Escalate dwell alerts and pull cleared imports forward to recover premium ground slots.</p>
       </article>
       <article class="sp-command-tile sp-command-tile--@energySeverity">
         <span class="sp-command-tile__signal"></span>
         <div class="sp-command-tile__eyebrow">Energy + Emissions Layer</div>
         <strong>@(context.LoadSheddingActive ? "Load-shedding active" : "Energy stable")</strong>
-        <p>@context.EstimatedCo2Today:F1 kg CO₂ estimated today from idling. Protect reefers and reduce avoidable waits.</p>
+        <p>@($"{context.EstimatedCo2Today:F1} kg CO₂ estimated today from idling. Protect reefers and reduce avoidable waits.")</p>
       </article>
     </section>
   }
@@ -187,11 +187,11 @@
             </div>
             <div class="sp-agent-ctx-item"><span>⚓ Vessels In Port</span><strong>@context.VesselsInPort</strong></div>
             <div class="sp-agent-ctx-item"><span>🟡 At Anchor</span><strong>@context.VesselsAtAnchor</strong></div>
-            <div class="sp-agent-ctx-item"><span>🅿️ Berth Util.</span><strong>@context.BerthUtilisationPct%</strong></div>
+            <div class="sp-agent-ctx-item"><span>🅿️ Berth Util.</span><strong>@($"{context.BerthUtilisationPct:F0}%")</strong></div>
             <div class="sp-agent-ctx-item"><span>🚛 Gate Queue</span><strong>@context.TrucksInQueue trucks</strong></div>
-            <div class="sp-agent-ctx-item"><span>📦 Yard Occupancy</span><strong>@context.YardOccupancyPct:F1%</strong></div>
+            <div class="sp-agent-ctx-item"><span>📦 Yard Occupancy</span><strong>@($"{context.YardOccupancyPct:F1}%")</strong></div>
             <div class="sp-agent-ctx-item"><span>⚠️ Open Incidents</span><strong>@context.OpenIncidents</strong></div>
-            <div class="sp-agent-ctx-item"><span>🌿 CO₂ Today</span><strong>@context.EstimatedCo2Today:F1 kg</strong></div>
+            <div class="sp-agent-ctx-item"><span>🌿 CO₂ Today</span><strong>@($"{context.EstimatedCo2Today:F1} kg")</strong></div>
           </div>
         </div>
 

@@ -21,8 +21,14 @@
                         <option value="">— Select berth —</option>
                         @foreach (var b in (IEnumerable<SmartPort.Application.Interfaces.BerthStatusDto>)ViewBag.Berths)
                         {
-                            var disabled = b.Status != SmartPort.Domain.Enums.BerthStatus.Available ? "disabled" : "";
-                            <option value="@b.Id" @disabled>@b.Code — @b.Name (@b.Status)</option>
+                            if (b.Status == SmartPort.Domain.Enums.BerthStatus.Available)
+                            {
+                                <option value="@b.Id">@b.Code — @b.Name (@b.Status)</option>
+                            }
+                            else
+                            {
+                                <option value="@b.Id" disabled="disabled">@b.Code — @b.Name (@b.Status)</option>
+                            }
                         }
                     </select>
                 </div>

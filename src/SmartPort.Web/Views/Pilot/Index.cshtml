@@ -33,13 +33,13 @@
     <div class="sp-kpi-card">
         <div class="sp-kpi-card__icon sp-kpi-card__icon--teal"><i data-feather="clock"></i></div>
         <div class="sp-kpi-card__body">
-            <div class="sp-kpi-card__value">@current.AverageWaitingMinutes.ToString("F0") min</div>
+            <div class="sp-kpi-card__value">@($"{current.AverageWaitingMinutes:F0} min")</div>
             <div class="sp-kpi-card__label">Avg Waiting Time</div>
             @if (baseline != null)
             {
                 var chg = Model.WaitingMinutesChangePercent;
                 <div class="sp-kpi-card__sub @(chg < 0 ? "sp-text-success" : "sp-text-danger")">
-                    Baseline: @baseline.AverageWaitingMinutes.ToString("F0") min · @(chg.HasValue ? $"{(chg > 0 ? "+" : "")}{chg:F1}%" : "—")
+                    Baseline: @($"{baseline.AverageWaitingMinutes:F0} min") · @(chg.HasValue ? $"{(chg > 0 ? "+" : "")}{chg:F1}%" : "—")
                 </div>
             }
         </div>
@@ -47,13 +47,13 @@
     <div class="sp-kpi-card">
         <div class="sp-kpi-card__icon sp-kpi-card__icon--orange"><i data-feather="droplet"></i></div>
         <div class="sp-kpi-card__body">
-            <div class="sp-kpi-card__value">R@current.EstimatedFuelCost.ToString("N0")</div>
+            <div class="sp-kpi-card__value">@($"R{current.EstimatedFuelCost:N2}")</div>
             <div class="sp-kpi-card__label">Est. Fuel Cost</div>
             @if (baseline != null)
             {
                 var chg = Model.FuelCostChangePercent;
                 <div class="sp-kpi-card__sub @(chg < 0 ? "sp-text-success" : "sp-text-danger")">
-                    Baseline: R@baseline.EstimatedFuelCost.ToString("N0") · @(chg.HasValue ? $"{(chg > 0 ? "+" : "")}{chg:F1}%" : "—")
+                    Baseline: @($"R{baseline.EstimatedFuelCost:N2}") · @(chg.HasValue ? $"{(chg > 0 ? "+" : "")}{chg:F1}%" : "—")
                 </div>
             }
         </div>
@@ -61,13 +61,13 @@
     <div class="sp-kpi-card">
         <div class="sp-kpi-card__icon sp-kpi-card__icon--green"><i data-feather="wind"></i></div>
         <div class="sp-kpi-card__body">
-            <div class="sp-kpi-card__value">@current.EstimatedCo2Kg.ToString("N1") kg</div>
+            <div class="sp-kpi-card__value">@($"{current.EstimatedCo2Kg:N1} kg")</div>
             <div class="sp-kpi-card__label">Est. CO₂</div>
             @if (baseline != null)
             {
                 var chg = Model.Co2ChangePercent;
                 <div class="sp-kpi-card__sub @(chg < 0 ? "sp-text-success" : "sp-text-danger")">
-                    Baseline: @baseline.EstimatedCo2Kg.ToString("N1") kg · @(chg.HasValue ? $"{(chg > 0 ? "+" : "")}{chg:F1}%" : "—")
+                    Baseline: @($"{baseline.EstimatedCo2Kg:N1} kg") · @(chg.HasValue ? $"{(chg > 0 ? "+" : "")}{chg:F1}%" : "—")
                 </div>
             }
         </div>
@@ -75,13 +75,13 @@
     <div class="sp-kpi-card">
         <div class="sp-kpi-card__icon sp-kpi-card__icon--blue"><i data-feather="check-circle"></i></div>
         <div class="sp-kpi-card__body">
-            <div class="sp-kpi-card__value">@current.DispatchReliabilityPercent.ToString("F1")%</div>
+            <div class="sp-kpi-card__value">@($"{current.DispatchReliabilityPercent:F1}%")</div>
             <div class="sp-kpi-card__label">Dispatch Reliability</div>
             @if (baseline != null)
             {
                 var chg = Model.ReliabilityChangePoints;
                 <div class="sp-kpi-card__sub @(chg > 0 ? "sp-text-success" : "sp-text-danger")">
-                    Baseline: @baseline.DispatchReliabilityPercent.ToString("F1")% · @(chg.HasValue ? $"{(chg > 0 ? "+" : "")}{chg:F1} pts" : "—")
+                    Baseline: @($"{baseline.DispatchReliabilityPercent:F1}%") · @(chg.HasValue ? $"{(chg > 0 ? "+" : "")}{chg:F1} pts" : "—")
                 </div>
             }
         </div>
@@ -125,12 +125,12 @@
                     <tr>
                         <td><strong>@s.PeriodLabel</strong></td>
                         <td><span class="sp-badge sp-badge--@mc">@s.MetricType</span></td>
-                        <td>@s.AverageWaitingMinutes.ToString("F0")</td>
-                        <td>@s.TotalIdlingMinutes.ToString("N0") min</td>
-                        <td>R@s.EstimatedFuelCost.ToString("N0")</td>
-                        <td>@s.EstimatedCo2Kg.ToString("N1")</td>
+                        <td>@($"{s.AverageWaitingMinutes:F0}")</td>
+                        <td>@($"{s.TotalIdlingMinutes:N0} min")</td>
+                        <td>@($"R{s.EstimatedFuelCost:N2}")</td>
+                        <td>@($"{s.EstimatedCo2Kg:N1}")</td>
                         <td>@s.MissedArrivalWindows</td>
-                        <td>@s.DispatchReliabilityPercent.ToString("F1")%</td>
+                        <td>@($"{s.DispatchReliabilityPercent:F1}%")</td>
                         <td>@s.RecommendationsGenerated</td>
                         <td class="sp-table__mono">@s.SnapshotDate.ToString("dd MMM yyyy")</td>
                     </tr>

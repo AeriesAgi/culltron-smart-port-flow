@@ -19,7 +19,7 @@
         <div><span>Gate Queue</span><strong>@ctx.TrucksInQueue</strong><small>trucks</small></div>
         <div><span>Berth Util.</span><strong>@($"{ctx.BerthUtilisationPct:F0}%")</strong><small>@ctx.BerthsOccupied occupied</small></div>
         <div><span>Yard Pressure</span><strong>@($"{ctx.YardOccupancyPct:F1}%")</strong><small>@ctx.DwellAlerts dwell alerts</small></div>
-        <div><span>CO₂ Today</span><strong>@($"{ctx.EstimatedCo2Today:F1}kg")</strong><small>@($"{ctx.TotalIdlingMinutesToday:F0} idle min")</small></div>
+        <div><span>CO₂ Today</span><strong>@($"{ctx.EstimatedCo2Today:F1} kg")</strong><small>@($"{ctx.TotalIdlingMinutesToday:F0} idle min")</small></div>
         <div><span>Energy</span><strong>@(ctx.LoadSheddingActive ? "ACTIVE" : "STABLE")</strong><small>@ctx.ActiveDisruptions disruptions</small></div>
     </div>
 
@@ -29,9 +29,12 @@
                 <div>
                     <span class="sp-copilot-status-dot"></span>
                     <strong>SmartPort Copilot</strong>
-                    <small>Local deterministic rules/scoring engine</small>
+                    <small>Local deterministic rules/scoring engine · scope-controlled assistant</small>
                 </div>
-                <span class="sp-badge sp-badge--info">Offline-safe</span>
+                <div style="display:flex;gap:.4rem;flex-wrap:wrap;justify-content:flex-end">
+                    <span class="sp-badge sp-badge--info">Offline-safe</span>
+                    <span class="sp-badge sp-badge--success">Demo data</span>
+                </div>
             </div>
 
             <div class="sp-copilot-thread" id="copilotThread">
@@ -39,7 +42,7 @@
                     <div class="sp-copilot-avatar">AI</div>
                     <div class="sp-copilot-bubble">
                         <strong>Ready for shift command.</strong>
-                        <p>Ask about risks, gates, berths, load-shedding, emissions, scenarios or demo narration. I will respond with reasoning, action, expected impact and links.</p>
+                        <p>Ask about truck tracking/ETA, risks, gates, berths, yard congestion, load-shedding, emissions, scenarios or demo narration. I will respond with summary, reasoning, action, expected impact, confidence and links.</p>
                     </div>
                 </div>
 
@@ -93,7 +96,7 @@
 
                 <div class="sp-copilot-typing" id="copilotTyping" hidden>
                     <span></span><span></span><span></span>
-                    <em>Copilot is scoring port state locally…</em>
+                    <em>Analysing live demo context locally…</em>
                 </div>
             </div>
 
@@ -105,6 +108,22 @@
         </div>
 
         <aside class="sp-copilot-side">
+            <div class="sp-card sp-supported-card">
+                <div class="sp-card__header"><h3 class="sp-card__title">Supported Topics</h3></div>
+                <div class="sp-supported-topics">
+                    @foreach (var topic in Model.SupportedTopics)
+                    {
+                        <span>@topic</span>
+                    }
+                </div>
+                <p class="sp-scope-note">Scope-limited to smart port flow, disruption, emissions, tracking, scenarios and recommendations. Unsafe or unrelated requests are redirected.</p>
+            </div>
+
+            <div class="sp-card sp-judge-card">
+                <div class="sp-card__header"><h3 class="sp-card__title">Judge Demo Path</h3></div>
+                <p>Landing → Dashboard → AI Agent → Copilot Chat → Truck Tracking → Scenario Simulator → Emissions → Recommendations</p>
+            </div>
+
             <div class="sp-card">
                 <div class="sp-card__header"><h3 class="sp-card__title">Demo Prompt Chips</h3></div>
                 <div class="sp-copilot-chip-grid">

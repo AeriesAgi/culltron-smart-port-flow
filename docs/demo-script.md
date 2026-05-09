@@ -2,7 +2,7 @@
 
 ## Exact demo path
 
-Landing page → Dashboard → AI Agent/Copilot Command Center → Copilot Chat → Scenario Simulator → Emissions/Recommendations/Audit
+Landing → Dashboard → AI Agent → Copilot Chat → Truck Tracking → Scenario Simulator → Emissions → Recommendations
 
 ## Objective
 
@@ -14,12 +14,13 @@ Demonstrate a polished enterprise Smart Port Agentic Operations Copilot that pre
 2. Log in as `ops.manager@smartport.co.za` using `SmartPort@2025!`.
 3. Open `/dashboard` and highlight the premium command-center KPIs.
 4. Open `/agent` and ask: “What should the operations manager prioritise right now?”
-5. Open `/copilot`, use the “Biggest risk” and “Reduce idling” prompt chips, then ask “Prepare a 2-minute demo summary.”
-6. Explain that both copilot experiences are local/deterministic and do not need paid AI APIs or cloud secrets.
-7. Open `/simulator`, run a high-congestion or load-shedding scenario, and show risk scores, expected wait-time impact and recommended actions.
-8. Open `/emissions` and show avoidable idling, diesel cost and CO₂ estimates.
-9. Open `/flow/recommendations` or `/reports/recommendations` and show the recommendation audit trail.
-10. Close with the roadmap: real telemetry integrations, forecasting models, digital twin optimization and production-grade workflow/audit controls.
+5. Open `/copilot`, use the “Biggest risk”, “Track trucks” and “Hold trucks” prompt chips, then ask “Prepare a 2-minute demo summary.”
+6. Explain that both copilot experiences are local/deterministic, scope-controlled and do not need paid AI APIs or cloud secrets.
+7. Open `/TruckTracking` and show ETA, checkpoint, queue risk, hold outside port, priority release and CO₂/idling exposure.
+8. Open `/simulator`, run a high-congestion or load-shedding scenario, and show risk scores, expected wait-time impact and recommended actions.
+9. Open `/emissions` and show avoidable idling, diesel cost and CO₂ estimates.
+10. Open `/flow/recommendations` or `/reports/recommendations` and show the recommendation audit trail.
+11. Close with the roadmap: real telemetry integrations, forecasting models, digital twin optimization and production-grade workflow/audit controls.
 
 ## Suggested judge narration
 
@@ -27,11 +28,18 @@ Demonstrate a polished enterprise Smart Port Agentic Operations Copilot that pre
 
 ## Backup demo prompts for Copilot Chat
 
+- hello
+- what can you do
+- trucks on queue
+- track delayed trucks
+- which trucks should be held outside the port
+
 - What is the biggest risk right now?
 - Explain current congestion.
 - Which gate is becoming a bottleneck?
 - Which vessel or berth needs attention first?
 - How should we reduce truck idling and emissions?
+- Which trucks are causing emissions/idling risk?
 - What happens if load-shedding starts soon?
 - Generate an operator action plan.
 - How much CO2 can we save?
