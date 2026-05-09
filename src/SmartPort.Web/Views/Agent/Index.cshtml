@@ -15,6 +15,8 @@
             <a class="sp-btn sp-btn--outline" asp-controller="Copilot" asp-action="Index" asp-route-prompt="what should operators do first">Open Copilot Chat</a>
             <a class="sp-btn sp-btn--outline" asp-controller="Simulator" asp-action="Index">Run Scenario</a>
             <a class="sp-btn sp-btn--outline" asp-controller="TruckTracking" asp-action="Index">View Truck Tracking</a>
+            <a class="sp-btn sp-btn--outline" asp-controller="Impact" asp-action="Index">Executive Impact</a>
+            <a class="sp-btn sp-btn--outline" asp-controller="Brief" asp-action="Index">Executive Brief</a>
         </div>
     </div>
     @if (snapshot != null)
@@ -31,6 +33,16 @@
     <i data-feather="info"></i>
     <span>This page is not a chat screen. It answers “what is happening across the port right now?” using synthetic demo data and deterministic local rules. Production integrations would connect to TOS/IPMS, gate systems, GPS/telematics and energy data.</span>
 </div>
+
+@if (snapshot != null)
+{
+    <section class="sp-business-grid sp-business-grid--compact">
+        <article class="sp-business-card"><span>Current operational risk</span><strong>@snapshot.TopRiskSeverity</strong><small>@snapshot.TopRisk</small></article>
+        <article class="sp-business-card"><span>Estimated impact opportunity</span><strong>@Math.Round(snapshot.IdlingMinutes * 0.32m, 0) min</strong><small>indicative idling reduction window</small></article>
+        <article class="sp-business-card"><span>Recommended next action</span><strong>Meter arrivals</strong><small>@snapshot.ImmediateActions.FirstOrDefault()</small></article>
+        <article class="sp-business-card"><span>Business context</span><strong>Demo ready</strong><small><a asp-controller="PilotReadiness" asp-action="Index">Pilot roadmap</a> · <a asp-controller="Copilot" asp-action="Index" asp-route-prompt="Explain NCIC alignment">Ask NCIC alignment</a></small></article>
+    </section>
+}
 
 @if (snapshot != null)
 {
