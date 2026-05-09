@@ -13,13 +13,19 @@ namespace SmartPort.Web.Controllers;
 public class AgentController : Controller
 {
     private readonly IAiAgentService _agent;
+    private readonly ISmartPortIntelligenceService _intelligence;
 
-    public AgentController(IAiAgentService agent) => _agent = agent;
+    public AgentController(IAiAgentService agent, ISmartPortIntelligenceService intelligence)
+    {
+        _agent = agent;
+        _intelligence = intelligence;
+    }
 
     public async Task<IActionResult> Index()
     {
         ViewBag.SuggestedQuestions = _agent.GetSuggestedQuestions();
         ViewBag.Context = await _agent.GetContextAsync();
+        ViewBag.Snapshot = await _intelligence.GetSnapshotAsync();
         return View();
     }
 
@@ -33,6 +39,7 @@ public class AgentController : Controller
         ViewBag.Answer = answer;
         ViewBag.SuggestedQuestions = _agent.GetSuggestedQuestions();
         ViewBag.Context = await _agent.GetContextAsync();
+        ViewBag.Snapshot = await _intelligence.GetSnapshotAsync();
         return View("Index");
     }
 

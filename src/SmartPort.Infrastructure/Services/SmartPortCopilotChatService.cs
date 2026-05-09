@@ -7,6 +7,7 @@ namespace SmartPort.Infrastructure.Services;
 public interface ISmartPortCopilotChatService
 {
     Task<CopilotChatPageModel> BuildPageAsync(string? prompt = null);
+    Task<CopilotChatResponse> GenerateResponseAsync(string prompt);
     List<CopilotPromptChip> GetPromptChips();
 }
 
@@ -29,8 +30,11 @@ public class CopilotPromptChip
 public class CopilotChatResponse
 {
     public string Prompt { get; set; } = string.Empty;
+    public string MessageType { get; set; } = "operational";
     public string Intent { get; set; } = "general";
+    public string Title { get; set; } = string.Empty;
     public string Summary { get; set; } = string.Empty;
+    public string ShortAnswer { get; set; } = string.Empty;
     public string OperationalReasoning { get; set; } = string.Empty;
     public string RecommendedAction { get; set; } = string.Empty;
     public string ExpectedImpact { get; set; } = string.Empty;
@@ -41,6 +45,13 @@ public class CopilotChatResponse
     public string EnergyImpact { get; set; } = string.Empty;
     public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
     public List<CopilotActionCard> ActionCards { get; set; } = new();
+    public string DataNote { get; set; } = "Synthetic demo data · deterministic local response";
+    public bool IsSmallTalk { get; set; }
+    public bool IsOutOfScope { get; set; }
+    public bool IsVagueButRelated { get; set; }
+    public bool IsOperational { get; set; } = true;
+    public List<string> SuggestedFollowUps { get; set; } = new();
+    public List<CopilotPromptChip> TopicChips { get; set; } = new();
     public List<CopilotMetricBadge> MetricBadges { get; set; } = new();
 }
 
@@ -64,12 +75,14 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
     private readonly IAiAgentService _agent;
     private readonly SmartPortDbContext _db;
     private readonly ITruckTrackingService _tracking;
+    private readonly ISmartPortIntelligenceService _intelligence;
 
-    public SmartPortCopilotChatService(IAiAgentService agent, SmartPortDbContext db, ITruckTrackingService tracking)
+    public SmartPortCopilotChatService(IAiAgentService agent, SmartPortDbContext db, ITruckTrackingService tracking, ISmartPortIntelligenceService intelligence)
     {
         _agent = agent;
         _db = db;
         _tracking = tracking;
+        _intelligence = intelligence;
     }
 
     public async Task<CopilotChatPageModel> BuildPageAsync(string? prompt = null)
@@ -111,6 +124,21 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         "Emissions / CO₂", "Load-shedding disruption", "Scenario simulation", "Recommendations", "Demo summary"
     };
 
+    public async Task<CopilotChatResponse> GenerateResponseAsync(string prompt)
+    {
+        var context = await _agent.GetContextAsync();
+        var snapshot = await _intelligence.GetSnapshotAsync();
+        var response = await GenerateResponseAsync(prompt.Trim(), context);
+        response.DataNote = $"{snapshot.DataNote} · snapshot {snapshot.Timestamp:HH:mm:ss} UTC";
+        if (response.Intent == "risk")
+        {
+            response.Title = snapshot.TopRisk;
+            response.AffectedArea = snapshot.AffectedArea;
+            response.ConfidenceScore = snapshot.Confidence;
+        }
+        return response;
+    }
+
     private async Task<CopilotChatResponse> GenerateResponseAsync(string prompt, OperationalContext ctx)
     {
         var q = prompt.ToLowerInvariant();
@@ -145,7 +173,8 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         if (IsGreeting(q)) return "greeting";
         if (Has(q, "help", "what can you do", "what are you", "capabilit", "supported", "topics")) return "help";
         if (Has(q, "demo", "2-minute", "summary", "video", "pitch", "walkthrough")) return "demo";
-        if (Has(q, "action plan", "next", "priorit", "manager do", "operator action")) return "action-plan";
+        if (Has(q, "biggest risk", "port risk", "operational risk", "current risk", "what is urgent", "urgent", "do first", "should we do first", "manager do first")) return "risk";
+        if (Has(q, "action plan", "operator action", "recommended actions", "what should operators do", "generate action", "prepare shift brief", "shift brief", "prioritise first", "prioritize first")) return "action-plan";
         if (Has(q, "track", "tracking", "eta", "truck eta", "where are the trucks", "where are trucks", "delayed truck", "delayed trucks", "which trucks are delayed", "hold outside", "held outside", "outside port", "wait outside", "trucks to hold", "hold trucks", "which trucks should wait", "priority release", "priority release trucks", "approaching", "checkpoint")) return "truck-tracking";
         if (Has(q, "truck queue", "trucks on queue", "queued truck", "queued trucks", "trucks in queue", "gate queue trucks")) return "truck-tracking";
         if (Has(q, "gate", "bottleneck", "queue")) return "gate";
@@ -154,11 +183,11 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         if (Has(q, "berth", "anchor", "turnaround")) return "berth";
         if (Has(q, "vessel", "ship", "eta slip")) return "vessel";
         if (Has(q, "yard", "container", "dwell")) return "yard";
-        if (Has(q, "scenario", "simulate", "what if")) return "scenario";
+        if (Has(q, "scenario", "simulate", "what if", "what happens if")) return "scenario";
         if (Has(q, "recommend")) return "recommendations";
         if (Has(q, "audit", "decision history", "decision")) return "audit";
         if (Has(q, "port", "operation", "congestion", "risk", "flow", "terminal")) return "vague-related";
-        if (Has(q, "politics", "medical", "legal advice", "financial advice", "recipe", "homework", "code", "programming", "weather", "sports", "celebrity", "news", "general knowledge", "offensive", "abusive")) return "out-of-scope";
+        if (Has(q, "politics", "medical", "legal advice", "financial advice", "recipe", "homework", "code", "coding", "programming", "weather", "sports", "celebrity", "news", "general knowledge", "offensive", "abusive", "bypass security", "show config")) return "out-of-scope";
         return "out-of-scope";
     }
 
@@ -356,7 +385,7 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         Base(prompt, "demo", "Medium", 94, "Competition Demo Narrative",
             "Culltron Smart Port Flow is a local deterministic Smart Port Copilot that converts synthetic port telemetry into explainable operator actions.",
             $"The live demo shows {ctx.VesselsInPort} vessels in port, {ctx.TrucksInQueue} queued trucks, {ctx.YardOccupancyPct:F1}% yard occupancy, {ctx.ActiveDisruptions} disruptions and {ctx.EstimatedCo2Today:F1} kg CO₂ from idling today.",
-            "Narrate Landing → Dashboard → AI Agent → Copilot Chat → Truck Tracking → Scenario Simulator → Emissions → Recommendations/Audit.",
+            "Narrate Landing → Dashboard → AI Command Centre → SmartPort Copilot Chat → Truck Tracking → Scenario Simulator → Emissions → Recommendations/Audit.",
             "Judges see premium UI, deterministic AI, scenario planning, sustainability impact and accountable decision history in under three minutes.",
             "Highlight CO₂/idling savings as a measurable business and sustainability outcome.",
             ctx.LoadSheddingActive ? "Mention active load-shedding response as a South African port reality." : "Mention that load-shedding can be simulated without live external feeds.",
@@ -370,7 +399,10 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         {
             Prompt = prompt,
             Intent = intent,
+            Title = area,
             Summary = summary,
+            ShortAnswer = summary,
+            MessageType = intent.Contains("greeting") || intent.Contains("help") ? "compact" : intent.Contains("out-of-scope") || intent.Contains("safety") ? "warning" : intent.Contains("vague") ? "clarification" : "operational",
             OperationalReasoning = reasoning,
             RecommendedAction = action,
             ExpectedImpact = impact,
@@ -380,6 +412,12 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
             EmissionsImpact = emissions,
             EnergyImpact = energy,
             ActionCards = cards,
+            IsSmallTalk = intent.Contains("greeting") || intent.Contains("help"),
+            IsOutOfScope = intent.Contains("out-of-scope") || intent.Contains("safety"),
+            IsVagueButRelated = intent.Contains("vague"),
+            IsOperational = !(intent.Contains("greeting") || intent.Contains("help") || intent.Contains("out-of-scope") || intent.Contains("safety") || intent.Contains("vague")),
+            SuggestedFollowUps = new() { "What is the biggest risk right now?", "Which trucks should be held outside the port?", "Generate an operator action plan." },
+            TopicChips = GetPromptChips().Take(6).ToList(),
             MetricBadges = new()
             {
                 new() { Label = "Urgency", Value = severity, Tone = severity.ToLowerInvariant() switch { "critical" => "danger", "high" => "warning", _ => "info" } },

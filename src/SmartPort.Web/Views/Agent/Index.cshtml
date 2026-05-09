@@ -1,210 +1,129 @@
 @using SmartPort.Infrastructure.Services
 @{
-    ViewData["Title"] = "Copilot Command Center";
-    var answer  = ViewBag.Answer  as AgentAnswer;
+    ViewData["Title"] = "AI Command Centre";
+    var snapshot = ViewBag.Snapshot as SmartPortOperationsSnapshot;
     var context = ViewBag.Context as OperationalContext;
-    var suggested = ViewBag.SuggestedQuestions as List<AgentQuestion> ?? new();
 }
 
-<div class="sp-agent-page">
-
-  <!-- ── Header ── -->
-  <div class="sp-agent-header">
-    <div class="sp-agent-header__left">
-      <div class="sp-agent-badge"><span>🤖</span> Local Deterministic AI Copilot</div>
-      <h1 class="sp-agent-title">SmartPort AI Agent / Copilot Command Center</h1>
-      <p class="sp-agent-subtitle">Explainable berth, gate, yard, energy, emissions and truck-flow recommendations from live demo port conditions — no paid AI APIs or cloud secrets required.</p>
-    </div>
-    <div class="sp-agent-header__right">
-      @if (context != null)
-      {
-        <div class="sp-agent-status">
-          <span class="sp-agent-status__dot"></span>
-          <span>Live — @context.ActiveDisruptions disruption(s) · @context.VesselsInPort vessel(s) in port · @context.TrucksInQueue trucks queued</span>
+<section class="sp-command-hero sp-premium-panel">
+    <div>
+        <div class="sp-agent-badge"><span class="sp-live-dot"></span> AI Agent Command Centre · Local deterministic intelligence</div>
+        <h1>AI Command Centre</h1>
+        <p>System-level operational intelligence, risk scoring, autonomous monitoring lanes and recommended actions for the synthetic smart-port demo state.</p>
+        <div class="sp-command-actions">
+            <button class="sp-btn sp-btn--primary" type="button" data-shift-brief>Generate Shift Brief</button>
+            <a class="sp-btn sp-btn--outline" asp-controller="Copilot" asp-action="Index" asp-route-prompt="what should operators do first">Open Copilot Chat</a>
+            <a class="sp-btn sp-btn--outline" asp-controller="Simulator" asp-action="Index">Run Scenario</a>
+            <a class="sp-btn sp-btn--outline" asp-controller="TruckTracking" asp-action="Index">View Truck Tracking</a>
         </div>
-      }
     </div>
-  </div>
+    @if (snapshot != null)
+    {
+        <div class="sp-command-risk-dial sp-command-risk-dial--@snapshot.TopRiskSeverity.ToLowerInvariant()">
+            <span>@snapshot.TopRiskSeverity</span>
+            <strong>@snapshot.Confidence%</strong>
+            <small>confidence</small>
+        </div>
+    }
+</section>
 
-  <div class="sp-alert sp-alert--info" style="margin-bottom:1.25rem">
+<div class="sp-alert sp-alert--info" style="margin-bottom:1.25rem">
     <i data-feather="info"></i>
-    <span>All responses are based on <strong>synthetic operational data</strong> generated for demonstration purposes. No real port, vessel, or private operator data is used.</span>
-  </div>
-
-  @if (context != null)
-  {
-    var gateSeverity = context.TrucksInQueue > 14 ? "critical" : context.TrucksInQueue > 8 ? "high" : "watch";
-    var yardSeverity = context.YardOccupancyPct > 88 ? "critical" : context.YardOccupancyPct > 76 ? "high" : "watch";
-    var berthSeverity = context.BerthUtilisationPct > 88 || context.VesselsAtAnchor > 0 ? "high" : "watch";
-    var energySeverity = context.LoadSheddingActive ? "critical" : "watch";
-    <section class="sp-command-strip" aria-label="Copilot intelligence lanes">
-      <article class="sp-command-tile sp-command-tile--@gateSeverity">
-        <span class="sp-command-tile__signal"></span>
-        <div class="sp-command-tile__eyebrow">Gate Queue Intelligence</div>
-        <strong>@context.TrucksInQueue trucks queued</strong>
-        <p>Open overflow lanes and smooth appointment arrivals when queue depth exceeds the active gate plan.</p>
-      </article>
-      <article class="sp-command-tile sp-command-tile--@berthSeverity">
-        <span class="sp-command-tile__signal"></span>
-        <div class="sp-command-tile__eyebrow">Berth Intelligence</div>
-        <strong>@($"{context.BerthUtilisationPct:F0}% berth utilisation")</strong>
-        <p>Prioritise delayed vessels and resolve anchor pressure before it cascades into yard congestion.</p>
-      </article>
-      <article class="sp-command-tile sp-command-tile--@yardSeverity">
-        <span class="sp-command-tile__signal"></span>
-        <div class="sp-command-tile__eyebrow">Yard Pressure Intelligence</div>
-        <strong>@($"{context.YardOccupancyPct:F1}% yard occupancy")</strong>
-        <p>Escalate dwell alerts and pull cleared imports forward to recover premium ground slots.</p>
-      </article>
-      <article class="sp-command-tile sp-command-tile--@energySeverity">
-        <span class="sp-command-tile__signal"></span>
-        <div class="sp-command-tile__eyebrow">Energy + Emissions Layer</div>
-        <strong>@(context.LoadSheddingActive ? "Load-shedding active" : "Energy stable")</strong>
-        <p>@($"{context.EstimatedCo2Today:F1} kg CO₂ estimated today from idling. Protect reefers and reduce avoidable waits.")</p>
-      </article>
-    </section>
-  }
-
-  <div class="sp-agent-grid">
-
-    <!-- ── Ask Form ── -->
-    <div class="sp-agent-main">
-      <div class="sp-card">
-        <div class="sp-card__header">
-          <h3 class="sp-card__title">Ask the Agent</h3>
-          <span class="sp-card__meta">Local rules/scoring engine · explainable audit trail</span>
-        </div>
-        <div style="padding:1.25rem">
-          <form asp-action="Ask" asp-controller="Agent" method="post">
-            @Html.AntiForgeryToken()
-            <div class="sp-agent-input-row">
-              <input type="text" name="question" class="sp-form__input sp-form__input--lg sp-agent-input"
-                     placeholder="e.g. What is causing congestion today?"
-                     value="@answer?.Question" autofocus autocomplete="off" />
-              <button type="submit" class="sp-btn sp-btn--primary sp-btn--lg">
-                <i data-feather="send"></i> Ask
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- ── Answer ── -->
-      @if (answer != null)
-      {
-        var riskClass = answer.RiskLevel switch { "critical" => "danger", "high" => "high", "medium" => "warning", _ => "info" };
-        <div class="sp-card sp-agent-answer sp-agent-answer--@riskClass" style="margin-top:1.25rem">
-          <div class="sp-card__header">
-            <div>
-              <span class="sp-badge sp-badge--type">@answer.Category</span>
-              <span class="sp-badge sp-badge--@riskClass" style="margin-left:.375rem">@answer.RiskLevel.ToUpper()</span>
-              @if (answer.IsFromLlm) { <span class="sp-badge sp-badge--ai" style="margin-left:.375rem">LLM Enhanced</span> }
-            </div>
-            <span class="sp-card__meta">@answer.AnsweredAt SAST</span>
-          </div>
-          <div style="padding:1.25rem">
-            <div class="sp-agent-answer__question">
-              <i data-feather="message-circle" style="width:14px;height:14px;flex-shrink:0"></i>
-              @answer.Question
-            </div>
-            <div class="sp-agent-answer__text">
-              @foreach (var line in answer.Answer.Split('\n'))
-              {
-                if (line.StartsWith("**") && line.EndsWith("**"))
-                {
-                  <p><strong>@line.Trim('*')</strong></p>
-                }
-                else if (line.StartsWith("• "))
-                {
-                  <p style="padding-left:1rem">@line</p>
-                }
-                else if (!string.IsNullOrWhiteSpace(line))
-                {
-                  <p>@line</p>
-                }
-              }
-            </div>
-
-            @if (answer.RelatedActions.Any())
-            {
-              <div class="sp-agent-actions">
-                <div class="sp-agent-actions__title"><i data-feather="zap" style="width:14px;height:14px"></i> Recommended Actions</div>
-                <ul class="sp-agent-actions__list">
-                  @foreach (var a in answer.RelatedActions) { <li>@a</li> }
-                </ul>
-              </div>
-            }
-
-            @if (answer.DataPoints.Any())
-            {
-              <div class="sp-agent-datapoints">
-                @foreach (var d in answer.DataPoints)
-                { <span class="sp-agent-dp">@d</span> }
-              </div>
-            }
-
-            <div class="sp-agent-disclaimer">@answer.DataDisclaimer</div>
-          </div>
-        </div>
-      }
-    </div>
-
-    <!-- ── Sidebar ── -->
-    <div class="sp-agent-sidebar">
-
-      <!-- Suggested Questions -->
-      <div class="sp-card">
-        <div class="sp-card__header"><h3 class="sp-card__title">Suggested Copilot Prompts</h3></div>
-        <div style="padding:.75rem">
-          @foreach (var q in suggested)
-          {
-            <form asp-action="Ask" asp-controller="Agent" method="post" style="margin-bottom:.375rem">
-              @Html.AntiForgeryToken()
-              <input type="hidden" name="question" value="@q.Question" />
-              <button type="submit" class="sp-agent-suggestion">@q.Question</button>
-            </form>
-          }
-        </div>
-      </div>
-
-      <!-- Live Context -->
-      @if (context != null)
-      {
-        <div class="sp-card" style="margin-top:1rem">
-          <div class="sp-card__header"><h3 class="sp-card__title">Live Context</h3></div>
-          <div style="padding:.75rem 1.25rem">
-            <div class="sp-agent-ctx-item @(context.LoadSheddingActive ? "sp-agent-ctx-item--danger" : "")">
-              <span>⚡ Load-Shedding</span>
-              <span class="sp-badge sp-badge--@(context.LoadSheddingActive ? "danger" : "success")">@(context.LoadSheddingActive ? "ACTIVE" : "Clear")</span>
-            </div>
-            <div class="sp-agent-ctx-item @(context.RoadCongestionActive ? "sp-agent-ctx-item--warn" : "")">
-              <span>🚛 Road Congestion</span>
-              <span class="sp-badge sp-badge--@(context.RoadCongestionActive ? "warning" : "success")">@(context.RoadCongestionActive ? "ACTIVE" : "Clear")</span>
-            </div>
-            <div class="sp-agent-ctx-item @(context.GateDelayActive ? "sp-agent-ctx-item--warn" : "")">
-              <span>🚪 Gate Delay</span>
-              <span class="sp-badge sp-badge--@(context.GateDelayActive ? "warning" : "success")">@(context.GateDelayActive ? "ACTIVE" : "Clear")</span>
-            </div>
-            <div class="sp-agent-ctx-item"><span>⚓ Vessels In Port</span><strong>@context.VesselsInPort</strong></div>
-            <div class="sp-agent-ctx-item"><span>🟡 At Anchor</span><strong>@context.VesselsAtAnchor</strong></div>
-            <div class="sp-agent-ctx-item"><span>🅿️ Berth Util.</span><strong>@($"{context.BerthUtilisationPct:F0}%")</strong></div>
-            <div class="sp-agent-ctx-item"><span>🚛 Gate Queue</span><strong>@context.TrucksInQueue trucks</strong></div>
-            <div class="sp-agent-ctx-item"><span>📦 Yard Occupancy</span><strong>@($"{context.YardOccupancyPct:F1}%")</strong></div>
-            <div class="sp-agent-ctx-item"><span>⚠️ Open Incidents</span><strong>@context.OpenIncidents</strong></div>
-            <div class="sp-agent-ctx-item"><span>🌿 CO₂ Today</span><strong>@($"{context.EstimatedCo2Today:F1} kg")</strong></div>
-          </div>
-        </div>
-
-        <!-- AMD Note -->
-        <div class="sp-card sp-card--amd" style="margin-top:1rem">
-          <div class="sp-card__header"><h3 class="sp-card__title">⚡ AMD Developer Cloud</h3></div>
-          <div style="padding:.875rem 1.25rem;font-size:.8125rem;color:var(--sp-text-muted);line-height:1.6">
-            <p>The current AI Agent uses a deterministic Flow Intelligence Engine for reliable demo operation.</p>
-            <p>AMD GPUs could accelerate: LLM inference, time-series forecasting, scenario simulation at scale, synthetic data generation, and digital twin port modelling.</p>
-            <a href="/about-amd" class="sp-btn sp-btn--outline sp-btn--sm" style="margin-top:.5rem">Learn More →</a>
-          </div>
-        </div>
-      }
-    </div>
-  </div>
+    <span>This page is not a chat screen. It answers “what is happening across the port right now?” using synthetic demo data and deterministic local rules. Production integrations would connect to TOS/IPMS, gate systems, GPS/telematics and energy data.</span>
 </div>
+
+@if (snapshot != null)
+{
+    <section class="sp-command-snapshot-grid">
+        <article class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@snapshot.TrucksInQueue</div><div class="sp-kpi-card__label">Queued Trucks</div><div class="sp-kpi-card__sub">Gate pressure input</div></div></article>
+        <article class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{snapshot.BerthUtilisation:F0}%")</div><div class="sp-kpi-card__label">Berth Utilisation</div><div class="sp-kpi-card__sub">@snapshot.VesselsAtAnchor vessel(s) at anchor</div></div></article>
+        <article class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{snapshot.YardOccupancy:F1}%")</div><div class="sp-kpi-card__label">Yard Occupancy</div><div class="sp-kpi-card__sub">Dwell and capacity signal</div></div></article>
+        <article class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{snapshot.EmissionsIdlingEstimateKg:F1} kg")</div><div class="sp-kpi-card__label">CO₂ Exposure</div><div class="sp-kpi-card__sub">@($"{snapshot.IdlingMinutes:F0} idling min")</div></div></article>
+        <article class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@snapshot.ActiveDisruptions</div><div class="sp-kpi-card__label">Disruptions</div><div class="sp-kpi-card__sub">@snapshot.LoadSheddingEnergyRisk</div></div></article>
+    </section>
+
+    <section class="sp-command-layout">
+        <article class="sp-card sp-command-top-risk">
+            <div class="sp-card__header">
+                <h3 class="sp-card__title">Top Risk Panel</h3>
+                <span class="sp-badge sp-badge--@(snapshot.TopRiskSeverity.ToLowerInvariant() == "critical" ? "danger" : snapshot.TopRiskSeverity.ToLowerInvariant() == "high" ? "warning" : "info")">@snapshot.TopRiskSeverity</span>
+            </div>
+            <div class="sp-command-risk-body">
+                <h2>@snapshot.TopRisk</h2>
+                <p>@snapshot.TopRiskReason</p>
+                <div class="sp-command-risk-meta">
+                    <div><span>Affected area</span><strong>@snapshot.AffectedArea</strong></div>
+                    <div><span>Expected consequence</span><strong>@snapshot.ExpectedConsequence</strong></div>
+                    <div><span>Top bottleneck</span><strong>@snapshot.TopGateBottleneck</strong></div>
+                </div>
+            </div>
+        </article>
+
+        <article class="sp-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">What the AI is Monitoring</h3><span class="sp-card__meta">@snapshot.DataNote</span></div>
+            <div class="sp-monitoring-lanes">
+                @foreach (var lane in snapshot.MonitoringLanes)
+                {
+                    var tone = lane.Status.ToLowerInvariant() switch { "critical" => "danger", "high" => "warning", "stable" => "success", _ => "info" };
+                    <div class="sp-monitoring-lane sp-monitoring-lane--@tone">
+                        <span class="sp-command-tile__signal"></span>
+                        <div><strong>@lane.Name</strong><small>@lane.Reason</small></div>
+                        <div class="sp-monitoring-lane__metric"><b>@lane.Metric</b><span>@lane.Confidence% confidence</span></div>
+                        <span class="sp-badge sp-badge--@tone">@lane.Status</span>
+                    </div>
+                }
+            </div>
+        </article>
+    </section>
+
+    <section class="sp-command-layout sp-command-layout--actions">
+        <article class="sp-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">Recommended Operator Action Plan</h3><span class="sp-card__meta">Explainable response loop</span></div>
+            <div class="sp-action-plan-grid">
+                <div><h4>Immediate</h4>@foreach (var item in snapshot.ImmediateActions){<p>@item</p>}</div>
+                <div><h4>Next 30 minutes</h4>@foreach (var item in snapshot.Next30Minutes){<p>@item</p>}</div>
+                <div><h4>Next 2 hours</h4>@foreach (var item in snapshot.Next2Hours){<p>@item</p>}</div>
+                <div><h4>Escalation / communication</h4>@foreach (var item in snapshot.EscalationActions){<p>@item</p>}</div>
+            </div>
+        </article>
+
+        <aside class="sp-card sp-shift-brief-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">Deterministic Shift Brief</h3><span class="sp-card__meta">Generated locally</span></div>
+            <p id="shiftBriefText">@snapshot.ShiftBrief</p>
+            <div class="sp-command-focus-lists">
+                <h4>Hold outside port</h4>
+                @foreach (var item in snapshot.HoldOutsidePortCandidates){<span>@item</span>}
+                <h4>Priority release</h4>
+                @foreach (var item in snapshot.PriorityReleaseCandidates){<span>@item</span>}
+            </div>
+        </aside>
+    </section>
+
+    <section class="sp-card">
+        <div class="sp-card__header"><h3 class="sp-card__title">Decision Support Links</h3><span class="sp-card__meta">Audit trail and operator workflow</span></div>
+        <div class="sp-copilot-action-row" style="padding:1rem">
+            @foreach (var link in snapshot.ActionLinks)
+            {
+                <a class="sp-copilot-action-card" href="@link.Url"><span>@link.Icon</span><strong>@link.Title</strong><small>@link.Description</small></a>
+            }
+        </div>
+    </section>
+}
+else if (context != null)
+{
+    <div class="sp-card" style="padding:1.25rem">AI Command Centre context loaded: @context.VesselsInPort vessels, @context.TrucksInQueue queued trucks.</div>
+}
+
+@section Scripts {
+<script>
+(() => {
+  const btn = document.querySelector('[data-shift-brief]');
+  const text = document.getElementById('shiftBriefText');
+  btn?.addEventListener('click', () => {
+    text?.classList.add('sp-shimmer');
+    setTimeout(() => text?.classList.remove('sp-shimmer'), 650);
+    text?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+})();
+</script>
+}

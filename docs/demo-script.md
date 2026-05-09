@@ -1,46 +1,90 @@
-# Culltron Smart Port Flow — Demo Script
+# Culltron Smart Port Flow — Judge Demo Script
 
-## Exact demo path
+## 2–3 minute video script
 
-Landing → Dashboard → AI Agent → Copilot Chat → Truck Tracking → Scenario Simulator → Emissions → Recommendations
+### 0:00–0:20 — Problem
 
-## Objective
+“Ports lose time and money when berth pressure, truck queues, yard density, load-shedding and emissions are handled in separate tools. Culltron Smart Port Flow demonstrates an AI-assisted command layer that turns synthetic port state into explainable operator actions.”
 
-Demonstrate a polished enterprise Smart Port Agentic Operations Copilot that predicts congestion, explains operational risk, recommends actions, simulates disruptions and quantifies idling/emissions impact using local deterministic intelligence.
+### 0:20–0:45 — Landing and Dashboard
 
-## Demo path
+Open the landing page, then log in and open the Dashboard. Highlight that the UI is a dark navy / teal / cyan enterprise command centre with synthetic demo data. Show the KPI cards and explain that the platform is demo-safe and locally deterministic.
 
-1. Open `/` and frame the problem: fragmented port decisions cause vessel delays, truck queues, excess idling and poor disruption response.
-2. Log in as `ops.manager@smartport.co.za` using `SmartPort@2025!`.
-3. Open `/dashboard` and highlight the premium command-center KPIs.
-4. Open `/agent` and ask: “What should the operations manager prioritise right now?”
-5. Open `/copilot`, use the “Biggest risk”, “Track trucks” and “Hold trucks” prompt chips, then ask “Prepare a 2-minute demo summary.”
-6. Explain that Copilot Chat is AJAX-powered, local/deterministic, scope-controlled and does not need paid AI APIs or cloud secrets.
-7. Open `/TruckTracking` and show ETA, checkpoint, queue risk, hold outside port, priority release and CO₂/idling exposure.
-8. Open `/simulator`, run a high-congestion or load-shedding scenario, and show risk scores, expected wait-time impact and recommended actions.
-9. Open `/emissions` and show avoidable idling, diesel cost and CO₂ estimates.
-10. Open `/flow/recommendations` or `/reports/recommendations` and show the recommendation audit trail.
-11. Close with the roadmap: real telemetry integrations, forecasting models, digital twin optimization and production-grade workflow/audit controls.
+### 0:45–1:15 — AI Command Centre
 
-## Suggested judge narration
+Open **AI Command Centre**. Say: “This is not chat. This answers what is happening across the port right now.” Show monitoring lanes, the top risk panel, confidence, deterministic shift brief and recommended action plan.
 
-“Culltron Smart Port Flow acts as a command layer above terminal operations. Instead of only displaying data, it converts synthetic port state into explainable actions: what is happening, why it matters, what to do next, what impact to expect and how the decision is recorded.”
+### 1:15–1:45 — SmartPort Copilot Chat
 
-## Backup demo prompts for Copilot Chat
+Open **SmartPort Copilot Chat** and use these exact prompts:
 
-- hello
-- what can you do
-- trucks on queue
-- track delayed trucks
-- which trucks should be held outside the port
+1. `hello`
+2. `what can you do`
+3. `what is the biggest risk right now`
+4. `which trucks should be held outside the port`
+5. `what happens if load-shedding starts at 16:00`
+6. `prepare a 2-minute demo summary`
 
-- What is the biggest risk right now?
-- Explain current congestion.
-- Which gate is becoming a bottleneck?
-- Which vessel or berth needs attention first?
-- How should we reduce truck idling and emissions?
-- Which trucks are causing emissions/idling risk?
-- What happens if load-shedding starts soon?
-- Generate an operator action plan.
-- How much CO2 can we save?
-- Prepare a 2-minute demo summary.
+Point out that chat sends via AJAX, the URL remains `/Copilot`, responses are scoped, and no paid external AI API is called.
+
+### 1:45–2:15 — Truck Tracking and Simulator
+
+Open **Truck Tracking & ETA Intelligence**. Show active trucks, checkpoints/geofences, ETA to gate, delay risk, hold-outside-port candidates, priority releases, idling minutes and CO₂ exposure. Then open the Scenario Simulator and run a load-shedding or congestion scenario.
+
+### 2:15–2:45 — Emissions and Recommendations
+
+Open Emissions to show indicative idling/CO₂ estimates. Open Recommendations / audit to show explainable decision support and action history.
+
+### 2:45–3:00 — Close
+
+“Culltron Smart Port Flow is a smart port operations demonstrator: synthetic data, deterministic local intelligence, explainable recommendations, no external paid AI API and a realistic roadmap to production integrations.”
+
+---
+
+## Judge demo path
+
+Landing → Dashboard → AI Command Centre → SmartPort Copilot Chat → Truck Tracking → Scenario Simulator → Emissions → Recommendations
+
+---
+
+## Exact prompt list
+
+- `hello`
+- `what can you do`
+- `what is the biggest risk right now`
+- `trucks on queue`
+- `which trucks should be held outside the port`
+- `track delayed trucks`
+- `truck ETA`
+- `gate bottleneck`
+- `berth pressure`
+- `yard congestion`
+- `vessel delay`
+- `how much CO2 can we save`
+- `reduce idling`
+- `load shedding`
+- `what happens if load-shedding starts at 16:00`
+- `run scenario`
+- `generate an operator action plan`
+- `prepare shift brief`
+- `prepare a 2-minute demo summary`
+
+---
+
+## Fallback if live deployment is slow
+
+1. Use the local Docker build if the DigitalOcean deployment is still starting:
+
+   ```bash
+   docker compose up --build
+   ```
+
+2. If the browser is slow, narrate over screenshots or reload the same route after the database seed completes.
+3. Use the prompt chips rather than typing long prompts during recording.
+4. If a scenario result takes too long, continue to Truck Tracking and Emissions; all data is synthetic and deterministic so the story remains coherent.
+
+---
+
+## Required truth statement
+
+“All operational data in this demo is synthetic/demo data. The intelligence layer is a deterministic local rules/scoring engine. No OpenAI, Gemini, Claude, Azure OpenAI, Anthropic or paid external AI API is required for demo mode. Production integrations would connect to real TOS/IPMS, gate, GPS/telematics and energy systems after governance and security review.”

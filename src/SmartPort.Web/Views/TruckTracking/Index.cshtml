@@ -16,12 +16,13 @@
     </div>
 </section>
 
-<div class="sp-kpi-grid sp-kpi-grid--sm">
+<div class="sp-kpi-grid sp-kpi-grid--sm sp-kpi-grid--tracking">
     <div class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.ActiveTrucks</div><div class="sp-kpi-card__label">Active Trucks</div><div class="sp-kpi-card__sub">Approaching port corridors</div></div></div>
-    <div class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.QueueRiskCount</div><div class="sp-kpi-card__label">Queue Risk</div><div class="sp-kpi-card__sub">Need release metering</div></div></div>
+    <div class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.DelayedCount</div><div class="sp-kpi-card__label">Delayed Trucks</div><div class="sp-kpi-card__sub">Need dispatcher advice</div></div></div>
     <div class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.HoldOutsidePortCount</div><div class="sp-kpi-card__label">Hold Outside Port</div><div class="sp-kpi-card__sub">Avoid live queue idling</div></div></div>
-    <div class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{Model.AverageEtaMinutes:F0} min")</div><div class="sp-kpi-card__label">Avg ETA to Gate</div><div class="sp-kpi-card__sub">Local deterministic estimate</div></div></div>
-    <div class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{Model.EstimatedCo2Kg:F1} kg")</div><div class="sp-kpi-card__label">CO₂ Exposure</div><div class="sp-kpi-card__sub">@($"{Model.TotalIdlingMinutes:F0} idling min")</div></div></div>
+    <div class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.PriorityReleaseCount</div><div class="sp-kpi-card__label">Priority Release</div><div class="sp-kpi-card__sub">Pre-cleared urgent cargo</div></div></div>
+    <div class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{Model.TotalIdlingMinutes:F0} min")</div><div class="sp-kpi-card__label">Queue Idling</div><div class="sp-kpi-card__sub">Estimated exposure</div></div></div>
+    <div class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{Model.EstimatedCo2Kg:F1} kg")</div><div class="sp-kpi-card__label">CO₂ Exposure</div><div class="sp-kpi-card__sub">Indicative estimate</div></div></div>
 </div>
 
 <div class="sp-tracking-grid">
@@ -65,15 +66,16 @@
         <div class="sp-card">
             <div class="sp-card__header"><h3 class="sp-card__title">Operator Focus</h3></div>
             <div class="sp-action-stack">
-                <div class="sp-action-note"><strong>@Model.PriorityReleaseCount priority release</strong><span>Route pre-cleared urgent cargo through the fastest gate lane.</span></div>
-                <div class="sp-action-note"><strong>@Model.HoldOutsidePortCount hold calls</strong><span>Keep high-risk trucks at staging points until pressure drops.</span></div>
+                <div class="sp-action-note"><strong>Hold outside port</strong><span>@string.Join(" · ", Model.Trucks.Where(t => t.Status == "Hold Outside Port").Take(3).Select(t => t.FleetIdentifier).DefaultIfEmpty("No holds above threshold"))</span></div>
+                <div class="sp-action-note"><strong>Priority release</strong><span>@string.Join(" · ", Model.Trucks.Where(t => t.Status == "Priority Release").Take(3).Select(t => t.FleetIdentifier).DefaultIfEmpty("No priority release above threshold"))</span></div>
+                <div class="sp-action-note"><strong>Reroute / advise dispatcher</strong><span>@string.Join(" · ", Model.Trucks.Where(t => t.Status is "Delayed" or "Queue Risk").Take(3).Select(t => t.FleetIdentifier).DefaultIfEmpty("No reroute advisory required"))</span></div>
                 <div class="sp-action-note"><strong>@($"{Model.EstimatedCo2Kg:F1} kg CO₂")</strong><span>Use emissions view to quantify idling reduction opportunity.</span></div>
             </div>
         </div>
         <div class="sp-card sp-judge-card">
             <div class="sp-card__header"><h3 class="sp-card__title">Ask Copilot</h3></div>
-            <p>Try: “which trucks should be held outside the port?” or “track delayed trucks”.</p>
-            <a class="sp-btn sp-btn--primary sp-btn--full" asp-controller="Copilot" asp-action="Index" asp-route-prompt="which trucks should be held outside the port">Ask SmartPort Copilot</a>
+            <p>Prompt the conversational interface without external map or AI APIs.</p>
+            <div class="sp-copilot-mini-topics"><a class="sp-btn sp-btn--primary sp-btn--full" asp-controller="Copilot" asp-action="Index" asp-route-prompt="which trucks should be held outside the port">Hold trucks</a><a class="sp-btn sp-btn--outline sp-btn--full" asp-controller="Copilot" asp-action="Index" asp-route-prompt="track delayed trucks">Delayed trucks</a><a class="sp-btn sp-btn--outline sp-btn--full" asp-controller="Copilot" asp-action="Index" asp-route-prompt="priority release trucks">Priority release</a><a class="sp-btn sp-btn--outline sp-btn--full" asp-controller="Copilot" asp-action="Index" asp-route-prompt="truck ETA risks">ETA risks</a></div>
         </div>
     </aside>
 </div>

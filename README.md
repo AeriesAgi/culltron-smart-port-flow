@@ -1,29 +1,136 @@
 # Culltron Smart Port Flow
 
-> **Enterprise Smart Port Agentic Operations Copilot** for competitions, hackathons, and premium logistics SaaS demonstrations.  
-> ASP.NET Core 8 MVC · PostgreSQL · Entity Framework Core · Docker Compose · deterministic local AI/rules engine.
+> **Premium Smart Port Agentic Operations Copilot demonstrator** by Culltron.
+> ASP.NET Core 8 MVC · PostgreSQL · Entity Framework Core · Docker Compose · synthetic demo data · deterministic local intelligence.
 
-Culltron Smart Port Flow is a competition-ready Smart Port command center that demonstrates how terminal operators can predict congestion, protect berth productivity, reduce gate queues, manage truck flow, respond to load-shedding, and quantify idling/emissions impact without relying on paid external AI APIs or cloud secrets.
+Culltron Smart Port Flow is a cohesive smart-port operations command system that demonstrates how port teams can monitor congestion, truck ETA risk, berth pressure, yard density, load-shedding disruption, incidents, recommendations and indicative emissions/idling impact from one enterprise command-centre UI.
 
-Culltron Smart Port Flow is an AI-assisted smart port operations demonstrator by Culltron. Built by Culltron for smart logistics, clean port operations, and decision-support demonstration.
+The product is intentionally **demo-safe**: it uses synthetic operational data, local deterministic rules/scoring, explainable response cards and scoped Copilot intent routing. It does **not** require OpenAI, Gemini, Claude, Azure OpenAI, Anthropic, external map APIs, cloud secrets or internet-dependent AI.
 
 ---
 
-## Competition positioning
+## Product summary
 
-This project is designed to look and feel like a polished enterprise AI logistics platform rather than a toy CRUD demo:
+Culltron Smart Port Flow is designed for hackathon judging, executive demos and product discovery. It is not presented as a live integration to any real port system. Production integrations would connect to TOS/IPMS, gate systems, GPS/telematics, berth planning, yard systems and energy data.
 
-- **Futuristic command-center UI** with dark navy, teal and cyan styling, glass panels, glowing KPI cards, charts, badges and animated status signals.
-- **Agentic operations copilot** that turns demo port state into explainable recommendations and action plans.
-- **Local deterministic intelligence** for reliable judging-room demos with no external paid AI dependency.
-- **Smart Port decision layers** spanning vessels, berths, gates, trucks, yard pressure, disruptions, load-shedding, emissions and audit history.
-- **Rich seed/demo data** so the platform looks alive immediately after first launch.
+### Platform modules
+
+- Landing and public product pages.
+- Dashboard command centre.
+- **AI Command Centre** for system-level intelligence, risk scoring, monitoring lanes and action plans.
+- **SmartPort Copilot Chat** for conversational, scoped smart-port questions.
+- Truck Tracking & ETA Intelligence.
+- Scenario Simulator.
+- Emissions / Idling impact.
+- Incidents, disruptions and load-shedding response.
+- Flow Recommendations and decision/audit reports.
+- Vessels, berths, gates, containers, dispatch, fleet, documents and analytics.
+
+---
+
+## AI Command Centre vs SmartPort Copilot Chat
+
+### AI Command Centre
+
+The AI Command Centre answers: **“What is happening across the port right now?”**
+
+It is a system-level intelligence wall, not a chat page. It shows:
+
+- live synthetic operational snapshot;
+- gate, berth, yard, truck, emissions, energy and incident monitoring lanes;
+- top risk, severity, affected area, operational reason and expected consequence;
+- confidence indicators;
+- immediate, next-30-minute, next-2-hour and escalation actions;
+- deterministic shift brief;
+- links to Truck Tracking, Simulator, Emissions, Recommendations and Copilot.
+
+### SmartPort Copilot Chat
+
+The Copilot Chat answers: **“Ask the system a question.”**
+
+It is the natural-language interface for scoped questions about:
+
+- greetings and capabilities;
+- biggest risk / operational risk;
+- truck queues, ETA tracking, hold-outside-port candidates and priority releases;
+- gate bottlenecks;
+- berth pressure, yard congestion and vessel delay;
+- emissions, CO₂ and idling;
+- load-shedding / energy disruption;
+- scenario simulation;
+- recommended action plans;
+- audit / decision history;
+- judge demo summary.
+
+Small talk is displayed as compact assistant bubbles. Operational answers use structured response cards. Out-of-scope, unsafe or secret-seeking prompts are refused and redirected to supported smart-port topics.
+
+---
+
+## Local deterministic AI explanation
+
+The system uses a shared local intelligence layer (`ISmartPortIntelligenceService` / `SmartPortIntelligenceService`) plus the deterministic Copilot routing service. The snapshot combines existing demo services and seeded data where available:
+
+- vessels and berths;
+- gates and queues;
+- dispatch/fleet trips;
+- truck ETA intelligence;
+- disruptions and incidents;
+- flow recommendations;
+- idling/emissions estimates;
+- scenario/recommendation links.
+
+If operational data is unavailable, deterministic synthetic fallback values are clearly treated as demo data. There is no random black-box generation and no external paid AI inference path.
+
+---
+
+## Copilot governance and scope control
+
+The Copilot is intentionally scoped to smart-port operations. It supports robust phrase matching for prompts such as:
+
+- `hello`
+- `what can you do`
+- `what is the biggest risk right now`
+- `trucks on queue`
+- `which trucks should be held outside the port`
+- `track delayed trucks`
+- `how much CO2 can we save`
+- `what happens if load-shedding starts at 16:00`
+- `generate an operator action plan`
+- `prepare a 2-minute demo summary`
+
+It refuses unrelated medical/legal/financial advice, politics, celebrity/news/general knowledge, offensive prompts, prompt-injection attempts, secret/config requests and database dump requests.
+
+---
+
+## Truck Tracking & ETA Intelligence
+
+The Truck Tracking page is a showpiece logistics console with no external GPS or map API dependency. It displays:
+
+- active trucks;
+- delayed trucks;
+- hold-outside-port candidates;
+- priority-release candidates;
+- estimated queue idling;
+- indicative CO₂ exposure;
+- fleet ID, organisation, route/corridor, checkpoint/geofence, ETA, queue status, idling minutes, CO₂ estimate, delay risk, status badge and recommended action;
+- checkpoint timeline from depot/corridor/staging/gate/terminal handoff;
+- operator focus lists and Copilot prompt links.
+
+---
+
+## Scenario Simulator
+
+The simulator models what-if operating conditions such as truck arrival spikes, vessel delay, berth pressure, crane availability, yard backlog, peak gate congestion and load-shedding. Outputs include indicative risk scores, waiting time changes, idling minutes, diesel/fuel cost and CO₂ impact.
+
+---
+
+## Emissions / idling assumptions
+
+Emissions figures are indicative demo estimates based on idling minutes and fixed diesel/CO₂ assumptions in the local services. They are useful for comparing scenarios and explaining avoidable idling, but they are not certified emissions reductions.
 
 ---
 
 ## Architecture overview
-
-The solution follows a clean ASP.NET Core architecture:
 
 ```text
 Culltron Smart Port Flow
@@ -32,144 +139,30 @@ Culltron Smart Port Flow
 ├── docker-compose.yml
 ├── README.md
 ├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── DEMO_SCRIPT.md
-│   ├── ROADMAP.md
-│   └── demo-script.md
-├── scripts/
-│   └── init.sql
 └── src/
     ├── SmartPort.Domain/          # Entities and enums
     ├── SmartPort.Application/     # DTOs and service contracts
-    ├── SmartPort.Infrastructure/  # EF Core, deterministic intelligence, seed data
+    ├── SmartPort.Infrastructure/  # EF Core, seed data, deterministic intelligence
     ├── SmartPort.Shared/          # Roles, policies and shared constants
-    └── SmartPort.Web/             # ASP.NET Core MVC controllers, Razor views, CSS/JS
+    └── SmartPort.Web/             # MVC controllers, Razor views, CSS/JS
 ```
-
-### Runtime stack
 
 | Layer | Technology |
 |---|---|
 | Web | ASP.NET Core 8 MVC / Razor Views |
 | Data | PostgreSQL 16 |
 | ORM/Auth | Entity Framework Core 8 / ASP.NET Core Identity |
-| UI | Custom CSS, JavaScript, Chart.js, Feather icons |
-| Intelligence | Local deterministic scoring, rules and heuristics |
+| UI | Custom CSS/JavaScript, Chart.js, Feather icons |
+| Intelligence | Local deterministic scoring, routing and heuristics |
 | Packaging | Dockerfile and Docker Compose |
-
----
-
-## Core features
-
-### SmartPort AI Agent / Copilot Command Center
-
-The copilot analyzes synthetic demo port state and generates explainable answers/action plans covering:
-
-- congestion intelligence
-- berth intelligence
-- gate queue intelligence
-- truck-flow intelligence
-- vessel and yard pressure intelligence
-- load-shedding / energy disruption intelligence
-- emissions and truck-idling impact
-- priority operator action plans
-
-Each recommendation/answer is intended to surface the operational reason, suggested action, expected impact, confidence/risk context and decision-audit friendly data points.
-
-
-### Local SmartPort Copilot Chat
-
-The `/copilot` page is a flagship premium AJAX chat-style operator assistant that updates the conversation without a full page reload. It does **not** call external AI APIs. Instead, it uses local deterministic intent routing over seeded/demo operational context. Operators can ask about biggest risk, truck tracking/ETA, truck idling, berth attention, gate bottlenecks, load-shedding, CO₂ savings, action plans and demo narration. The Copilot includes governance/scope control, supported topic chips, prompt-injection refusal, safe small talk handling and deterministic intent routing. Each response includes:
-
-- short summary
-- affected area and urgency/severity
-- operational reasoning
-- recommended action
-- expected impact
-- confidence score
-- emissions/idling impact
-- load-shedding/energy impact
-- buttons to related pages such as Dashboard, Truck Tracking, Simulator, Emissions, Recommendations and Audit reports
-
-### Scenario simulation
-
-Run what-if simulations for:
-
-- truck arrival spikes
-- vessel ETA slips
-- berth occupancy increases
-- crane availability reductions
-- container backlog growth
-- load-shedding stages
-- peak-hour gate congestion
-
-The simulator outputs congestion, berth, gate, energy and yard pressure scores, estimated waiting time changes, idling minutes, diesel/fuel cost and CO₂ impact.
-
-### Decision audit and recommendations
-
-Operators can review recommendation history, pending actions, accepted/dismissed decisions, risk level, confidence, route/vehicle context and timestamps.
-
-### Truck Tracking & ETA Intelligence
-
-The `/TruckTracking` page is a local synthetic ETA intelligence module showing active trucks approaching the port, current checkpoint/geofence, ETA to gate, queue status, idling minutes, CO₂ estimate, delay risk, status badges and recommended operator actions. It uses existing dispatch/fleet/gate demo data where available and never calls GPS or map APIs. Flagship pages include a global Copilot help orb with page-specific prompts that open the full AJAX Copilot chat.
-
-### Emissions / energy / disruption layer
-
-The emissions view estimates avoidable idling, diesel use, fuel cost and CO₂ impact, while disruption views model load-shedding, road congestion, gate delays and operational impacts.
-
-### Enterprise operations modules
-
-- Landing page and public product pages
-- Main dashboard
-- Vessels and berth management
-- Container and yard operations
-- Gates and truck queues
-- Dispatch and fleet flow intelligence
-- Incidents and alerts
-- Documents and compliance
-- Analytics and reports
-- Admin/users/roles
 
 ---
 
 ## Local run instructions
 
-### Prerequisites
-
-- .NET SDK 8.x
-- Docker / Docker Compose
-- PostgreSQL 16 if running outside Docker
-
-### Restore and build
-
 ```bash
 dotnet restore SmartPort.sln
 dotnet build SmartPort.sln
-```
-
-### Run locally with a local PostgreSQL container
-
-```bash
-docker run -d \
-  --name smartport_db \
-  -e POSTGRES_DB=smartport_dev \
-  -e POSTGRES_USER=smartport \
-  -e POSTGRES_PASSWORD=SmartPort2025! \
-  -p 5432:5432 \
-  postgres:16-alpine
-
-cd src/SmartPort.Web
-dotnet run
-```
-
-Browse to the URL printed by `dotnet run`.
-
----
-
-## Docker run instructions
-
-```bash
-docker compose config
 docker compose up --build
 ```
 
@@ -188,84 +181,57 @@ docker compose up --build
 
 ---
 
-## Demo credentials
+## DigitalOcean deployment command
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | admin@smartport.co.za | SmartPort@2025! |
-| Port Operations Manager | ops.manager@smartport.co.za | SmartPort@2025! |
-| Terminal Staff | terminal1@smartport.co.za | SmartPort@2025! |
-| Logistics Partner | logistics@freightco.co.za | SmartPort@2025! |
-| Executive Viewer | executive@transnet.co.za | SmartPort@2025! |
-
----
-
-## Flagship demo flow
-
-1. **Landing page** — introduce Culltron Smart Port Flow as an enterprise AI logistics SaaS command center.
-2. **Login** as `ops.manager@smartport.co.za`.
-3. **Dashboard** — show premium KPI cards, vessel/gate/yard health and live operational context.
-4. **AI Agent / Copilot Command Center** — ask: “What should the operations manager prioritise right now?”
-5. **Copilot Chat** — use prompt chips such as “Biggest risk”, “Track trucks”, “Hold trucks”, “Gate bottleneck” and “2-minute demo summary”.
-6. **Truck Tracking & ETA Intelligence** — show approaching trucks, ETA, queue risk, hold/release decisions and CO₂ exposure.
-7. **Scenario Simulation** — run “Load-Shedding Stage 4 at 16:00” or “Durban High Congestion”.
-8. **Emissions / Energy** — show idling, diesel cost, avoidable CO₂ estimates and disruption response.
-9. **Flow Recommendations / Audit** — show explainable recommendations, statuses, accept/dismiss actions and decision history.
-10. **Close** with roadmap: live integrations, real telemetry, predictive ML and digital-twin optimization.
-
----
-
-## 2–3 minute video script
-
-**0:00–0:20 — Problem**  
-“Ports lose time and money when berth congestion, truck queues, yard pressure, power disruptions and emissions are managed in separate tools. Culltron Smart Port Flow brings those decisions into one command center.”
-
-**0:20–0:45 — Landing and dashboard**  
-“Here is the enterprise landing page and main operations dashboard. The system is seeded with live-looking vessels, berths, gates, trucks, incidents and emissions estimates, so judges can see the port state immediately.”
-
-**0:45–1:25 — Copilot Command Center and Chat**
-“The AI Agent and Copilot Chat use deterministic local heuristics. No paid AI APIs are required. The chat page feels like an enterprise AI assistant, but every answer is generated locally with explainable reasoning, confidence, expected impact, emissions impact, energy impact and buttons to the relevant operational pages. It is scope-controlled and refuses secrets, prompt overrides and unrelated questions.”
-
-**1:25–1:50 — Truck Tracking & ETA Intelligence**
-“Now we open Truck Tracking. This shows synthetic approaching trucks, route checkpoints, ETA to gate, idling and CO₂ exposure, and tells the operator which trucks to release, delay or hold outside the port.”
-
-**1:25–1:55 — Simulation**  
-“Now we run a load-shedding and peak-hour truck spike scenario. The simulator recalculates gate delay risk, berth risk, energy disruption risk, waiting time, idling minutes, diesel cost and CO₂.”
-
-**1:55–2:25 — Audit and sustainability**  
-“Recommendations are auditable. Operators can accept or dismiss actions, and the emissions view quantifies avoidable idling and CO₂ reduction opportunities.”
-
-**2:25–3:00 — Close**  
-“This is a demo-ready Smart Port Agentic Operations Copilot: polished UI, rich data, explainable recommendations, scenario planning and a clear path to real integrations.”
-
----
-
-## Known limitations
-
-- Demo data is synthetic and created for competition presentation.
-- The local rules engine is deterministic; it is not a trained predictive model.
-- No real AIS, TOS, OCR, GPS, telematics, weather, customs or power utility integrations are connected yet.
-- Emissions calculations use configurable assumptions and should be validated against real fleet telemetry before production use.
-- Database schema is created with `EnsureCreatedAsync()` for demo simplicity, not production migrations.
-
----
-
-## Next phase roadmap
-
-1. Integrate real telemetry feeds: AIS, TOS, gate OCR/RFID, truck GPS and berth planning systems.
-2. Add forecasting models for ETA drift, gate queues, dwell risk and crane productivity.
-3. Add a proper decision-audit workflow with approvals, assignments, SLAs and incident linkage.
-4. Add digital-twin optimization for berth plans, yard reshuffles and gate appointment smoothing.
-5. Add production migrations, observability, health checks, SSO and hardened deployment profiles.
-
----
-
-## DigitalOcean deploy command
-
-On a DigitalOcean Droplet with Docker and Docker Compose installed, deploy/update with:
+From the repository root on the droplet:
 
 ```bash
 git pull && docker compose up -d --build
 ```
 
-The app is containerised, uses local deterministic AI/copilot logic, and does not require paid AI API keys or external map/GPS APIs.
+If a full reset is intentionally required for a demo environment:
+
+```bash
+docker compose down -v && docker compose up -d --build
+```
+
+---
+
+## Demo route
+
+Landing → Dashboard → AI Command Centre → SmartPort Copilot Chat → Truck Tracking → Scenario Simulator → Emissions → Recommendations
+
+Recommended Copilot prompt list:
+
+- `hello`
+- `what can you do`
+- `what is the biggest risk right now`
+- `trucks on queue`
+- `which trucks should be held outside the port`
+- `track delayed trucks`
+- `how much CO2 can we save`
+- `what happens if load-shedding starts at 16:00`
+- `generate an operator action plan`
+- `prepare a 2-minute demo summary`
+
+---
+
+## Limitations
+
+- Synthetic/demo data only.
+- No claim of live TOS/IPMS, GPS, telematics, gate OCR/RFID or energy-system integration.
+- No external paid AI API required in demo mode.
+- Emissions and diesel calculations are indicative estimates based on assumptions.
+- The deterministic engine is explainable and repeatable, not a trained predictive model.
+- Production deployment would require security review, integrations, observability, real identity/tenant controls and data-governance work.
+
+---
+
+## Next phase roadmap
+
+1. Real integration adapters for TOS/IPMS, gate systems, telematics/GPS and energy schedules.
+2. Tenant-aware workflow, approval and audit controls.
+3. Advanced simulation/digital twin calibration against historical operations data.
+4. Optional production-grade ML forecasting after real data governance is in place.
+5. Operational alerting, SLA tracking and dispatcher communications.
+6. Certified sustainability methodology if emissions reporting becomes a regulated feature.
