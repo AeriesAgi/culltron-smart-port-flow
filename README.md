@@ -5,6 +5,8 @@
 
 Culltron Smart Port Flow is a competition-ready Smart Port command center that demonstrates how terminal operators can predict congestion, protect berth productivity, reduce gate queues, manage truck flow, respond to load-shedding, and quantify idling/emissions impact without relying on paid external AI APIs or cloud secrets.
 
+Culltron Smart Port Flow is an AI-assisted smart port operations demonstrator by Culltron. Built by Culltron for smart logistics, clean port operations, and decision-support demonstration.
+
 ---
 
 ## Competition positioning
@@ -77,7 +79,7 @@ Each recommendation/answer is intended to surface the operational reason, sugges
 
 ### Local SmartPort Copilot Chat
 
-The `/copilot` page is a flagship premium chat-style operator assistant. It does **not** call external AI APIs. Instead, it uses local deterministic intent routing over seeded/demo operational context. Operators can ask about biggest risk, truck idling, berth attention, gate bottlenecks, load-shedding, CO₂ savings, action plans and demo narration. Each response includes:
+The `/copilot` page is a flagship premium AJAX chat-style operator assistant that updates the conversation without a full page reload. It does **not** call external AI APIs. Instead, it uses local deterministic intent routing over seeded/demo operational context. Operators can ask about biggest risk, truck tracking/ETA, truck idling, berth attention, gate bottlenecks, load-shedding, CO₂ savings, action plans and demo narration. The Copilot includes governance/scope control, supported topic chips, prompt-injection refusal, safe small talk handling and deterministic intent routing. Each response includes:
 
 - short summary
 - affected area and urgency/severity
@@ -87,7 +89,7 @@ The `/copilot` page is a flagship premium chat-style operator assistant. It does
 - confidence score
 - emissions/idling impact
 - load-shedding/energy impact
-- buttons to related pages such as Dashboard, Simulator, Emissions, Recommendations and Audit reports
+- buttons to related pages such as Dashboard, Truck Tracking, Simulator, Emissions, Recommendations and Audit reports
 
 ### Scenario simulation
 
@@ -106,6 +108,10 @@ The simulator outputs congestion, berth, gate, energy and yard pressure scores, 
 ### Decision audit and recommendations
 
 Operators can review recommendation history, pending actions, accepted/dismissed decisions, risk level, confidence, route/vehicle context and timestamps.
+
+### Truck Tracking & ETA Intelligence
+
+The `/TruckTracking` page is a local synthetic ETA intelligence module showing active trucks approaching the port, current checkpoint/geofence, ETA to gate, queue status, idling minutes, CO₂ estimate, delay risk, status badges and recommended operator actions. It uses existing dispatch/fleet/gate demo data where available and never calls GPS or map APIs. Flagship pages include a global Copilot help orb with page-specific prompts that open the full AJAX Copilot chat.
 
 ### Emissions / energy / disruption layer
 
@@ -200,11 +206,12 @@ docker compose up --build
 2. **Login** as `ops.manager@smartport.co.za`.
 3. **Dashboard** — show premium KPI cards, vessel/gate/yard health and live operational context.
 4. **AI Agent / Copilot Command Center** — ask: “What should the operations manager prioritise right now?”
-5. **Copilot Chat** — use prompt chips such as “Biggest risk”, “Reduce idling”, “Gate bottleneck” and “2-minute demo summary”.
-6. **Scenario Simulation** — run “Load-Shedding Stage 4 at 16:00” or “Durban High Congestion”.
-7. **Emissions / Energy** — show idling, diesel cost, avoidable CO₂ estimates and disruption response.
-8. **Flow Recommendations / Audit** — show explainable recommendations, statuses, accept/dismiss actions and decision history.
-9. **Close** with roadmap: live integrations, real telemetry, predictive ML and digital-twin optimization.
+5. **Copilot Chat** — use prompt chips such as “Biggest risk”, “Track trucks”, “Hold trucks”, “Gate bottleneck” and “2-minute demo summary”.
+6. **Truck Tracking & ETA Intelligence** — show approaching trucks, ETA, queue risk, hold/release decisions and CO₂ exposure.
+7. **Scenario Simulation** — run “Load-Shedding Stage 4 at 16:00” or “Durban High Congestion”.
+8. **Emissions / Energy** — show idling, diesel cost, avoidable CO₂ estimates and disruption response.
+9. **Flow Recommendations / Audit** — show explainable recommendations, statuses, accept/dismiss actions and decision history.
+10. **Close** with roadmap: live integrations, real telemetry, predictive ML and digital-twin optimization.
 
 ---
 
@@ -217,7 +224,10 @@ docker compose up --build
 “Here is the enterprise landing page and main operations dashboard. The system is seeded with live-looking vessels, berths, gates, trucks, incidents and emissions estimates, so judges can see the port state immediately.”
 
 **0:45–1:25 — Copilot Command Center and Chat**
-“The AI Agent and Copilot Chat use deterministic local heuristics. No paid AI APIs are required. The chat page feels like an enterprise AI assistant, but every answer is generated locally with explainable reasoning, confidence, expected impact, emissions impact, energy impact and buttons to the relevant operational pages.”
+“The AI Agent and Copilot Chat use deterministic local heuristics. No paid AI APIs are required. The chat page feels like an enterprise AI assistant, but every answer is generated locally with explainable reasoning, confidence, expected impact, emissions impact, energy impact and buttons to the relevant operational pages. It is scope-controlled and refuses secrets, prompt overrides and unrelated questions.”
+
+**1:25–1:50 — Truck Tracking & ETA Intelligence**
+“Now we open Truck Tracking. This shows synthetic approaching trucks, route checkpoints, ETA to gate, idling and CO₂ exposure, and tells the operator which trucks to release, delay or hold outside the port.”
 
 **1:25–1:55 — Simulation**  
 “Now we run a load-shedding and peak-hour truck spike scenario. The simulator recalculates gate delay risk, berth risk, energy disruption risk, waiting time, idling minutes, diesel cost and CO₂.”
@@ -247,3 +257,15 @@ docker compose up --build
 3. Add a proper decision-audit workflow with approvals, assignments, SLAs and incident linkage.
 4. Add digital-twin optimization for berth plans, yard reshuffles and gate appointment smoothing.
 5. Add production migrations, observability, health checks, SSO and hardened deployment profiles.
+
+---
+
+## DigitalOcean deploy command
+
+On a DigitalOcean Droplet with Docker and Docker Compose installed, deploy/update with:
+
+```bash
+git pull && docker compose up -d --build
+```
+
+The app is containerised, uses local deterministic AI/copilot logic, and does not require paid AI API keys or external map/GPS APIs.

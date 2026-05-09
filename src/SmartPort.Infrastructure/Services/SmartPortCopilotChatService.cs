@@ -16,6 +16,7 @@ public class CopilotChatPageModel
     public string CurrentPrompt { get; set; } = string.Empty;
     public CopilotChatResponse? Response { get; set; }
     public List<CopilotPromptChip> PromptChips { get; set; } = new();
+    public List<string> SupportedTopics { get; set; } = new();
 }
 
 public class CopilotPromptChip
@@ -62,11 +63,13 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
 {
     private readonly IAiAgentService _agent;
     private readonly SmartPortDbContext _db;
+    private readonly ITruckTrackingService _tracking;
 
-    public SmartPortCopilotChatService(IAiAgentService agent, SmartPortDbContext db)
+    public SmartPortCopilotChatService(IAiAgentService agent, SmartPortDbContext db, ITruckTrackingService tracking)
     {
         _agent = agent;
         _db = db;
+        _tracking = tracking;
     }
 
     public async Task<CopilotChatPageModel> BuildPageAsync(string? prompt = null)
@@ -76,7 +79,8 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         {
             Context = context,
             CurrentPrompt = prompt ?? string.Empty,
-            PromptChips = GetPromptChips()
+            PromptChips = GetPromptChips(),
+            SupportedTopics = SupportedTopics()
         };
 
         if (!string.IsNullOrWhiteSpace(prompt))
@@ -89,30 +93,124 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
 
     public List<CopilotPromptChip> GetPromptChips() => new()
     {
+        new() { Icon = "👋", Label = "Hello", Prompt = "hello" },
+        new() { Icon = "❔", Label = "Capabilities", Prompt = "what can you do" },
+        new() { Icon = "🚛", Label = "Truck queues", Prompt = "trucks on queue" },
+        new() { Icon = "📡", Label = "Track trucks", Prompt = "track delayed trucks" },
+        new() { Icon = "🛑", Label = "Hold trucks", Prompt = "which trucks should be held outside the port" },
         new() { Icon = "⚠️", Label = "Biggest risk", Prompt = "What is the biggest risk right now?" },
-        new() { Icon = "🚛", Label = "Reduce idling", Prompt = "How can we reduce truck idling?" },
-        new() { Icon = "⚓", Label = "Berth focus", Prompt = "Which berth needs attention?" },
-        new() { Icon = "⚡", Label = "Energy shock", Prompt = "What happens if load-shedding starts soon?" },
         new() { Icon = "🧭", Label = "Action plan", Prompt = "Generate an operator action plan." },
         new() { Icon = "🌿", Label = "CO₂ savings", Prompt = "How much CO2 can we save?" },
         new() { Icon = "🚪", Label = "Gate bottleneck", Prompt = "Which gate is becoming a bottleneck?" },
         new() { Icon = "🎬", Label = "Demo summary", Prompt = "Prepare a 2-minute demo summary." }
     };
 
+    private static List<string> SupportedTopics() => new()
+    {
+        "Truck queues", "Truck tracking / ETA", "Gate bottlenecks", "Berth pressure", "Yard congestion",
+        "Emissions / CO₂", "Load-shedding disruption", "Scenario simulation", "Recommendations", "Demo summary"
+    };
+
     private async Task<CopilotChatResponse> GenerateResponseAsync(string prompt, OperationalContext ctx)
     {
         var q = prompt.ToLowerInvariant();
-        if (Has(q, "demo", "2-minute", "summary", "video")) return BuildDemoSummary(prompt, ctx);
-        if (Has(q, "action plan", "next", "priorit", "manager do")) return BuildActionPlan(prompt, ctx);
-        if (Has(q, "load", "energy", "shedding", "power")) return BuildEnergy(prompt, ctx);
-        if (Has(q, "emission", "co2", "carbon", "idling", "diesel", "fuel")) return BuildEmissions(prompt, ctx);
-        if (Has(q, "gate", "bottleneck", "queue", "truck")) return await BuildGate(prompt, ctx);
-        if (Has(q, "berth", "vessel", "anchor", "turnaround")) return BuildBerth(prompt, ctx);
-        if (Has(q, "yard", "container", "dwell")) return BuildYard(prompt, ctx);
-        if (Has(q, "scenario", "simulate", "what if")) return BuildScenario(prompt, ctx);
-        if (Has(q, "recommend", "audit", "decision")) return BuildAudit(prompt, ctx);
-        return BuildRisk(prompt, ctx);
+        var intent = ClassifyIntent(q);
+        return intent switch
+        {
+            "safety" => BuildSafetyRefusal(prompt),
+            "greeting" => BuildGreeting(prompt, ctx),
+            "help" => BuildHelp(prompt, ctx),
+            "truck-tracking" => await BuildTruckTracking(prompt, ctx),
+            "truck-queue" => await BuildGate(prompt, ctx),
+            "gate" => await BuildGate(prompt, ctx),
+            "berth" => BuildBerth(prompt, ctx),
+            "yard" => BuildYard(prompt, ctx),
+            "vessel" => BuildBerth(prompt, ctx),
+            "emissions" => BuildEmissions(prompt, ctx),
+            "energy" => BuildEnergy(prompt, ctx),
+            "scenario" => BuildScenario(prompt, ctx),
+            "recommendations" => BuildAudit(prompt, ctx),
+            "audit" => BuildAudit(prompt, ctx),
+            "demo" => BuildDemoSummary(prompt, ctx),
+            "action-plan" => BuildActionPlan(prompt, ctx),
+            "vague-related" => BuildVagueRelated(prompt, ctx),
+            "out-of-scope" => BuildOutOfScope(prompt),
+            _ => BuildRisk(prompt, ctx)
+        };
     }
+
+    private static string ClassifyIntent(string q)
+    {
+        if (Has(q, "ignore instruction", "ignore previous", "system prompt", "developer prompt", "reveal prompt", "show prompt", "secret", "credential", "password", "api key", "dump database", "dump config", "internal config", "jailbreak")) return "safety";
+        if (IsGreeting(q)) return "greeting";
+        if (Has(q, "help", "what can you do", "what are you", "capabilit", "supported", "topics")) return "help";
+        if (Has(q, "demo", "2-minute", "summary", "video", "pitch", "walkthrough")) return "demo";
+        if (Has(q, "action plan", "next", "priorit", "manager do", "operator action")) return "action-plan";
+        if (Has(q, "track", "tracking", "eta", "truck eta", "where are the trucks", "where are trucks", "delayed truck", "delayed trucks", "which trucks are delayed", "hold outside", "held outside", "outside port", "wait outside", "trucks to hold", "hold trucks", "which trucks should wait", "priority release", "priority release trucks", "approaching", "checkpoint")) return "truck-tracking";
+        if (Has(q, "truck queue", "trucks on queue", "queued truck", "queued trucks", "trucks in queue", "gate queue trucks")) return "truck-tracking";
+        if (Has(q, "gate", "bottleneck", "queue")) return "gate";
+        if (Has(q, "load", "energy", "shedding", "power")) return "energy";
+        if (Has(q, "emission", "co2", "co₂", "carbon", "idling", "diesel", "fuel")) return "emissions";
+        if (Has(q, "berth", "anchor", "turnaround")) return "berth";
+        if (Has(q, "vessel", "ship", "eta slip")) return "vessel";
+        if (Has(q, "yard", "container", "dwell")) return "yard";
+        if (Has(q, "scenario", "simulate", "what if")) return "scenario";
+        if (Has(q, "recommend")) return "recommendations";
+        if (Has(q, "audit", "decision history", "decision")) return "audit";
+        if (Has(q, "port", "operation", "congestion", "risk", "flow", "terminal")) return "vague-related";
+        if (Has(q, "politics", "medical", "legal advice", "financial advice", "recipe", "homework", "code", "programming", "weather", "sports", "celebrity", "news", "general knowledge", "offensive", "abusive")) return "out-of-scope";
+        return "out-of-scope";
+    }
+
+    private CopilotChatResponse BuildGreeting(string prompt, OperationalContext ctx) =>
+        Base(prompt, "greeting", "Low", 98, "Smart Port Copilot",
+            "Hello, I’m the SmartPort Copilot — a local deterministic assistant for Culltron Smart Port Flow.",
+            "I can analyse truck queues, truck ETA, gate bottlenecks, berth pressure, yard congestion, load-shedding disruption, emissions, scenario simulation and recommendations.",
+            "Ask a focused operations question such as ‘what is the biggest port risk right now?’ or ‘which trucks should be held outside the port?’. ",
+            "Keeps the demo scoped, safe and judge-friendly.",
+            "Synthetic demo data is used for all operational estimates.",
+            "No external AI or cloud secret is required.",
+            StandardActions());
+
+    private CopilotChatResponse BuildHelp(string prompt, OperationalContext ctx) =>
+        Base(prompt, "help / capabilities", "Low", 97, "Supported Smart Port Topics",
+            "I can help with smart port operations, congestion, truck tracking/ETA, gate flow, berth and yard pressure, emissions, disruptions, scenarios, recommendations and demo summary.",
+            "The assistant uses deterministic topic routing and refuses unrelated, unsafe or secret-seeking prompts.",
+            "Choose a topic chip or ask: trucks on queue, track delayed trucks, how much CO₂ can we save, or generate an operator action plan.",
+            "You get consistent explainable outputs with summary, reasoning, action, impact, confidence, affected area and links.",
+            "All figures are based on synthetic demo data.",
+            "Local-only processing keeps the competition demo safe and repeatable.",
+            StandardActions());
+
+    private CopilotChatResponse BuildVagueRelated(string prompt, OperationalContext ctx) =>
+        Base(prompt, "vague but related", "Low", 80, "Scope Clarification",
+            "I can help with port operations, but I need a more specific operational area.",
+            "The request appears related to port flow, but it does not identify a clear supported intent such as truck queues, berth pressure, yard congestion, emissions, load-shedding or recommendations.",
+            "Try: truck queues, truck ETA, gate bottleneck, berth pressure, yard congestion, emissions, scenario simulation or recommendations.",
+            "A clearer question produces a safer and more actionable answer.",
+            "Synthetic demo data will be used once a topic is selected.",
+            "No external live systems are queried.",
+            StandardActions());
+
+    private CopilotChatResponse BuildOutOfScope(string prompt) =>
+        Base(prompt, "out-of-scope", "Low", 99, "Scope Control",
+            "I’m focused on Smart Port operations, congestion, truck queues, berth/gate flow, emissions, disruptions, scenario simulation and operator recommendations.",
+            "That request is outside the Culltron Smart Port Flow demo scope, so I won’t generate unrelated general, political, medical, legal, financial or offensive content.",
+            "Try asking: ‘What is the biggest port risk right now?’ or ‘How can we reduce truck idling?’. ",
+            "Keeps the assistant safe, scoped and presentation-ready.",
+            "Synthetic demo data is only used for smart port operations questions.",
+            "Local deterministic scope control is active.",
+            StandardActions());
+
+    private CopilotChatResponse BuildSafetyRefusal(string prompt) =>
+        Base(prompt, "safety refusal", "Low", 99, "Governance / Safety",
+            "I can’t help with secrets, credentials, internal configuration, prompt override requests, database dumps or attempts to bypass instructions.",
+            "The Copilot is scope-limited to smart port operations and protects internal prompts, configuration and demo data boundaries.",
+            "Ask about port congestion, truck ETA, gate queues, emissions, disruptions, scenario risk or recommended operator actions instead.",
+            "Maintains enterprise governance and demo safety.",
+            "No secret or external system data is exposed.",
+            "Local deterministic governance is active.",
+            StandardActions());
 
     private CopilotChatResponse BuildRisk(string prompt, OperationalContext ctx)
     {
@@ -145,6 +243,23 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
             $"Target avoidable idling first: {ctx.TotalIdlingMinutesToday:F0} minutes today can be reduced by metering truck dispatch.",
             ctx.LoadSheddingActive ? "Energy playbook should be active now." : "Keep the load-shedding playbook ready for the next disruption window.",
             StandardActions());
+    }
+
+    private async Task<CopilotChatResponse> BuildTruckTracking(string prompt, OperationalContext ctx)
+    {
+        var tracking = await _tracking.GetDashboardAsync();
+        var delayed = tracking.Trucks.Where(t => t.Status is "Delayed" or "Hold Outside Port").Take(3).ToList();
+        var focus = delayed.Count > 0 ? delayed : tracking.Trucks.Take(3).ToList();
+        var truckSummary = string.Join("; ", focus.Select(t => $"{t.FleetIdentifier} on {t.RouteCorridor} at {t.CurrentCheckpoint}, ETA {t.EtaMinutesToGate} min, risk {t.DelayRiskScore}/100, {t.Status.ToLowerInvariant()}, {t.EstimatedCo2Kg:F1} kg CO₂"));
+
+        return Base(prompt, "truck tracking / ETA", tracking.GatePressureScore >= 80 ? "High" : "Medium", tracking.AiConfidenceScore, "Truck Tracking / ETA Intelligence",
+            $"Tracking {tracking.ActiveTrucks} active approaching trucks; {tracking.HoldOutsidePortCount} should be held outside the port and {tracking.PriorityReleaseCount} should receive priority release.",
+            $"ETA and checkpoint risk are derived from local dispatch, fleet and gate queue demo data. Focus trucks: {truckSummary}.",
+            "Hold high-risk trucks at outer staging, release priority cargo through pre-cleared lanes, and meter remaining arrivals against live gate pressure.",
+            $"Expected impact is lower queue growth, about {tracking.TotalIdlingMinutes:F0} idling minutes under control, and reduced CO₂ exposure of {tracking.EstimatedCo2Kg:F1} kg in the current demo view.",
+            $"Truck idling exposure is {tracking.TotalIdlingMinutes:F0} minutes / {tracking.EstimatedCo2Kg:F1} kg CO₂ based on synthetic demo assumptions.",
+            ctx.LoadSheddingActive ? "Energy disruption increases ETA uncertainty; hold non-critical trucks outside the port perimeter." : "Energy stable; gate pressure is the main ETA constraint.",
+            new() { new() { Icon = "📡", Title = "Truck Tracking", Description = "Open ETA intelligence board.", Url = "/TruckTracking" }, new() { Icon = "🚪", Title = "Gates", Description = "Inspect live gate queue pressure.", Url = "/gates" }, new() { Icon = "🌿", Title = "Emissions", Description = "Review idling and CO₂ exposure.", Url = "/emissions" } });
     }
 
     private async Task<CopilotChatResponse> BuildGate(string prompt, OperationalContext ctx)
@@ -241,7 +356,7 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         Base(prompt, "demo", "Medium", 94, "Competition Demo Narrative",
             "Culltron Smart Port Flow is a local deterministic Smart Port Copilot that converts synthetic port telemetry into explainable operator actions.",
             $"The live demo shows {ctx.VesselsInPort} vessels in port, {ctx.TrucksInQueue} queued trucks, {ctx.YardOccupancyPct:F1}% yard occupancy, {ctx.ActiveDisruptions} disruptions and {ctx.EstimatedCo2Today:F1} kg CO₂ from idling today.",
-            "Narrate Landing → Dashboard → AI Agent → Copilot Chat → Scenario Simulator → Emissions → Recommendations/Audit.",
+            "Narrate Landing → Dashboard → AI Agent → Copilot Chat → Truck Tracking → Scenario Simulator → Emissions → Recommendations/Audit.",
             "Judges see premium UI, deterministic AI, scenario planning, sustainability impact and accountable decision history in under three minutes.",
             "Highlight CO₂/idling savings as a measurable business and sustainability outcome.",
             ctx.LoadSheddingActive ? "Mention active load-shedding response as a South African port reality." : "Mention that load-shedding can be simulated without live external feeds.",
@@ -278,12 +393,26 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
     private static List<CopilotActionCard> StandardActions() => new()
     {
         new() { Icon = "⬡", Title = "Dashboard", Description = "Return to the command center.", Url = "/dashboard" },
+        new() { Icon = "📡", Title = "Truck Tracking", Description = "Inspect truck ETA and holds.", Url = "/TruckTracking" },
         new() { Icon = "🧠", Title = "Recommendations", Description = "Review/accept actions.", Url = "/flow/recommendations" },
         new() { Icon = "🔬", Title = "Simulator", Description = "Model what-if pressure.", Url = "/simulator" },
         new() { Icon = "🌿", Title = "Emissions", Description = "Quantify idling impact.", Url = "/emissions" }
     };
 
     private static bool Has(string text, params string[] terms) => terms.Any(term => text.Contains(term));
+
+    private static bool IsGreeting(string text)
+    {
+        var normalized = text.Trim().Trim('?', '!', '.', ',');
+        return normalized is "hello" or "hi" or "hey" or "thanks" or "thank you" or "who are you" or "how are you"
+            || normalized.StartsWith("hello ")
+            || normalized.StartsWith("hi ")
+            || normalized.StartsWith("hey ")
+            || normalized.StartsWith("thanks ")
+            || normalized.StartsWith("thank you ")
+            || normalized.StartsWith("good morning")
+            || normalized.StartsWith("good afternoon");
+    }
 
     private static int Score(OperationalContext ctx)
     {

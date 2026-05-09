@@ -1,142 +1,46 @@
-# SmartPort — Competition & Investor Demo Script
+# Culltron Smart Port Flow — Demo Script
 
-## Setup
-- Open browser at `http://localhost:8080` (Docker) or `https://localhost:5001` (local)
-- Have a second tab ready at `/auth/login`
-- Recommended login: `ops.manager@smartport.co.za` / `SmartPort@2025!`
+## Exact demo path
 
----
+Landing → Dashboard → AI Agent → Copilot Chat → Truck Tracking → Scenario Simulator → Emissions → Recommendations
 
-## Opening Statement (30 seconds)
+## Objective
 
-> "SmartPort is an intelligent port operations platform built specifically for South Africa's maritime and logistics industry. It gives terminal operators, port authorities, and logistics stakeholders a single unified operational picture — from vessel arrivals and berth assignments, all the way through to container dwell, gate queues, document compliance, and incident management — in real time."
+Demonstrate a polished enterprise Smart Port Agentic Operations Copilot that predicts congestion, explains operational risk, recommends actions, simulates disruptions and quantifies idling/emissions impact using local deterministic intelligence.
 
----
+## Demo path
 
-## Step 1 — Public Website (`/`)
+1. Open `/` and frame the problem: fragmented port decisions cause vessel delays, truck queues, excess idling and poor disruption response.
+2. Log in as `ops.manager@smartport.co.za` using `SmartPort@2025!`.
+3. Open `/dashboard` and highlight the premium command-center KPIs.
+4. Open `/agent` and ask: “What should the operations manager prioritise right now?”
+5. Open `/copilot`, use the “Biggest risk”, “Track trucks” and “Hold trucks” prompt chips, then ask “Prepare a 2-minute demo summary.”
+6. Explain that Copilot Chat is AJAX-powered, local/deterministic, scope-controlled and does not need paid AI APIs or cloud secrets.
+7. Open `/TruckTracking` and show ETA, checkpoint, queue risk, hold outside port, priority release and CO₂/idling exposure.
+8. Open `/simulator`, run a high-congestion or load-shedding scenario, and show risk scores, expected wait-time impact and recommended actions.
+9. Open `/emissions` and show avoidable idling, diesel cost and CO₂ estimates.
+10. Open `/flow/recommendations` or `/reports/recommendations` and show the recommendation audit trail.
+11. Close with the roadmap: real telemetry integrations, forecasting models, digital twin optimization and production-grade workflow/audit controls.
 
-**Talking points:**
-- Professional product landing page — credible to investors and buyers
-- Clear module overview: vessel, container, gate, document, AI, analytics
-- Pricing page shows commercial viability
-- Demo access page with live credentials
+## Suggested judge narration
 
----
+“Culltron Smart Port Flow acts as a command layer above terminal operations. Instead of only displaying data, it converts synthetic port state into explainable actions: what is happening, why it matters, what to do next, what impact to expect and how the decision is recorded.”
 
-## Step 2 — Login (`/auth/login`)
+## Backup demo prompts for Copilot Chat
 
-- Point out the credentials table — 5 distinct roles
-- Log in as **Port Operations Manager**: `ops.manager@smartport.co.za`
+- hello
+- what can you do
+- trucks on queue
+- track delayed trucks
+- which trucks should be held outside the port
 
-> "Role-based access means a logistics partner sees different views from a terminal supervisor or an executive. Every route and action is governed by policy."
-
----
-
-## Step 3 — Operations Dashboard (`/dashboard`)
-
-**Key talking points:**
-
-**KPI Banner:**
-- 3 vessels in port, 82% berth utilisation, 2,847 TEU today, 5 open incidents
-- Trucks in queue with real-time wait estimate
-
-**Vessels In Port panel:**
-- MSC SARACEN in cargo operations — note the +90 min delay flag
-- CMA CGM CALLISTO berthed
-- EVER GREET at anchor — 3h+ wait, AI has raised a berth reallocation recommendation
-
-**Throughput Chart:**
-- 14-day trend with realistic seasonal variation
-
-**Berth Tiles:**
-- Visual berth occupancy — immediate situational awareness
-
-**Yard Blocks:**
-- Block A at 84% — near capacity warning
-- Block R reefer block showing reefer badge
-
-**AI Recommendations panel:**
-- 3 pending recommendations — berth reallocation, gate queue, DG document chase
-
----
-
-## Step 4 — Vessel Detail (`/vessels/1`)
-
-- Full MSC SARACEN record: IMO, flag, shipping line, agent, technical particulars
-- Berth assignment: cargo ops in progress, 2,600 / 2,800 TEU discharged
-- Documents panel: **DG Declaration missing** — overdue flag, red highlight
-- Related incident: crane failure
-
-> "The platform links vessels, documents, incidents, and berth assignments — everything about this vessel call is in one place."
-
----
-
-## Step 5 — AI Recommendations (`/incidents/recommendations`)
-
-- Show 4 pending recommendations
-- **EVER GREET Berth Reallocation**: detailed rationale, suggested action, estimated 4h time saving
-- **Gate Queue Mitigation**: queue at 12 trucks, recommendation to open Gate 4
-- **DG Declaration Chase**: MSC SARACEN departure at risk, step-by-step action plan
-- Demonstrate **Accept & Action** workflow
-
-> "This isn't just dashboards — it's an AI layer that watches the data and tells operators what to do next, with an estimated impact for each suggestion."
-
----
-
-## Step 6 — Incident Management (`/incidents/1`)
-
-- Crane failure incident: Critical severity, In Progress status
-- Audit trail showing acknowledgment
-- Live resolution workflow: root cause, resolution notes, corrective action
-
----
-
-## Step 7 — Container Tracker (`/containers/track`)
-
-- Search any container number (e.g. MAEU...)
-- Show: status, yard location, customs status, dwell time, reefer/hazmat flags
-
----
-
-## Step 8 — Yard Overview (`/containers/yard`)
-
-- Block-level occupancy visualisation
-- Block A near capacity — near-capacity badge
-- Hazmat block clearly labelled
-- Drill into Block A — see individual containers
-
----
-
-## Step 9 — Analytics (`/analytics`)
-
-- Default 30-day view
-- KPIs: total TEU, average turnaround, crane productivity, berth utilisation
-- Throughput chart and turnaround chart side by side
-- Berth efficiency table — utilisation per berth
-- Adjust date range to show flexibility
-
----
-
-## Step 10 — Admin (login as admin)
-
-- Switch to: `admin@smartport.co.za`
-- User management table — 5 users, roles, last login
-- Settings page: alert thresholds, integration roadmap
-- Roles page: clear permission matrix
-
----
-
-## Closing
-
-> "SmartPort runs on ASP.NET Core 8, PostgreSQL, and Docker. The codebase is structured for maintainability and enterprise deployment. Integration pathways are already documented for AIS vessel feeds, SARS customs, SAWS weather, and Navis N4 TOS. We are seeking pilot partners for deployment at a South African terminal. The platform is ready to run today."
-
----
-
-## Differentiators to Emphasise
-
-1. **South African context** — SARS, SAMSA, DAFF workflows built in
-2. **AI layer** — not just dashboards, actionable recommendations with impact estimates
-3. **Full document workflow** — departure-critical document tracking
-4. **Role-based** — right information to the right stakeholder
-5. **Production-ready stack** — .NET 8, PostgreSQL, Docker, not a prototype
-6. **Realistic data** — based on Durban Container Terminal operational patterns
+- What is the biggest risk right now?
+- Explain current congestion.
+- Which gate is becoming a bottleneck?
+- Which vessel or berth needs attention first?
+- How should we reduce truck idling and emissions?
+- Which trucks are causing emissions/idling risk?
+- What happens if load-shedding starts soon?
+- Generate an operator action plan.
+- How much CO2 can we save?
+- Prepare a 2-minute demo summary.

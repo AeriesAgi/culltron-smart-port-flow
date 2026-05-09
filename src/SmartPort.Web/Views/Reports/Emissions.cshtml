@@ -4,10 +4,10 @@
 <div class="sp-toolbar"><h2 style="margin:0">Emissions Report — @DateTime.UtcNow.ToString("dd MMM yyyy")</h2><div style="display:flex;gap:.5rem"><a asp-action="ExportEmissionsCsv" asp-controller="Reports" class="sp-btn sp-btn--sm sp-btn--outline">⬇ CSV</a><a asp-action="Index" asp-controller="Reports" class="sp-btn sp-btn--sm sp-btn--outline">← Reports</a></div></div>
 <div class="sp-alert sp-alert--info" style="margin-bottom:1rem"><i data-feather="info"></i> Synthetic estimates only. Assumptions: 3.0 L/hr idle · R24.00/L · 2.68 kg CO₂/L.</div>
 <div class="sp-kpi-grid sp-kpi-grid--sm" style="margin-bottom:1.5rem">
-    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.TotalIdlingMinutes.ToString("N0") min</div><div class="sp-kpi-card__label">Total Idling</div></div></div>
-    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.TotalDieselLitres.ToString("N1") L</div><div class="sp-kpi-card__label">Diesel Consumed</div></div></div>
-    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">R@Model.TotalFuelCost.ToString("N0")</div><div class="sp-kpi-card__label">Fuel Cost</div></div></div>
-    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.TotalCo2Kg.ToString("N1") kg</div><div class="sp-kpi-card__label">CO₂ Emissions</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{Model.TotalIdlingMinutes:N0} min")</div><div class="sp-kpi-card__label">Total Idling</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{Model.TotalDieselLitres:N1} L")</div><div class="sp-kpi-card__label">Diesel Consumed</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"R{Model.TotalFuelCost:N2}")</div><div class="sp-kpi-card__label">Fuel Cost</div></div></div>
+    <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{Model.TotalCo2Kg:N1} kg")</div><div class="sp-kpi-card__label">CO₂ Emissions</div></div></div>
     <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.AvoidableIdlingCount</div><div class="sp-kpi-card__label">Avoidable Events</div></div></div>
 </div>
 <div class="sp-card">
@@ -19,8 +19,8 @@
             {
                 <tr class="@(t.AvoidableFlag ? "sp-table__row--warn" : "")">
                     <td class="sp-table__mono">@t.VehicleRegistration</td><td>@t.OrganisationName</td><td>@t.RouteName</td>
-                    <td>@t.IdlingMinutes.ToString("F0")</td><td>@t.DieselLitres.ToString("F2")</td>
-                    <td>R@t.FuelCost.ToString("F2")</td><td>@t.Co2Kg.ToString("F2")</td>
+                    <td>@($"{t.IdlingMinutes:F0}")</td><td>@($"{t.DieselLitres:F2}")</td>
+                    <td>@($"R{t.FuelCost:N2}")</td><td>@($"{t.Co2Kg:F2}")</td>
                     <td>@(t.AvoidableFlag ? "⚠ Yes" : "No")</td><td class="sp-table__mono">@t.TripDate.ToString("dd MMM")</td>
                 </tr>
             }

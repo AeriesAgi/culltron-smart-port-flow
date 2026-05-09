@@ -75,10 +75,10 @@
           <span class="sp-card__meta">Synthetic estimate — indicative only</span>
         </div>
         <div class="sp-kpi-grid sp-kpi-grid--sm" style="padding:1rem 1.25rem">
-          <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@em.EstimatedIdlingMinutes.ToString("F0") min</div><div class="sp-kpi-card__label">Idling</div></div></div>
-          <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@em.EstimatedDieselLitres.ToString("F2") L</div><div class="sp-kpi-card__label">Diesel</div></div></div>
-          <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">R@em.EstimatedFuelCost.ToString("F2")</div><div class="sp-kpi-card__label">Fuel Cost</div></div></div>
-          <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@em.EstimatedCo2Kg.ToString("F2") kg</div><div class="sp-kpi-card__label">CO₂</div></div></div>
+          <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{em.EstimatedIdlingMinutes:F0} min")</div><div class="sp-kpi-card__label">Idling</div></div></div>
+          <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{em.EstimatedDieselLitres:F2} L")</div><div class="sp-kpi-card__label">Diesel</div></div></div>
+          <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"R{em.EstimatedFuelCost:N2}")</div><div class="sp-kpi-card__label">Fuel Cost</div></div></div>
+          <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{em.EstimatedCo2Kg:F2} kg")</div><div class="sp-kpi-card__label">CO₂</div></div></div>
         </div>
         @if (em.AvoidableIdlingFlag)
         { <div class="sp-alert sp-alert--warning" style="margin:.5rem 1.25rem"><i>⚠</i> This idling is flagged as avoidable with optimised dispatch timing.</div> }
@@ -140,7 +140,7 @@
         <dt>Actual Arrival</dt><dd class="sp-table__mono">@(Model.ActualArrivalTime?.ToString("dd MMM HH:mm") ?? "—")</dd>
         <dt>Gate In</dt><dd class="sp-table__mono">@(Model.GateInTime?.ToString("dd MMM HH:mm") ?? "—")</dd>
         <dt>Gate Out</dt><dd class="sp-table__mono">@(Model.GateOutTime?.ToString("dd MMM HH:mm") ?? "—")</dd>
-        @if (Model.PortDwellMinutes.HasValue) { <dt>Port Dwell</dt><dd>@Model.PortDwellMinutes.Value.ToString("F0") min</dd> }
+        @if (Model.PortDwellMinutes.HasValue) { <dt>Port Dwell</dt><dd>@($"{Model.PortDwellMinutes.Value:F0} min")</dd> }
       </dl>
     </div>
     @if (!string.IsNullOrEmpty(Model.Notes))

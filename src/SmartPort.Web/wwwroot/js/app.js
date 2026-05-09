@@ -60,3 +60,20 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
 });
+
+document.addEventListener('DOMContentLoaded', function () {
+  var orb = document.getElementById('aiHelpOrb');
+  var drawer = document.getElementById('aiHelpDrawer');
+  var close = document.getElementById('aiHelpClose');
+  function setDrawer(open) {
+    if (!drawer || !orb) return;
+    drawer.classList.toggle('open', open);
+    drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+    orb.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  if (orb && drawer) {
+    orb.addEventListener('click', function () { setDrawer(!drawer.classList.contains('open')); });
+    close?.addEventListener('click', function () { setDrawer(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setDrawer(false); });
+  }
+});

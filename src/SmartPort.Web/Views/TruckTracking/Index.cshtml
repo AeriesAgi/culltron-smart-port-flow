@@ -1,0 +1,80 @@
+@model TruckTrackingDashboardDto
+@{
+    ViewData["Title"] = "Truck Tracking & ETA Intelligence";
+}
+
+<section class="sp-tracking-hero sp-premium-panel">
+    <div>
+        <div class="sp-agent-badge"><span class="sp-live-dot"></span> Local ETA Intelligence · Synthetic Demo Data</div>
+        <h1>Truck Tracking &amp; ETA Intelligence</h1>
+        <p>Deterministic local view of active trucks approaching the port, queue exposure, idling risk, CO₂ impact and operator release actions.</p>
+    </div>
+    <div class="sp-gauge sp-gauge--cyan" style="--value:@Model.GatePressureScore">
+        <div class="sp-gauge__ring"></div>
+        <div class="sp-gauge__value">@Model.GatePressureScore</div>
+        <div class="sp-gauge__label">Gate Pressure</div>
+    </div>
+</section>
+
+<div class="sp-kpi-grid sp-kpi-grid--sm">
+    <div class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.ActiveTrucks</div><div class="sp-kpi-card__label">Active Trucks</div><div class="sp-kpi-card__sub">Approaching port corridors</div></div></div>
+    <div class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.QueueRiskCount</div><div class="sp-kpi-card__label">Queue Risk</div><div class="sp-kpi-card__sub">Need release metering</div></div></div>
+    <div class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.HoldOutsidePortCount</div><div class="sp-kpi-card__label">Hold Outside Port</div><div class="sp-kpi-card__sub">Avoid live queue idling</div></div></div>
+    <div class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{Model.AverageEtaMinutes:F0} min")</div><div class="sp-kpi-card__label">Avg ETA to Gate</div><div class="sp-kpi-card__sub">Local deterministic estimate</div></div></div>
+    <div class="sp-kpi-card sp-kpi-card--interactive"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{Model.EstimatedCo2Kg:F1} kg")</div><div class="sp-kpi-card__label">CO₂ Exposure</div><div class="sp-kpi-card__sub">@($"{Model.TotalIdlingMinutes:F0} idling min")</div></div></div>
+</div>
+
+<div class="sp-tracking-grid">
+    <div class="sp-card sp-card--span2">
+        <div class="sp-card__header">
+            <h3 class="sp-card__title">Active Truck ETA Board</h3>
+            <span class="sp-card__meta">No GPS/API dependency · demo telemetry</span>
+        </div>
+        <div class="sp-truck-list">
+            @foreach (var truck in Model.Trucks)
+            {
+                <article class="sp-truck-card sp-truck-card--@truck.StatusTone">
+                    <div class="sp-truck-card__head">
+                        <div>
+                            <strong>@truck.FleetIdentifier</strong>
+                            <span>@truck.OrganisationName · @truck.RouteCorridor</span>
+                        </div>
+                        <span class="sp-badge sp-badge--@truck.StatusTone">@truck.Status</span>
+                    </div>
+                    <div class="sp-truck-card__metrics">
+                        <div><span>ETA</span><strong>@truck.EtaMinutesToGate min</strong></div>
+                        <div><span>Checkpoint</span><strong>@truck.CurrentCheckpoint</strong></div>
+                        <div><span>Queue</span><strong>@truck.QueueStatus</strong></div>
+                        <div><span>Idling</span><strong>@($"{truck.IdlingMinutes:F0} min")</strong></div>
+                        <div><span>CO₂</span><strong>@($"{truck.EstimatedCo2Kg:F1} kg")</strong></div>
+                        <div><span>Risk</span><strong>@truck.DelayRiskScore/100</strong></div>
+                    </div>
+                    <div class="sp-route-timeline">
+                        @foreach (var step in truck.Timeline)
+                        {
+                            <span class="@(step == truck.CurrentCheckpoint ? "active" : "")">@step</span>
+                        }
+                    </div>
+                    <div class="sp-truck-action"><i data-feather="zap"></i> @truck.RecommendedAction</div>
+                </article>
+            }
+        </div>
+    </div>
+
+    <aside class="sp-tracking-side">
+        <div class="sp-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">Operator Focus</h3></div>
+            <div class="sp-action-stack">
+                <div class="sp-action-note"><strong>@Model.PriorityReleaseCount priority release</strong><span>Route pre-cleared urgent cargo through the fastest gate lane.</span></div>
+                <div class="sp-action-note"><strong>@Model.HoldOutsidePortCount hold calls</strong><span>Keep high-risk trucks at staging points until pressure drops.</span></div>
+                <div class="sp-action-note"><strong>@($"{Model.EstimatedCo2Kg:F1} kg CO₂")</strong><span>Use emissions view to quantify idling reduction opportunity.</span></div>
+            </div>
+        </div>
+        <div class="sp-card sp-judge-card">
+            <div class="sp-card__header"><h3 class="sp-card__title">Ask Copilot</h3></div>
+            <p>Try: “which trucks should be held outside the port?” or “track delayed trucks”.</p>
+            <a class="sp-btn sp-btn--primary sp-btn--full" asp-controller="Copilot" asp-action="Index" asp-route-prompt="which trucks should be held outside the port">Ask SmartPort Copilot</a>
+        </div>
+    </aside>
+</div>
+

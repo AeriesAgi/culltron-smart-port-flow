@@ -14,8 +14,8 @@
       <div class="sp-rec-card__action-box"><strong>Reason:</strong><p>@Model.Reason</p></div>
       @if (!string.IsNullOrEmpty(Model.ExpectedBenefit))
       { <div class="sp-rec-card__impact">→ Expected Impact: @Model.ExpectedBenefit</div> }
-      @if (!string.IsNullOrEmpty(Model.ActedOnBy))
-      { <div class="sp-rec-card__acted">Actioned by @Model.ActedOnBy — @Model.ActedOnNotes</div> }
+      @if (Model.AcceptedByUser != null)
+      { <div class="sp-rec-card__acted">@(Model.AcceptedByUser == true ? "Accepted" : "Dismissed") @Model.AcceptedAt?.ToString("HH:mm dd MMM") — @(Model.UserFeedback ?? "No feedback provided")</div> }
       @if (Model.IsPending)
       {
         <div class="sp-rec-card__footer">
