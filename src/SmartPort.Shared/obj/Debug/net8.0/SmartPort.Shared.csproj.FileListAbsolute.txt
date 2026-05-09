@@ -1,0 +1,12 @@
+/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/bin/Debug/net8.0/SmartPort.Shared.deps.json
+/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/bin/Debug/net8.0/SmartPort.Shared.dll
+/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/bin/Debug/net8.0/SmartPort.Shared.pdb
+/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/obj/Debug/net8.0/SmartPort.Shared.GeneratedMSBuildEditorConfig.editorconfig
+/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/obj/Debug/net8.0/SmartPort.Shared.AssemblyInfoInputs.cache
+/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/obj/Debug/net8.0/SmartPort.Shared.AssemblyInfo.cs
+/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/obj/Debug/net8.0/SmartPort.Shared.csproj.CoreCompileInputs.cache
+/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/obj/Debug/net8.0/SmartPort.Shared.sourcelink.json
+/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/obj/Debug/net8.0/SmartPort.Shared.dll
+/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/obj/Debug/net8.0/refint/SmartPort.Shared.dll
+/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/obj/Debug/net8.0/SmartPort.Shared.pdb
+/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/obj/Debug/net8.0/ref/SmartPort.Shared.dll
