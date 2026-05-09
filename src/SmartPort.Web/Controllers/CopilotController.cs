@@ -21,6 +21,72 @@ public class CopilotController : Controller
     public async Task<IActionResult> Ask(string prompt)
     {
         var model = await _chat.BuildPageAsync(prompt);
+        if (IsJsonRequest())
+        {
+            return Json(ToJson(model.Response));
+        }
+
         return View("Index", model);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AskJson(string prompt)
+    {
+        var model = await _chat.BuildPageAsync(prompt);
+        return Json(ToJson(model.Response));
+    }
+
+    private bool IsJsonRequest() =>
+        string.Equals(Request.Headers["X-Requested-With"].ToString(), "XMLHttpRequest", StringComparison.OrdinalIgnoreCase)
+        || Request.Headers["Accept"].Any(h => h?.Contains("application/json", StringComparison.OrdinalIgnoreCase) == true);
+
+    private static object ToJson(CopilotChatResponse? response)
+    {
+        if (response == null)
+        {
+            return new
+            {
+                summary = "I did not receive a prompt. Try asking about truck queues, ETA tracking, gate pressure, emissions or recommendations.",
+                intent = "empty",
+                urgency = "Low",
+                confidence = 100,
+                affectedArea = "Smart Port Copilot",
+                operationalReasoning = "No prompt was provided.",
+                recommendedAction = "Choose a supported topic chip or type a focused smart port operations question.",
+                expectedImpact = "Keeps the demo focused and safe.",
+                emissionsImpact = "Synthetic demo data is used when operational context is requested.",
+                energyImpact = "No live external systems are queried.",
+                actionLinks = Array.Empty<object>(),
+                generatedAt = DateTime.UtcNow.ToString("HH:mm:ss"),
+                isOutOfScope = false,
+                isSmallTalk = true,
+                isVagueButRelated = false
+            };
+        }
+
+        var intent = response.Intent.ToLowerInvariant();
+        var isSmallTalk = intent.Contains("greeting") || intent.Contains("help");
+        var isOutOfScope = intent.Contains("out-of-scope") || intent.Contains("safety");
+        var isVague = intent.Contains("vague");
+
+        return new
+        {
+            summary = response.Summary,
+            intent = response.Intent,
+            urgency = response.Severity,
+            confidence = response.ConfidenceScore,
+            affectedArea = response.AffectedArea,
+            operationalReasoning = response.OperationalReasoning,
+            recommendedAction = response.RecommendedAction,
+            expectedImpact = response.ExpectedImpact,
+            emissionsImpact = response.EmissionsImpact,
+            energyImpact = response.EnergyImpact,
+            actionLinks = response.ActionCards.Select(a => new { title = a.Title, description = a.Description, url = a.Url, icon = a.Icon }),
+            metricBadges = response.MetricBadges.Select(b => new { label = b.Label, value = b.Value, tone = b.Tone }),
+            generatedAt = response.GeneratedAt.ToString("HH:mm:ss"),
+            isOutOfScope,
+            isSmallTalk,
+            isVagueButRelated = isVague
+        };
     }
 }

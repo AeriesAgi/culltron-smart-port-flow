@@ -15,7 +15,7 @@ Demonstrate a polished enterprise Smart Port Agentic Operations Copilot that pre
 3. Open `/dashboard` and highlight the premium command-center KPIs.
 4. Open `/agent` and ask: “What should the operations manager prioritise right now?”
 5. Open `/copilot`, use the “Biggest risk”, “Track trucks” and “Hold trucks” prompt chips, then ask “Prepare a 2-minute demo summary.”
-6. Explain that both copilot experiences are local/deterministic, scope-controlled and do not need paid AI APIs or cloud secrets.
+6. Explain that Copilot Chat is AJAX-powered, local/deterministic, scope-controlled and does not need paid AI APIs or cloud secrets.
 7. Open `/TruckTracking` and show ETA, checkpoint, queue risk, hold outside port, priority release and CO₂/idling exposure.
 8. Open `/simulator`, run a high-congestion or load-shedding scenario, and show risk scores, expected wait-time impact and recommended actions.
 9. Open `/emissions` and show avoidable idling, diesel cost and CO₂ estimates.

@@ -143,11 +143,11 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
     {
         if (Has(q, "ignore instruction", "ignore previous", "system prompt", "developer prompt", "reveal prompt", "show prompt", "secret", "credential", "password", "api key", "dump database", "dump config", "internal config", "jailbreak")) return "safety";
         if (IsGreeting(q)) return "greeting";
-        if (Has(q, "help", "what can you do", "capabilit", "supported", "topics")) return "help";
+        if (Has(q, "help", "what can you do", "what are you", "capabilit", "supported", "topics")) return "help";
         if (Has(q, "demo", "2-minute", "summary", "video", "pitch", "walkthrough")) return "demo";
         if (Has(q, "action plan", "next", "priorit", "manager do", "operator action")) return "action-plan";
-        if (Has(q, "track", "tracking", "eta", "where are the trucks", "delayed truck", "hold outside", "priority release", "approaching", "checkpoint")) return "truck-tracking";
-        if (Has(q, "truck queue", "trucks on queue", "queued truck", "trucks in queue")) return "truck-queue";
+        if (Has(q, "track", "tracking", "eta", "truck eta", "where are the trucks", "where are trucks", "delayed truck", "delayed trucks", "which trucks are delayed", "hold outside", "held outside", "outside port", "wait outside", "trucks to hold", "hold trucks", "which trucks should wait", "priority release", "priority release trucks", "approaching", "checkpoint")) return "truck-tracking";
+        if (Has(q, "truck queue", "trucks on queue", "queued truck", "queued trucks", "trucks in queue", "gate queue trucks")) return "truck-tracking";
         if (Has(q, "gate", "bottleneck", "queue")) return "gate";
         if (Has(q, "load", "energy", "shedding", "power")) return "energy";
         if (Has(q, "emission", "co2", "co₂", "carbon", "idling", "diesel", "fuel")) return "emissions";
@@ -158,7 +158,7 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         if (Has(q, "recommend")) return "recommendations";
         if (Has(q, "audit", "decision history", "decision")) return "audit";
         if (Has(q, "port", "operation", "congestion", "risk", "flow", "terminal")) return "vague-related";
-        if (Has(q, "politics", "medical", "legal advice", "financial advice", "recipe", "homework", "code", "programming", "weather", "sports", "abusive")) return "out-of-scope";
+        if (Has(q, "politics", "medical", "legal advice", "financial advice", "recipe", "homework", "code", "programming", "weather", "sports", "celebrity", "news", "general knowledge", "offensive", "abusive")) return "out-of-scope";
         return "out-of-scope";
     }
 
@@ -250,7 +250,7 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         var tracking = await _tracking.GetDashboardAsync();
         var delayed = tracking.Trucks.Where(t => t.Status is "Delayed" or "Hold Outside Port").Take(3).ToList();
         var focus = delayed.Count > 0 ? delayed : tracking.Trucks.Take(3).ToList();
-        var truckSummary = string.Join("; ", focus.Select(t => $"{t.FleetIdentifier} at {t.CurrentCheckpoint}, ETA {t.EtaMinutesToGate} min, {t.Status.ToLowerInvariant()}, {t.EstimatedCo2Kg:F1} kg CO₂"));
+        var truckSummary = string.Join("; ", focus.Select(t => $"{t.FleetIdentifier} on {t.RouteCorridor} at {t.CurrentCheckpoint}, ETA {t.EtaMinutesToGate} min, risk {t.DelayRiskScore}/100, {t.Status.ToLowerInvariant()}, {t.EstimatedCo2Kg:F1} kg CO₂"));
 
         return Base(prompt, "truck tracking / ETA", tracking.GatePressureScore >= 80 ? "High" : "Medium", tracking.AiConfidenceScore, "Truck Tracking / ETA Intelligence",
             $"Tracking {tracking.ActiveTrucks} active approaching trucks; {tracking.HoldOutsidePortCount} should be held outside the port and {tracking.PriorityReleaseCount} should receive priority release.",
@@ -405,6 +405,11 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
     {
         var normalized = text.Trim().Trim('?', '!', '.', ',');
         return normalized is "hello" or "hi" or "hey" or "thanks" or "thank you" or "who are you" or "how are you"
+            || normalized.StartsWith("hello ")
+            || normalized.StartsWith("hi ")
+            || normalized.StartsWith("hey ")
+            || normalized.StartsWith("thanks ")
+            || normalized.StartsWith("thank you ")
             || normalized.StartsWith("good morning")
             || normalized.StartsWith("good afternoon");
     }

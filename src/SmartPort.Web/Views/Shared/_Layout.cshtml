@@ -161,11 +161,33 @@
     <div class="sp-content">@RenderBody()</div>
 </main>
 
-@if (ctrl is "Dashboard" or "Agent" or "Simulator" or "TruckTracking" or "Emissions")
+@if (ctrl is "Dashboard" or "Agent" or "Simulator" or "TruckTracking" or "Emissions" or "Flow")
 {
-    <a class="sp-ai-help-orb" asp-controller="Copilot" asp-action="Index" asp-route-prompt="What is the biggest risk right now?">
+    var promptSet = ctrl switch
+    {
+        "TruckTracking" => new[] { "Which trucks should be held outside the port?", "Which trucks are delayed?", "Show ETA risks." },
+        "Simulator" => new[] { "Explain this scenario.", "What action should operators take?", "Generate an operator action plan." },
+        "Emissions" => new[] { "How much CO2 can we save?", "Which trucks are causing avoidable idling?", "How can we reduce truck idling?" },
+        "Flow" => new[] { "Summarise recommendations.", "Generate an operator action plan.", "Explain current congestion." },
+        _ => new[] { "What is the biggest risk right now?", "Explain congestion.", "Generate operator action plan." }
+    };
+    <button type="button" class="sp-ai-help-orb" id="aiHelpOrb" aria-controls="aiHelpDrawer" aria-expanded="false">
         <span>✦</span><strong>Ask SmartPort Copilot</strong>
-    </a>
+    </button>
+    <aside class="sp-ai-help-drawer" id="aiHelpDrawer" aria-hidden="true">
+        <div class="sp-ai-help-drawer__head">
+            <div><strong>Ask about this page</strong><small>Local deterministic Copilot</small></div>
+            <button type="button" id="aiHelpClose" aria-label="Close Copilot helper">×</button>
+        </div>
+        <div class="sp-ai-help-drawer__badges"><span>Offline-safe</span><span>Synthetic demo data</span><span>No external AI API</span></div>
+        <div class="sp-ai-help-drawer__prompts">
+            @foreach (var prompt in promptSet)
+            {
+                <a asp-controller="Copilot" asp-action="Index" asp-route-prompt="@prompt">@prompt</a>
+            }
+        </div>
+        <a class="sp-btn sp-btn--primary sp-btn--full" asp-controller="Copilot" asp-action="Index">Open full Copilot Chat</a>
+    </aside>
 }
 
 <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>

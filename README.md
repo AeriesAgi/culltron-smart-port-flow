@@ -79,7 +79,7 @@ Each recommendation/answer is intended to surface the operational reason, sugges
 
 ### Local SmartPort Copilot Chat
 
-The `/copilot` page is a flagship premium chat-style operator assistant. It does **not** call external AI APIs. Instead, it uses local deterministic intent routing over seeded/demo operational context. Operators can ask about biggest risk, truck tracking/ETA, truck idling, berth attention, gate bottlenecks, load-shedding, CO₂ savings, action plans and demo narration. The Copilot includes governance/scope control, supported topic chips, prompt-injection refusal, safe small talk handling and deterministic intent routing. Each response includes:
+The `/copilot` page is a flagship premium AJAX chat-style operator assistant that updates the conversation without a full page reload. It does **not** call external AI APIs. Instead, it uses local deterministic intent routing over seeded/demo operational context. Operators can ask about biggest risk, truck tracking/ETA, truck idling, berth attention, gate bottlenecks, load-shedding, CO₂ savings, action plans and demo narration. The Copilot includes governance/scope control, supported topic chips, prompt-injection refusal, safe small talk handling and deterministic intent routing. Each response includes:
 
 - short summary
 - affected area and urgency/severity
@@ -111,7 +111,7 @@ Operators can review recommendation history, pending actions, accepted/dismissed
 
 ### Truck Tracking & ETA Intelligence
 
-The `/TruckTracking` page is a local synthetic ETA intelligence module showing active trucks approaching the port, current checkpoint/geofence, ETA to gate, queue status, idling minutes, CO₂ estimate, delay risk, status badges and recommended operator actions. It uses existing dispatch/fleet/gate demo data where available and never calls GPS or map APIs.
+The `/TruckTracking` page is a local synthetic ETA intelligence module showing active trucks approaching the port, current checkpoint/geofence, ETA to gate, queue status, idling minutes, CO₂ estimate, delay risk, status badges and recommended operator actions. It uses existing dispatch/fleet/gate demo data where available and never calls GPS or map APIs. Flagship pages include a global Copilot help orb with page-specific prompts that open the full AJAX Copilot chat.
 
 ### Emissions / energy / disruption layer
 
