@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SmartPort.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5322d51fda480eb81515b9d1dc8cfe13f52415af")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+57a1c52e3333055a2fd7e8ceecfc98ff92dd0af3")]
 [assembly: System.Reflection.AssemblyProductAttribute("SmartPort.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SmartPort.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
