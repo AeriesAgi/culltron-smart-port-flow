@@ -1,0 +1,68 @@
+@using SmartPort.Web.Controllers
+@using SmartPort.Application.Interfaces
+@{
+    ViewData["Title"] = "Executive Impact Centre";
+    var snapshot = ViewBag.Snapshot as SmartPortOperationsSnapshot;
+    var trucks = ViewBag.Trucks as TruckTrackingDashboardDto;
+    var kpis = ViewBag.Kpis as ImpactKpi[] ?? Array.Empty<ImpactKpi>();
+    var integrations = ViewBag.Integrations as IReadOnlyList<IntegrationProviderStatus> ?? Array.Empty<IntegrationProviderStatus>();
+}
+
+<section class="sp-business-hero sp-premium-panel">
+    <div>
+        <div class="sp-agent-badge"><span class="sp-live-dot"></span> Executive value layer · synthetic demo estimates</div>
+        <h1>Executive Impact Centre</h1>
+        <p>Business, sustainability and operational value from Culltron Smart Port Flow. Calculations are deterministic and indicative; emissions and savings are indicative only.</p>
+        <div class="sp-command-actions">
+            <a class="sp-btn sp-btn--primary" asp-controller="Brief" asp-action="Index">Generate Executive Brief</a>
+            <a class="sp-btn sp-btn--outline" asp-controller="CleanLogistics" asp-action="Index">Clean Logistics Impact</a>
+            <a class="sp-btn sp-btn--outline" asp-controller="PilotReadiness" asp-action="Index">Pilot Readiness</a>
+        </div>
+    </div>
+    <div class="sp-impact-score"><span>Impact opportunity</span><strong>@(kpis.FirstOrDefault()?.Progress ?? 72)%</strong><small>demo scoring</small></div>
+</section>
+
+<section class="sp-business-grid sp-business-grid--kpis">
+@foreach (var kpi in kpis)
+{
+    <article class="sp-business-card sp-business-card--@kpi.Tone">
+        <span>@kpi.Label</span>
+        <strong>@kpi.Value</strong>
+        <small>@kpi.Note</small>
+        <div class="sp-impact-bar"><i style="width:@kpi.Progress%"></i></div>
+    </article>
+}
+</section>
+
+<section class="sp-command-layout">
+    <article class="sp-card">
+        <div class="sp-card__header"><h3 class="sp-card__title">Before / After Opportunity</h3><span class="sp-card__meta">demo scenario estimate</span></div>
+        <div class="sp-before-after">
+            <div><span>Without metering</span><strong>@(snapshot?.IdlingMinutes.ToString("F0") ?? "0") min</strong><small>idling exposure</small></div>
+            <div><span>With action plan</span><strong>@Math.Round((snapshot?.IdlingMinutes ?? 0) * 0.68m, 0) min</strong><small>indicative after intervention</small></div>
+            <div><span>CO₂ opportunity</span><strong>@Math.Round((snapshot?.EmissionsIdlingEstimateKg ?? 0) * 0.32m, 1) kg</strong><small>indicative only</small></div>
+        </div>
+    </article>
+    <article class="sp-card">
+        <div class="sp-card__header"><h3 class="sp-card__title">Why this matters</h3><span class="sp-card__meta">NCIC / business lens</span></div>
+        <ul class="sp-business-list">
+            <li>Reduces avoidable truck idling by holding high-risk vehicles outside the port queue.</li>
+            <li>Improves dispatch coordination before gate, berth and yard pressure cascades.</li>
+            <li>Gives pilot stakeholders a transparent, auditable decision-support layer.</li>
+            <li>Creates indicative clean-logistics reporting without sensitive live operational feeds.</li>
+        </ul>
+    </article>
+</section>
+
+<section class="sp-card">
+    <div class="sp-card__header"><h3 class="sp-card__title">Assumptions & Integration Readiness</h3><span class="sp-card__meta">demo-safe by default</span></div>
+    <div class="sp-assumption-grid">
+        <div><strong>Demo mode uses synthetic data.</strong><span>No live TOS/IPMS, GPS, gate OCR/RFID or paid AI API is required.</span></div>
+        <div><strong>Calculations are indicative.</strong><span>Fuel, CO₂ and time savings are not verified emissions outcomes.</span></div>
+        <div><strong>Production integrations would connect later.</strong><span>Adapters are prepared for telematics, gate, port operations, energy and emissions factors.</span></div>
+    </div>
+    <div class="sp-integration-strip">
+        @foreach (var item in integrations.Take(6))
+        { <span>@item.Name · @item.DemoStatus</span> }
+    </div>
+</section>
