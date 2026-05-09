@@ -16,7 +16,7 @@
     <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@occupied.ToString("N0")</div><div class="sp-kpi-card__label">TEU Occupied</div></div></div>
     <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@total.ToString("N0")</div><div class="sp-kpi-card__label">Total Capacity</div></div></div>
     <div class="sp-kpi-card @(pct >= 85 ? "sp-kpi-card--warn" : "")">
-        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@pct.ToString("F1")%</div><div class="sp-kpi-card__label">Overall Occupancy</div></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@($"{pct:F1}%")</div><div class="sp-kpi-card__label">Overall Occupancy</div></div>
     </div>
     <div class="sp-kpi-card @(Model.Any(y => y.IsCritical) ? "sp-kpi-card--danger" : "")">
         <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.Count(y => y.IsCritical)</div><div class="sp-kpi-card__label">Critical Blocks (≥95%)</div></div>

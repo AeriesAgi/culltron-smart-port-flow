@@ -19,7 +19,7 @@
         <div><span>Gate Queue</span><strong>@ctx.TrucksInQueue</strong><small>trucks</small></div>
         <div><span>Berth Util.</span><strong>@($"{ctx.BerthUtilisationPct:F0}%")</strong><small>@ctx.BerthsOccupied occupied</small></div>
         <div><span>Yard Pressure</span><strong>@($"{ctx.YardOccupancyPct:F1}%")</strong><small>@ctx.DwellAlerts dwell alerts</small></div>
-        <div><span>CO₂ Today</span><strong>@($"{ctx.EstimatedCo2Today:F1}kg")</strong><small>@($"{ctx.TotalIdlingMinutesToday:F0} idle min")</small></div>
+        <div><span>CO₂ Today</span><strong>@($"{ctx.EstimatedCo2Today:F1} kg")</strong><small>@($"{ctx.TotalIdlingMinutesToday:F0} idle min")</small></div>
         <div><span>Energy</span><strong>@(ctx.LoadSheddingActive ? "ACTIVE" : "STABLE")</strong><small>@ctx.ActiveDisruptions disruptions</small></div>
     </div>
 
