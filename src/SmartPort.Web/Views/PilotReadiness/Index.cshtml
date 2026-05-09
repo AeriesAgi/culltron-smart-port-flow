@@ -3,9 +3,9 @@
     ViewData["Title"] = "Pilot Readiness";
     var integrations = ViewBag.Integrations as IReadOnlyList<IntegrationProviderStatus> ?? Array.Empty<IntegrationProviderStatus>();
     var timeline = new[] {
-        ("30-day pilot setup", new[] { "Confirm pilot site", "Define stakeholders", "Identify data owners", "Collect sample operational data", "Configure demo KPIs", "Validate workflows", "Define baseline metrics" }),
-        ("60-day integration prototype", new[] { "Connect gate/queue data", "Connect telematics or dispatch data", "Connect berth/vessel schedule data", "Validate emissions assumptions", "Connect disruption feeds", "Operator feedback cycle" }),
-        ("90-day operational pilot", new[] { "Daily shift brief", "Operator recommendations", "Scenario simulation", "Emissions/idling reporting", "Decision audit review", "Adoption review", "Pilot success report" })
+        new { Title = "30-day pilot setup", Steps = new[] { "Confirm pilot site", "Define stakeholders", "Identify data owners", "Collect sample operational data", "Configure demo KPIs", "Validate workflows", "Define baseline metrics" } },
+        new { Title = "60-day integration prototype", Steps = new[] { "Connect gate/queue data", "Connect telematics or dispatch data", "Connect berth/vessel schedule data", "Validate emissions assumptions", "Connect disruption feeds", "Operator feedback cycle" } },
+        new { Title = "90-day operational pilot", Steps = new[] { "Daily shift brief", "Operator recommendations", "Scenario simulation", "Emissions/idling reporting", "Decision audit review", "Adoption review", "Pilot success report" } }
     };
     var metrics = new[] { "Truck waiting time reduction", "Queue length reduction", "Idling reduction", "CO₂ avoided", "Diesel cost avoided", "Average turnaround time", "Recommendation adoption rate", "Operator response time", "Disruption recovery time" };
     var risks = new[] { "Data availability", "Operator adoption", "Integration complexity", "Network/power reliability", "Change management", "Data quality", "Stakeholder alignment" };
@@ -14,7 +14,7 @@
 <section class="sp-timeline-grid">
 @foreach (var phase in timeline)
 {
-    <article class="sp-card sp-roadmap-card"><h3>@phase.Item1</h3><ol>@foreach (var item in phase.Item2){<li>@item</li>}</ol></article>
+    <article class="sp-card sp-roadmap-card"><h3>@phase.Title</h3><ol>@foreach (var item in phase.Steps){<li>@item</li>}</ol></article>
 }
 </section>
 <section class="sp-card" id="integration-readiness">

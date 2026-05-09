@@ -1,12 +1,12 @@
 @{
     ViewData["Title"] = "Stakeholder Value";
     var personas = new[] {
-        ("Port Authority", "Congestion visibility, cleaner logistics reporting, coordination complexity.", "Command-centre view, impact reporting and transparent decision support.", "Improved situational awareness and pilot evidence.", "/Impact"),
-        ("Terminal Operator", "Berth/gate/yard pressure, sequencing and disruption response.", "Monitoring lanes, scenario simulation and operator action plans.", "Faster prioritisation under operational pressure.", "/Agent"),
-        ("Fleet Operator", "Queues, uncertain ETA, idling cost and poor release timing.", "Truck tracking, hold/release guidance and reduced avoidable idle time.", "Better dispatch timing and driver utilisation.", "/TruckTracking"),
-        ("Sustainability Officer", "Emissions reporting, diesel waste visibility and clean logistics impact.", "CO₂/idling estimates, impact dashboard and reporting brief.", "Clearer indicative impact narrative.", "/CleanLogistics"),
-        ("Municipality / Province", "Congestion impact, infrastructure pressure and clean-tech innovation goals.", "Pilot-ready demonstrator, sustainability alignment and decision-support evidence.", "Credible clean logistics innovation story.", "/PilotReadiness"),
-        ("Operations Manager", "Too many moving parts, disruption pressure and slow prioritisation.", "Top-risk detection, shift brief and recommended action plan.", "A repeatable response loop for shift handover.", "/Brief")
+        new { Name = "Port Authority", PainPoint = "Congestion visibility, cleaner logistics reporting, coordination complexity.", Capability = "Command-centre view, impact reporting and transparent decision support.", Value = "Improved situational awareness and pilot evidence.", Url = "/Impact" },
+        new { Name = "Terminal Operator", PainPoint = "Berth/gate/yard pressure, sequencing and disruption response.", Capability = "Monitoring lanes, scenario simulation and operator action plans.", Value = "Faster prioritisation under operational pressure.", Url = "/Agent" },
+        new { Name = "Fleet Operator", PainPoint = "Queues, uncertain ETA, idling cost and poor release timing.", Capability = "Truck tracking, hold/release guidance and reduced avoidable idle time.", Value = "Better dispatch timing and driver utilisation.", Url = "/TruckTracking" },
+        new { Name = "Sustainability Officer", PainPoint = "Emissions reporting, diesel waste visibility and clean logistics impact.", Capability = "CO₂/idling estimates, impact dashboard and reporting brief.", Value = "Clearer indicative impact narrative.", Url = "/CleanLogistics" },
+        new { Name = "Municipality / Province", PainPoint = "Congestion impact, infrastructure pressure and clean-tech innovation goals.", Capability = "Pilot-ready demonstrator, sustainability alignment and decision-support evidence.", Value = "Credible clean logistics innovation story.", Url = "/PilotReadiness" },
+        new { Name = "Operations Manager", PainPoint = "Too many moving parts, disruption pressure and slow prioritisation.", Capability = "Top-risk detection, shift brief and recommended action plan.", Value = "A repeatable response loop for shift handover.", Url = "/Brief" }
     };
 }
 <section class="sp-business-hero sp-premium-panel"><div><div class="sp-agent-badge"><span class="sp-live-dot"></span> Stakeholder map</div><h1>Stakeholder Value</h1><p>How Culltron Smart Port Flow creates value for pilot stakeholders without claiming live deployment or verified impact.</p></div></section>
@@ -14,11 +14,11 @@
 @foreach (var p in personas)
 {
     <article class="sp-persona-card">
-        <h3>@p.Item1</h3>
-        <p><strong>Pain point:</strong> @p.Item2</p>
-        <p><strong>Culltron capability:</strong> @p.Item3</p>
-        <p><strong>Expected value:</strong> @p.Item4</p>
-        <a class="sp-btn sp-btn--outline sp-btn--full" href="@p.Item5">Related module</a>
+        <h3>@p.Name</h3>
+        <p><strong>Pain point:</strong> @p.PainPoint</p>
+        <p><strong>Culltron capability:</strong> @p.Capability</p>
+        <p><strong>Expected value:</strong> @p.Value</p>
+        <a class="sp-btn sp-btn--outline sp-btn--full" href="@p.Url">Related module</a>
     </article>
 }
 </section>

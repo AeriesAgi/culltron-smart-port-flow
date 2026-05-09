@@ -1,11 +1,11 @@
 @{
     ViewData["Title"] = "Clean Logistics Impact";
-    var sections = new[] {
-        ("Problem", "Port congestion, truck idling, diesel waste, berth/gate bottlenecks, load-shedding disruption, limited decision visibility and weak proactive scenario planning."),
-        ("Solution", "Local deterministic AI decision support with truck queue intelligence, ETA tracking, hold-outside-port recommendations, gate/berth/yard pressure monitoring, scenario simulation, idling impact and audit-style action plans."),
-        ("Impact areas", "Cleaner logistics, lower avoidable idling, better truck flow, improved operator coordination, energy resilience, clearer decision visibility and explainable recommendations."),
-        ("Demo-first advantage", "Synthetic data means no sensitive operational data is required for demonstration. No external paid AI API is required; production integrations can connect later."),
-        ("NCIC-style pilot outcomes", "Reduced truck idling, improved turnaround, lower diesel waste, less congestion, stronger resilience during energy disruption and an explainable decision-support layer.")
+    var cards = new[] {
+        new { Title = "Problem", Body = "Truck idling, port congestion, berth/gate bottlenecks, diesel waste and load-shedding disruption reduce flow visibility and create avoidable emissions exposure." },
+        new { Title = "Solution", Body = "Culltron Smart Port Flow uses local deterministic AI, truck queue intelligence, ETA tracking, hold-outside-port recommendations and scenario simulation to turn pressure signals into action plans." },
+        new { Title = "Clean impact", Body = "The demonstrator makes avoidable idling visible, estimates CO₂ and diesel-saving opportunities, and supports cleaner logistics flow through better dispatch timing." },
+        new { Title = "Pilot value", Body = "Synthetic demo data works now; production integrations would connect later to partner-approved TOS/IPMS, gate systems, telematics and energy data." },
+        new { Title = "NCIC fit", Body = "The platform aligns with clean logistics, emissions-reduction potential, operational resilience and explainable decision support without claiming live deployment or verified outcomes." }
     };
 }
 <section class="sp-business-hero sp-premium-panel">
@@ -20,9 +20,9 @@
     </div>
 </section>
 <section class="sp-story-grid">
-@foreach (var section in sections)
+@foreach (var card in cards)
 {
-    <article class="sp-business-card sp-story-card"><span>@section.Item1</span><p>@section.Item2</p></article>
+    <article class="sp-business-card sp-story-card"><span>@card.Title</span><p>@card.Body</p></article>
 }
 </section>
 <section class="sp-card">
