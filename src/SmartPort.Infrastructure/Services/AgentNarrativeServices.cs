@@ -29,6 +29,8 @@ public class AgentNarrativeRequest
     public string UserPrompt { get; set; } = string.Empty;
     public string CurrentPage { get; set; } = "Agent Reports";
     public string ReportType { get; set; } = "Executive Operations Brief";
+    public string DetectedIntent { get; set; } = "operational";
+    public string ConversationHistory { get; set; } = string.Empty;
     public AgentMode RequestedMode { get; set; } = AgentMode.Hybrid;
     public OperationalContext Context { get; set; } = new();
     public IReadOnlyList<string> DeterministicRecommendations { get; set; } = Array.Empty<string>();
@@ -284,6 +286,42 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
     {
         var ctx = request.Context;
         var recs = request.DeterministicRecommendations.Any() ? request.DeterministicRecommendations : ctx.TopRecommendations;
+        var sharedContext = $$"""
+Structured operational summary (sanitized synthetic/demo data):
+- Truck queue / pressure: {{ctx.TrucksInQueue}} queued trucks; active trips: {{ctx.ActiveTrips}}; high-risk trips: {{ctx.HighRiskTrips}}
+- Berth utilisation: {{ctx.BerthUtilisationPct:F0}}%; berths occupied/available: {{ctx.BerthsOccupied}}/{{ctx.BerthsAvailable}}; vessels delayed/at anchor: {{ctx.VesselsDelayed}}/{{ctx.VesselsAtAnchor}}
+- Yard occupancy: {{ctx.YardOccupancyPct:F0}}%; containers in yard: {{ctx.ContainersInYard}}; dwell alerts: {{ctx.DwellAlerts}}
+- Incidents/disruptions: {{ctx.OpenIncidents}} open incidents; {{ctx.ActiveDisruptions}} active disruptions; {{ctx.CriticalDisruptions}} critical disruptions
+- Emissions/idling: {{ctx.TotalIdlingMinutesToday:F0}} idling minutes; {{ctx.EstimatedCo2Today:F1}} kg CO2 estimate
+- Energy/load-shedding active: {{ctx.LoadSheddingActive}}; road congestion active: {{ctx.RoadCongestionActive}}; gate delay active: {{ctx.GateDelayActive}}
+- Top disruptions: {{string.Join("; ", ctx.TopDisruptions.Take(4))}}
+- Deterministic recommendation summary: {{string.Join("; ", recs.Take(6))}}
+- Available modules/pages: Dashboard, AI Command Centre, Copilot, Truck Tracking, Scenario Simulator, Emissions, Recommendations/Audit, Reports, Pilot Readiness, Executive Brief
+- Data note: synthetic/demo data only; not live production port data
+""";
+
+        if (request.Purpose.Contains("copilot", StringComparison.OrdinalIgnoreCase))
+        {
+            return $$"""
+You are Culltron Smart Port Copilot, an enterprise AI assistant for the Culltron Smart Port Flow demo system. You help users understand and operate the Smart Port prototype using only the supplied system context and current synthetic/demo operational data. You can be friendly and conversational for greetings or light chat, but you must stay grounded in the Smart Port system. Do not invent live port integrations, real customers, real Transnet/IPMS/Navayuga access, signed pilots, guaranteed savings, or production deployment. If asked operational questions, use the supplied context. If asked normal greetings, respond normally and offer useful Smart Port help. Recommendations are decision-support only, require human approval, and are not automatically executed.
+
+Detected intent: {{Sanitize(request.DetectedIntent)}}
+Current user message: {{Sanitize(request.UserPrompt)}}
+Recent conversation (sanitized, current browser session only): {{Sanitize(request.ConversationHistory)}}
+Current page/context: {{request.CurrentPage}}
+
+{{sharedContext}}
+
+Response requirements:
+- For greeting/small talk: answer naturally in 1-3 sentences and offer Smart Port help; do not generate a risk report.
+- For help/capability: explain practical Smart Port Copilot capabilities.
+- For operational questions: provide grounded reasoning, recommended next step, and human-approval note.
+- For report/action/demo requests: structure the answer with concise headings or bullets.
+- For password/passphrase-looking text or unrelated prompts: do not process as an operations command; redirect safely.
+- Return clean conversational Markdown only, no JSON.
+""";
+        }
+
         return $$"""
 You are the Culltron Smart Port Flow AI Agent. You support port operations decision-making using only the supplied operational summary. You must not claim live integration unless the supplied data says so. You must not invent real customers, real port access, real IPMS/Transnet/Navayuga integration, real production deployment, real customer data, guaranteed savings, or signed pilot agreements. You may describe this as a prototype/demo/pilot-ready architecture when appropriate. Recommendations must be explainable, human-approved, and audit-friendly.
 
@@ -292,16 +330,7 @@ Current page/context: {{request.CurrentPage}}.
 User prompt: {{Sanitize(request.UserPrompt)}}.
 Scenario summary if supplied: {{Sanitize(request.ScenarioSummary)}}.
 
-Structured operational summary (sanitized):
-- Vessels in port: {{ctx.VesselsInPort}}; delayed: {{ctx.VesselsDelayed}}; at anchor: {{ctx.VesselsAtAnchor}}
-- Berth utilisation: {{ctx.BerthUtilisationPct:F0}}%; berths occupied/available: {{ctx.BerthsOccupied}}/{{ctx.BerthsAvailable}}
-- Yard occupancy: {{ctx.YardOccupancyPct:F0}}%; containers in yard: {{ctx.ContainersInYard}}; dwell alerts: {{ctx.DwellAlerts}}
-- Truck queue estimate: {{ctx.TrucksInQueue}}; active trips: {{ctx.ActiveTrips}}; high-risk trips: {{ctx.HighRiskTrips}}
-- Open incidents: {{ctx.OpenIncidents}}; active disruptions: {{ctx.ActiveDisruptions}}; critical disruptions: {{ctx.CriticalDisruptions}}
-- Idling estimate: {{ctx.TotalIdlingMinutesToday:F0}} minutes; emissions estimate: {{ctx.EstimatedCo2Today:F1}} kg CO2
-- Energy/load-shedding active: {{ctx.LoadSheddingActive}}; road congestion active: {{ctx.RoadCongestionActive}}; gate delay active: {{ctx.GateDelayActive}}
-- Top disruptions: {{string.Join("; ", ctx.TopDisruptions.Take(4))}}
-- Deterministic recommendation summary: {{string.Join("; ", recs.Take(6))}}
+{{sharedContext}}
 
 Formatting requirements:
 - Return clean Markdown only, no JSON.
@@ -319,7 +348,20 @@ Formatting requirements:
         {
             text = text.Replace(marker, "[redacted-sensitive-term]", StringComparison.OrdinalIgnoreCase);
         }
+
+        var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(word => LooksSensitiveValue(word.Trim()) ? "[redacted-sensitive-value]" : word);
+        text = string.Join(" ", words);
         return text.Length > 1000 ? text[..1000] : text;
+    }
+
+    private static bool LooksSensitiveValue(string value)
+    {
+        if (value.Length < 6 || value.Contains(' ')) return false;
+        var hasLetter = value.Any(char.IsLetter);
+        var hasDigit = value.Any(char.IsDigit);
+        var hasSymbol = value.Any(ch => !char.IsLetterOrDigit(ch));
+        return hasLetter && hasDigit && hasSymbol;
     }
 }
 

@@ -2,15 +2,18 @@
 @{
     ViewData["Title"] = "SmartPort Copilot Chat";
     var ctx = Model.Context;
+    var status = Model.AgentModeStatus;
     var initialPrompt = Model.CurrentPrompt ?? string.Empty;
+    var modeLabel = status.GeminiEnabled && status.GeminiConfigured ? "Gemini Agent Mode" : status.GeminiEnabled ? "Hybrid Agent Mode" : "Local Offline-Safe Mode";
+    var modeBadge = status.GeminiEnabled && status.GeminiConfigured ? "Gemini available" : status.GeminiEnabled ? "Gemini fallback" : "Offline-safe";
 }
 
 <section class="sp-copilot-shell">
     <div class="sp-copilot-hero">
         <div>
-            <div class="sp-agent-badge"><span class="sp-live-dot"></span> SmartPort Copilot — Hybrid operations planner</div>
+            <div class="sp-agent-badge"><span class="sp-live-dot"></span> SmartPort Copilot — @modeLabel</div>
             <h1>SmartPort Copilot Chat</h1>
-            <p>Conversational assistant for scoped smart-port questions. Button-triggered, scope-limited operator assistance for truck ETA, gate queues, berth pressure, yard congestion, emissions, load-shedding, scenarios and decision audit. Gemini can enhance answers when configured; local deterministic fallback remains available.</p>
+            <p>Conversational assistant for scoped smart-port questions. Button-triggered, scope-limited operator assistance for truck ETA, gate queues, berth pressure, yard congestion, emissions, load-shedding, scenarios and decision audit. Gemini can enhance answers when configured; local offline-safe fallback remains available.</p>
         </div>
         <div class="sp-copilot-orb" aria-hidden="true"><span></span></div>
     </div>
@@ -29,13 +32,13 @@
                 <div>
                     <span class="sp-copilot-status-dot"></span>
                     <strong>SmartPort Copilot</strong>
-                    <small>Local deterministic operations assistant</small>
+                    <small>@modeLabel · @(status.GeminiStatus)</small>
                 </div>
                 <div class="sp-copilot-header-badges">
-                    <span class="sp-badge sp-badge--info">Offline-safe</span>
+                    <span class="sp-badge sp-badge--info">@modeBadge</span>
                     <span class="sp-badge sp-badge--success">Synthetic demo data</span>
-                    <span class="sp-badge sp-badge--warning">Scope-limited</span>
-                    <span class="sp-badge sp-badge--ai">No external AI API</span>
+                    <span class="sp-badge sp-badge--warning">Human-approved</span>
+                    <span class="sp-badge sp-badge--ai">gemini-2.5-flash optional</span>
                 </div>
             </div>
 
@@ -43,14 +46,14 @@
                 <div class="sp-copilot-message sp-copilot-message--assistant sp-copilot-welcome" data-static="true">
                     <div class="sp-copilot-avatar">AI</div>
                     <div class="sp-copilot-bubble">
-                        <strong>Running locally and ready for port operations.</strong>
-                        <p>I can help with truck queues, ETA tracking, gate bottlenecks, berth pressure, yard congestion, emissions, load-shedding disruption, scenario simulation and operator action plans.</p>
+                        <strong>@modeLabel is ready for Smart Port operations.</strong>
+                        <p>I can chat naturally, explain the system, answer operational questions, generate action plans, and prepare demo/pilot summaries. Gemini is used for chat when configured; local fallback stays available.</p>
                     </div>
                 </div>
 
                 <div class="sp-copilot-typing" id="copilotTyping" hidden>
                     <span></span><span></span><span></span>
-                    <em id="copilotTypingText">Scoring synthetic port state locally…</em>
+                    <em id="copilotTypingText">Preparing Smart Port Copilot response…</em>
                 </div>
             </div>
 
@@ -118,12 +121,12 @@
   const token = form?.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
   const storageKey = 'smartport.copilot.chat.v2';
   const topicPrompts = {
-    'Truck queues': 'trucks on queue',
-    'Truck tracking / ETA': 'which trucks should be held outside the port',
-    'Gate bottlenecks': 'Which gate is becoming a bottleneck?',
+    'Truck queues': 'What is the biggest operational risk right now?',
+    'Truck tracking / ETA': 'Which trucks should be held outside the port?',
+    'Gate bottlenecks': 'Where is the gate bottleneck?',
     'Berth pressure': 'Which berth needs attention?',
     'Yard congestion': 'Explain yard congestion risk.',
-    'Emissions / CO₂': 'How much CO2 can we save?',
+    'Emissions / CO₂': 'How can we reduce truck idling?',
     'Load-shedding disruption': 'What happens if load-shedding starts soon?',
     'Scenario simulation': 'What scenario should operators run?',
     'Recommendations': 'Generate an operator action plan.',
@@ -134,9 +137,9 @@
     'Grant / investor summary': 'Prepare a 2-minute grant summary.'
   };
   const thinkingPhrases = [
-    'Scoring synthetic port state locally…',
+    'Preparing Smart Port Copilot response…',
     'Checking truck ETA, gate pressure, and emissions…',
-    'Routing the request through deterministic Copilot intents…',
+    'Classifying the message before choosing Gemini or fallback…',
     'Preparing an explainable operator action…',
     'Checking whether Gemini enhancement is configured, otherwise using fallback…'
   ];
@@ -147,6 +150,13 @@
     try { return JSON.parse(sessionStorage.getItem(storageKey) || '[]'); } catch { return []; }
   }
   function saveHistory() { sessionStorage.setItem(storageKey, JSON.stringify(history.slice(-16))); }
+  function recentHistoryText() {
+    return history.slice(-6).map(item => {
+      if (item.role === 'user') return `User: ${item.text}`;
+      const p = item.payload || {};
+      return `Assistant: ${(p.summary || p.shortAnswer || '').toString().slice(0, 220)}`;
+    }).join('\\n').slice(0, 1500);
+  }
   function scrollLatest() { thread?.scrollTo({ top: thread.scrollHeight, behavior: 'smooth' }); }
   function escapeHtml(value) {
     return String(value || '').replace(/[&<>'"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[ch]));
@@ -200,6 +210,7 @@
     return `<div class="sp-copilot-avatar">AI</div><div class="sp-copilot-bubble ${toneClass}">
       <strong>${escapeHtml(data.title || data.summary)}</strong>
       <p>${escapeHtml(data.shortAnswer || data.operationalReasoning || data.recommendedAction)}</p>
+      <div class="sp-copilot-timestamp">Generated ${escapeHtml(data.generatedAt)} UTC · Generated by ${escapeHtml(data.generatedBy || 'Local')} · Intent: ${escapeHtml(data.intent || 'greeting')} · ${escapeHtml(data.dataNote || 'Smart Port Copilot')} · Human approval required where operational · Not automatically executed</div>
       <div class="sp-copilot-mini-topics">${((data.topicChips && data.topicChips.length) ? data.topicChips : Object.entries(topicPrompts).slice(0, 6).map(([label, prompt]) => ({ label, prompt }))).map(c => `<button type="button" data-prompt="${escapeHtml(c.prompt)}">${escapeHtml(c.label)}</button>`).join('')}</div>
     </div>`;
   }
@@ -223,7 +234,7 @@
       </div>
       <div class="sp-copilot-action-row">${links}</div>
       <div class="sp-copilot-mini-topics">${(data.suggestedFollowUps || []).map(p => `<button type="button" data-prompt="${escapeHtml(p)}">${escapeHtml(p)}</button>`).join('')}</div>
-      <div class="sp-copilot-timestamp">Generated ${escapeHtml(data.generatedAt)} UTC · Generated by ${escapeHtml(data.generatedBy || 'Local')} · ${escapeHtml(data.dataNote || 'Synthetic demo data · Local deterministic response')} · Human approval required · Not automatically executed</div>
+      <div class="sp-copilot-timestamp">Generated ${escapeHtml(data.generatedAt)} UTC · Generated by ${escapeHtml(data.generatedBy || 'Local')} · ${escapeHtml(data.dataNote || 'Smart Port Copilot response')} · Human approval required · Not automatically executed</div>
     </div>`;
   }
   function urgencyTone(urgency) {
@@ -240,6 +251,7 @@
       const body = new URLSearchParams();
       body.set('prompt', text);
       body.set('__RequestVerificationToken', token);
+      body.set('history', recentHistoryText());
       const res = await fetch(form.action, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
@@ -275,13 +287,9 @@
     if (topicButton) { e.preventDefault(); sendPrompt(topicPrompts[topicButton.getAttribute('data-topic')] || topicButton.textContent); }
   });
   const initialPrompt = form?.getAttribute('data-initial-prompt') || '';
-  if (initialPrompt && !history.some(x => x.role === 'user' && x.text.toLowerCase() === initialPrompt.toLowerCase())) {
-    setTimeout(() => {
-      sendPrompt(initialPrompt);
-      if (window.history?.replaceState) window.history.replaceState({}, document.title, '/Copilot');
-    }, 250);
-  } else if (initialPrompt && window.history?.replaceState) {
-    window.history.replaceState({}, document.title, '/Copilot');
+  if (initialPrompt) {
+    input.value = initialPrompt;
+    if (window.history?.replaceState) window.history.replaceState({}, document.title, '/Copilot');
   }
   input?.focus();
 })();

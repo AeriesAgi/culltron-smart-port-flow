@@ -18,11 +18,11 @@ public class CopilotController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Ask(string prompt)
+    public async Task<IActionResult> Ask(string prompt, string? history = null)
     {
         if (IsJsonRequest())
         {
-            var response = string.IsNullOrWhiteSpace(prompt) ? null : await _chat.GenerateResponseAsync(prompt);
+            var response = string.IsNullOrWhiteSpace(prompt) ? null : await _chat.GenerateResponseAsync(prompt, history);
             return Json(ToJson(response));
         }
 
@@ -31,9 +31,9 @@ public class CopilotController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> AskJson(string prompt)
+    public async Task<IActionResult> AskJson(string prompt, string? history = null)
     {
-        var response = string.IsNullOrWhiteSpace(prompt) ? null : await _chat.GenerateResponseAsync(prompt);
+        var response = string.IsNullOrWhiteSpace(prompt) ? null : await _chat.GenerateResponseAsync(prompt, history);
         return Json(ToJson(response));
     }
 
@@ -60,7 +60,10 @@ public class CopilotController : Controller
                 expectedImpact = "Keeps the demo focused and safe.",
                 emissionsImpact = "Synthetic demo data is used when operational context is requested.",
                 energyImpact = "No live external systems are queried.",
-                dataNote = "Synthetic demo data · local deterministic response",
+                dataNote = "Local Offline-Safe Mode · no prompt provided",
+                generatedBy = "Local",
+                humanApprovalRequired = true,
+                notAutomaticallyExecuted = true,
                 actionLinks = Array.Empty<object>(),
                 suggestedFollowUps = new[] { "What is the biggest risk right now?", "Which trucks should be held outside the port?" },
                 topicChips = Array.Empty<object>(),
@@ -71,7 +74,7 @@ public class CopilotController : Controller
             };
         }
 
-        var intent = response.Intent.ToLowerInvariant();
+        var intent = response.IntentCategory.ToLowerInvariant();
         var isSmallTalk = response.IsSmallTalk || intent.Contains("greeting") || intent.Contains("help");
         var isOutOfScope = response.IsOutOfScope || intent.Contains("out-of-scope") || intent.Contains("safety");
         var isVague = response.IsVagueButRelated || intent.Contains("vague");
@@ -82,7 +85,7 @@ public class CopilotController : Controller
             title = response.Title,
             summary = response.Summary,
             shortAnswer = response.ShortAnswer,
-            intent = response.Intent,
+            intent = response.IntentCategory,
             urgency = response.Severity,
             confidence = response.ConfidenceScore,
             affectedArea = response.AffectedArea,
