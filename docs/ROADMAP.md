@@ -9,7 +9,7 @@ Culltron Smart Port Flow is currently a working deployed demo/prototype and pilo
 - [x] Enterprise-style Smart Port operations dashboard.
 - [x] AI Command Centre.
 - [x] SmartPort Copilot Chat.
-- [x] Optional Gemini Agent Mode using `gemini-2.5-flash`.
+- [x] Gemini Agent Mode using `gemini-2.5-flash`.
 - [x] Hybrid mode with local offline-safe fallback.
 - [x] Button/user-triggered Gemini responses only.
 - [x] Reports / Agent Intelligence Desk.
@@ -26,7 +26,7 @@ Culltron Smart Port Flow is currently a working deployed demo/prototype and pilo
 - [ ] Confirm pilot stakeholders, decision rights, operating constraints, and success metrics.
 - [ ] Map required data sources for gate queues, truck dispatch/telematics, berth/vessel schedules, yard status, incidents, energy disruption, and emissions factors.
 - [ ] Define data minimization, privacy, retention, security, and audit requirements.
-- [ ] Validate where Gemini-enhanced summaries add value and where deterministic outputs should remain authoritative.
+- [ ] Validate where Gemini-enhanced summaries add value and where governed baseline outputs should remain authoritative.
 
 ## Phase 3 — Sandbox Integration
 

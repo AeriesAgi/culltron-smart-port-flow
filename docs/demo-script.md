@@ -1,6 +1,6 @@
 # Culltron Smart Port Flow — Demo Script
 
-This script is written for hackathon judges, enterprise AI reviewers, and potential pilot/investor readers. Keep the wording honest: Culltron Smart Port Flow is a working deployed demo/prototype and pilot-ready architecture using synthetic/demo data, optional Gemini Agent Mode, and human-approved recommendations.
+This script is written for hackathon judges, enterprise AI reviewers, and potential pilot/investor readers. Keep the wording honest: Culltron Smart Port Flow is a working deployed demo/prototype and pilot-ready architecture using synthetic/demo data, Gemini Agent Mode, and human-approved recommendations.
 
 ## Main judge demo path
 
@@ -31,7 +31,7 @@ Open **SmartPort Copilot Chat**. Use these exact prompts:
 - `what is the biggest operational risk right now?`
 - `generate an operator action plan`
 
-Say: “When configured, Gemini Agent Mode uses Gemini 2.5 Flash to enhance the operator-facing response. If Gemini is unavailable or not configured, the local offline-safe fallback still provides demo-safe decision support. Calls are user-triggered only, not automatic page-load calls.”
+Say: “When configured, Gemini Agent Mode uses Gemini 2.5 Flash to enhance the operator-facing response. If Gemini is unavailable or not configured in a self-hosted/local environment, the local offline-safe fallback still provides demo-safe decision support. Calls are user-triggered only, not automatic page-load calls.”
 
 ### 1:30–1:45 — Scenario Simulator
 
@@ -47,7 +47,7 @@ Say: “The demo estimates avoidable idling, diesel, and CO₂ impact so teams c
 
 ### 1:55–2:00 — Close
 
-“Culltron Smart Port Flow is a working deployed demo/prototype with pilot-ready architecture: observe, analyze, recommend, simulate, human approves, and audit trail. It uses synthetic/demo data, optional Gemini Agent Mode, local fallback, and human-approved recommendations only.”
+“Culltron Smart Port Flow is a working deployed demo/prototype with pilot-ready architecture: observe, analyze, recommend, simulate, human approves, and audit trail. It uses synthetic/demo data, Gemini Agent Mode, local fallback, and human-approved recommendations only.”
 
 ## 3-minute extended route
 
@@ -74,7 +74,7 @@ Suggested prompts:
 - `what happens if load-shedding starts at 16:00`
 - `prepare a 2-minute demo summary`
 
-Emphasize that Gemini-enhanced responses are optional, user-triggered, grounded in sanitized synthetic/demo context, and backed by a local fallback.
+Emphasize that Gemini-enhanced responses are available when configured, user-triggered, grounded in sanitized synthetic/demo context, and backed by a local fallback.
 
 ### Truck Tracking and ETA
 
@@ -98,11 +98,11 @@ Emphasize that Gemini-enhanced responses are optional, user-triggered, grounded 
 
 ## Exact truth statement
 
-“All operational data in this demo is synthetic/demo data. The system is a working deployed demo/prototype and pilot-ready architecture, not a live production deployment inside an actual port. It does not claim live Transnet, IPMS, Navayuga, TOS, gate, GPS/telematics, energy, customer, or emissions-factor integration. Gemini Agent Mode is optional, receives only sanitized operational summaries, and is triggered by user action. Recommendations require human review and are not automatically executed. Savings and impact estimates are demo outputs until validated in a controlled pilot.”
+“All operational data in this demo is synthetic/demo data. The system is a working deployed demo/prototype and pilot-ready architecture, not a live production deployment inside an actual port. It does not claim live Transnet, IPMS, Navayuga, TOS, gate, GPS/telematics, energy, customer, or emissions-factor integration. Gemini Agent Mode receives only sanitized operational summaries and is triggered by user action. Recommendations require human review and are not automatically executed. Savings and impact estimates are demo outputs until validated in a controlled pilot.”
 
 ## Fallback if Gemini or the live demo is unavailable
 
-1. If Gemini is unavailable or not configured, use the local offline-safe fallback and explain that the fallback is part of the safety design.
+1. If Gemini is unavailable or not configured in a self-hosted/local environment, use the local offline-safe fallback and explain that the fallback is part of the safety design.
 2. If the live deployment is slow, run locally:
 
    ```bash

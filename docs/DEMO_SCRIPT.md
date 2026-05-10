@@ -1,6 +1,6 @@
 # Culltron Smart Port Flow — Judge Demo Script
 
-Use this script for a concise competition recording. Keep claims precise: the system is a working deployed demo/prototype using synthetic/demo data, optional Gemini Agent Mode, local fallback, and human-approved recommendations.
+Use this script for a concise competition recording. Keep claims precise: the system is a working deployed demo/prototype using synthetic/demo data, Gemini Agent Mode, local fallback, and human-approved recommendations.
 
 ## Judge demo path
 
@@ -77,10 +77,10 @@ Open **Emissions** to show indicative clean-logistics impact through idling, fue
    ```
 
 2. Open `http://localhost:8080`.
-3. If Gemini is not configured, use the local offline-safe fallback and explain that fallback behavior is intentional.
+3. If Gemini is not configured in a self-hosted/local environment, use the local offline-safe fallback and explain that fallback behavior is intentional.
 4. Use prompt chips rather than typing long prompts during recording.
 5. If a scenario result takes too long, continue to Truck Tracking and Emissions; all data is synthetic/demo data so the story remains coherent.
 
 ## Required truth statement
 
-“All operational data in this demo is synthetic/demo data. Culltron Smart Port Flow is a working deployed demo/prototype and pilot-ready architecture, not a live production deployment inside an actual port. It does not claim live Transnet, IPMS, Navayuga, TOS, gate, GPS/telematics, customer, energy, or emissions-factor integration. Gemini Agent Mode is optional, receives only sanitized operational summaries, and is triggered by user action. Recommendations require human review and are not automatically executed. Savings and impact estimates are demo outputs until validated in a controlled pilot.”
+“All operational data in this demo is synthetic/demo data. Culltron Smart Port Flow is a working deployed demo/prototype and pilot-ready architecture, not a live production deployment inside an actual port. It does not claim live Transnet, IPMS, Navayuga, TOS, gate, GPS/telematics, customer, energy, or emissions-factor integration. Gemini Agent Mode receives only sanitized operational summaries and is triggered by user action. Recommendations require human review and are not automatically executed. Savings and impact estimates are demo outputs until validated in a controlled pilot.”
