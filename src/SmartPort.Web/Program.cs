@@ -56,6 +56,8 @@ builder.Services.Configure<FlowIntelligenceSettings>(
     builder.Configuration.GetSection("FlowIntelligence"));
 builder.Services.Configure<AiAgentSettings>(
     builder.Configuration.GetSection("AiAgent"));
+builder.Services.Configure<GeminiSettings>(
+    builder.Configuration.GetSection("Gemini"));
 
 // ─── Existing port services ───────────────────────────────────────────────────
 builder.Services.AddScoped<IDashboardService,      DashboardService>();
@@ -88,6 +90,11 @@ builder.Services.AddScoped<ISmartPortIntelligenceService, SmartPortIntelligenceS
 builder.Services.AddScoped<ISmartPortCopilotChatService, SmartPortCopilotChatService>();
 builder.Services.AddScoped<ITruckTrackingService, TruckTrackingService>();
 builder.Services.AddScoped<IScenarioSimulatorService, ScenarioSimulatorService>();
+builder.Services.AddHttpClient<GeminiAgentNarrativeService>();
+builder.Services.AddScoped<LocalAgentNarrativeService>();
+builder.Services.AddScoped<HybridAgentNarrativeService>();
+builder.Services.AddScoped<IAgentNarrativeService, HybridAgentNarrativeService>();
+builder.Services.AddScoped<IOperationalReportService, OperationalReportService>();
 builder.Services.AddScoped<ITruckTelematicsProvider, DemoTruckTelematicsProvider>();
 builder.Services.AddScoped<IGpsTrackingProvider, DemoGpsTrackingProvider>();
 builder.Services.AddScoped<IGateSystemProvider, DemoGateSystemProvider>();
