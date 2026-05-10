@@ -1,98 +1,114 @@
 # Culltron Smart Port Flow — Demo Script
 
-## Route 1: Hackathon 2–3 minute route
+This script is written for hackathon judges, enterprise AI reviewers, and potential pilot/investor readers. Keep the wording honest: Culltron Smart Port Flow is a working deployed demo/prototype and pilot-ready architecture using synthetic/demo data, optional Gemini Agent Mode, and human-approved recommendations.
 
-Landing → Dashboard → AI Command Centre → SmartPort Copilot Chat → Truck Tracking → Simulator → Emissions → Recommendations.
+## Main judge demo path
+
+Landing → Dashboard → AI Command Centre → SmartPort Copilot Chat → Truck Tracking → Scenario Simulator → Emissions → Recommendations / Reports
+
+## 2-minute judge walkthrough
 
 ### 0:00–0:20 — Problem
 
-“Ports lose time and money when berth pressure, truck queues, yard density, load-shedding and emissions are handled in separate tools. Culltron Smart Port Flow demonstrates an AI-assisted command layer that turns synthetic port state into explainable operator actions.”
+“Ports face congestion, idling, emissions, vessel delays, yard pressure, truck queues, and disruptions. The challenge is that teams often observe these signals in disconnected tools, which makes it hard to prioritize the next safest operational action.”
 
-### 0:20–0:45 — Landing and Dashboard
+### 0:20–0:40 — Solution
 
-Open the landing page, then log in and open the Dashboard. Highlight the dark navy / teal / cyan enterprise command-centre style, synthetic demo data and local deterministic intelligence.
+“Culltron Smart Port Flow is an enterprise-style Smart Port command centre. It combines operational dashboards, truck ETA views, scenario simulation, emissions/idling insights, recommendations, and AI-assisted decision support in one demo-safe system.”
 
-### 0:45–1:15 — AI Command Centre
+Open the live demo at https://smartport.culltron.app/ and move from Landing to Dashboard.
 
-Open **AI Command Centre**. Say: “This is not chat. This answers what is happening across the port right now.” Show monitoring lanes, top risk, confidence, deterministic shift brief, recommended action plan and business links.
+### 0:40–1:05 — AI Command Centre
 
-### 1:15–1:45 — SmartPort Copilot Chat
+Open **AI Command Centre**.
 
-Use exact prompts:
+Say: “This page answers what is happening across the port right now. It summarizes synthetic/demo operational pressure, highlights risk, shows monitoring lanes, and turns the current state into human-reviewable recommendations.”
+
+### 1:05–1:30 — SmartPort Copilot Chat with Gemini Agent Mode
+
+Open **SmartPort Copilot Chat**. Use these exact prompts:
+
+- `what is the biggest operational risk right now?`
+- `generate an operator action plan`
+
+Say: “When configured, Gemini Agent Mode uses Gemini 2.5 Flash to enhance the operator-facing response. If Gemini is unavailable or not configured, the local offline-safe fallback still provides demo-safe decision support. Calls are user-triggered only, not automatic page-load calls.”
+
+### 1:30–1:45 — Scenario Simulator
+
+Open **Scenario Simulator** and show a congestion, vessel delay, or load-shedding-style what-if.
+
+Say: “The simulator lets operators compare potential disruption scenarios before approving action.”
+
+### 1:45–1:55 — Emissions and clean logistics impact
+
+Open **Emissions**.
+
+Say: “The demo estimates avoidable idling, diesel, and CO₂ impact so teams can reason about cleaner logistics. These values are indicative demo outputs until validated in a real pilot.”
+
+### 1:55–2:00 — Close
+
+“Culltron Smart Port Flow is a working deployed demo/prototype with pilot-ready architecture: observe, analyze, recommend, simulate, human approves, and audit trail. It uses synthetic/demo data, optional Gemini Agent Mode, local fallback, and human-approved recommendations only.”
+
+## 3-minute extended route
+
+### Landing and Dashboard
+
+- Show the live demo URL: https://smartport.culltron.app/.
+- Explain that the repository is public at https://github.com/AeriesAgi/culltron-smart-port-flow.
+- Highlight that all operational data is synthetic/demo data.
+
+### AI Command Centre
+
+- Show top risk, confidence, monitoring lanes, action guidance, and report links.
+- Explain that the page is not a live port control system; it is an AI-assisted demo command layer.
+
+### SmartPort Copilot Chat
+
+Suggested prompts:
 
 - `hello`
 - `what can you do`
-- `what is the biggest risk right now`
+- `what is the biggest operational risk right now?`
 - `which trucks should be held outside the port`
+- `generate an operator action plan`
 - `what happens if load-shedding starts at 16:00`
+- `prepare a 2-minute demo summary`
 
-Point out that responses are scoped, deterministic and no paid external AI API is called.
+Emphasize that Gemini-enhanced responses are optional, user-triggered, grounded in sanitized synthetic/demo context, and backed by a local fallback.
 
-### 1:45–2:15 — Truck Tracking and Simulator
+### Truck Tracking and ETA
 
-Open **Truck Tracking & ETA Intelligence**. Show active trucks, checkpoints/geofences, ETA to gate, delay risk, hold-outside-port candidates, priority releases, idling minutes and CO₂ exposure. Then open the Scenario Simulator and run a load-shedding or congestion scenario.
+- Show active trucks, delayed trucks, checkpoint/geofence labels, ETA to gate, delay risk, hold-outside-port candidates, priority releases, idling minutes, and CO₂ exposure.
+- Explain that this is not connected to live GPS/telematics in the demo.
 
-### 2:15–2:45 — Emissions and Recommendations
+### Scenario Simulator
 
-Open Emissions to show indicative idling/CO₂ estimates. Open Recommendations / audit to show explainable decision support and action history.
+- Run a congestion, vessel delay, crane availability, berth pressure, yard backlog, or load-shedding-style scenario.
+- Show how outputs help compare possible action plans before human approval.
 
-### 2:45–3:00 — Close
+### Emissions
 
-“Culltron Smart Port Flow is a smart-port operations demonstrator: synthetic data, deterministic local intelligence, explainable recommendations, no external paid AI API and a realistic roadmap to production integrations.”
+- Show indicative idling, fuel, and CO₂ estimates.
+- State that impacts are estimates for demo framing and require validation in a controlled pilot.
 
-## Route 2: NCIC / business route
+### Recommendations / Reports / Agent Intelligence Desk
 
-Landing → Executive Impact Centre → Clean Logistics Impact → Pilot Readiness → Stakeholder Value → Copilot `prepare grant summary`.
+- Show recommendations as decision support, not automated execution.
+- Show report options such as executive operations brief, scenario analysis report, operator action plan, emissions reduction report, incident response report, pilot readiness report, and daily port operations report.
 
-### 0:00–0:30 — Executive Impact Centre
+## Exact truth statement
 
-Open `/Impact`. Show estimated idling minutes avoided, CO₂ reduction potential, diesel/fuel cost saving, gate queue reduction, turnaround improvement and assumptions. State that all values are indicative demo estimates, not verified emissions outcomes.
+“All operational data in this demo is synthetic/demo data. The system is a working deployed demo/prototype and pilot-ready architecture, not a live production deployment inside an actual port. It does not claim live Transnet, IPMS, Navayuga, TOS, gate, GPS/telematics, energy, customer, or emissions-factor integration. Gemini Agent Mode is optional, receives only sanitized operational summaries, and is triggered by user action. Recommendations require human review and are not automatically executed. Savings and impact estimates are demo outputs until validated in a controlled pilot.”
 
-### 0:30–1:00 — Clean Logistics Impact
+## Fallback if Gemini or the live demo is unavailable
 
-Open `/CleanLogistics`. Explain the clean logistics problem: congestion, truck idling, diesel waste, berth/gate bottlenecks, load-shedding disruption and limited decision visibility. Explain how local deterministic decision support helps coordinate truck flow.
-
-### 1:00–1:45 — Pilot Readiness
-
-Open `/PilotReadiness`. Show the 30/60/90-day pilot roadmap, required integrations, success metrics, risks and the Integration Readiness wall. Say: “Production integrations would connect later to partner-approved TOS/IPMS, gate, telematics, energy and emissions-factor data.”
-
-### 1:45–2:15 — Stakeholder Value
-
-Open `/Stakeholders`. Pick one or two personas such as Fleet Operator and Port Authority. Show pain point, Culltron capability, expected value and related module links.
-
-### 2:15–3:00 — Copilot grant summary
-
-Open Copilot and use:
-
-- `Prepare a 2-minute grant summary.`
-
-Close with the truth statement below.
-
-## Exact Copilot prompts
-
-- `What is the business impact?`
-- `Explain NCIC alignment.`
-- `What would a 90-day pilot look like?`
-- `What integrations are required?`
-- `Generate executive brief.`
-- `Prepare a 2-minute grant summary.`
-- `What are the pilot success metrics?`
-- `What value does this give fleet operators?`
-- `What is the biggest risk right now?`
-- `Which trucks should be held outside the port?`
-
-## Fallback if live deployment is slow
-
-1. Use the local Docker build if the DigitalOcean deployment is still starting:
+1. If Gemini is unavailable or not configured, use the local offline-safe fallback and explain that the fallback is part of the safety design.
+2. If the live deployment is slow, run locally:
 
    ```bash
    docker compose up --build
    ```
 
-2. If the browser is slow, narrate over screenshots or reload the same route after the database seed completes.
-3. Use the prompt chips rather than typing long prompts during recording.
-4. If a scenario result takes too long, continue to Truck Tracking and Emissions; all data is synthetic and deterministic so the story remains coherent.
-
-## Required truth statement
-
-“All operational data in this demo is synthetic/demo data. The intelligence layer is a deterministic local rules/scoring engine. No OpenAI, Gemini, Claude, Azure OpenAI, Anthropic or paid external AI API is required for demo mode. Production integrations would connect to partner-approved TOS/IPMS, gate, GPS/telematics, energy and emissions-factor systems after governance and security review. Emissions and fuel figures are indicative and not verified outcomes.”
+3. Open `http://localhost:8080`.
+4. Use prompt chips or short prompts rather than typing long prompts during recording.
+5. If a scenario result takes too long, continue to Truck Tracking and Emissions; the synthetic/demo data keeps the story coherent.
