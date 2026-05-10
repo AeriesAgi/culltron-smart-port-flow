@@ -192,3 +192,50 @@ docker compose down -v && docker compose up -d --build
 - Operator feedback loop and recommendation adoption tracking.
 - Export/reporting hardening for pilot review.
 - Security, role model and audit workflow review.
+
+## Gemini Agent Intelligence Mode
+
+Culltron Smart Port Flow now includes an optional **Gemini Agent Intelligence Mode** for richer enterprise operations briefs, report generation, recommendation explanation, scenario analysis, emissions planning, incident response notes, pilot-readiness summaries, and Copilot enhancements.
+
+Gemini is optional. The deterministic local Smart Port intelligence engine remains the default safety fallback, and the application must continue to run without any Gemini API key. Gemini enhances, explains, summarizes, and structures operator-facing text; it does not silently replace deterministic operational scoring, recommendations, audit controls, or human approvals.
+
+### Running without Gemini
+
+No setup is required. Leave `GEMINI_API_KEY` unset and keep the default configuration:
+
+```json
+"Gemini": {
+  "Enabled": false,
+  "Model": "gemini-2.5-flash",
+  "TimeoutSeconds": 20,
+  "MaxOutputTokens": 2048
+}
+```
+
+The UI will show local fallback / not configured status, and report buttons will still generate useful deterministic Smart Port outputs.
+
+### Running with Gemini locally
+
+Set the key as a server-side environment variable only, then enable Gemini configuration through environment variables or local, uncommitted settings:
+
+```bash
+export GEMINI_API_KEY="your_new_key_here"
+export Gemini__Enabled=true
+export Gemini__Mode=Hybrid
+```
+
+Then run the app normally. Gemini calls are button-triggered only from the Copilot / Agent Reports workflow; the app does not call Gemini automatically on page load, during seed generation, or in loops.
+
+### Docker and deployment notes
+
+For Docker or production hosting, inject the key through the runtime environment or secret manager instead of committed files. For example, use your platform's environment-variable settings or a Docker secret to provide `GEMINI_API_KEY` to the web container at runtime. Do not place the key in `appsettings.json`, `appsettings.Development.json`, `Dockerfile`, `docker-compose.yml`, `launchSettings.json`, README examples, screenshots, logs, or source code.
+
+### Security and data-boundary notes
+
+Never commit Gemini keys. The application reads the key only from `GEMINI_API_KEY`, never logs it, and never displays it in UI or diagnostics. Gemini receives only sanitized operational summaries such as truck queue estimates, berth/yard pressure, active incidents, idling/emissions estimates, deterministic recommendation summaries, and the requested report type. Do not send secrets, connection strings, credentials, private configs, customer data, API tokens, or sensitive internal values.
+
+Gemini prompts are grounded in the Culltron Smart Port Flow prototype/demo context. Responses must not invent real Transnet access, live IPMS access, Navayuga integration, production deployment at a port, real customer data, guaranteed savings, or signed pilot agreements. Use careful wording such as “prototype,” “demo,” “pilot-ready architecture,” “designed to integrate,” “can support,” and “would require live data integration for production use.”
+
+### Demo testing
+
+Use the visible button-triggered report actions, such as Executive Operations Brief, Scenario Analysis Report, Operator Action Plan, Emissions Reduction Report, Incident Response Report, Pilot Readiness Report, and Daily Port Operations Report. With no key configured, verify local fallback output. With a key configured and Gemini enabled, test only a few intentional calls for demo usage.

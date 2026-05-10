@@ -14,11 +14,13 @@ public class AgentController : Controller
 {
     private readonly IAiAgentService _agent;
     private readonly ISmartPortIntelligenceService _intelligence;
+    private readonly IOperationalReportService _reports;
 
-    public AgentController(IAiAgentService agent, ISmartPortIntelligenceService intelligence)
+    public AgentController(IAiAgentService agent, ISmartPortIntelligenceService intelligence, IOperationalReportService reports)
     {
         _agent = agent;
         _intelligence = intelligence;
+        _reports = reports;
     }
 
     public async Task<IActionResult> Index()
@@ -26,6 +28,7 @@ public class AgentController : Controller
         ViewBag.SuggestedQuestions = _agent.GetSuggestedQuestions();
         ViewBag.Context = await _agent.GetContextAsync();
         ViewBag.Snapshot = await _intelligence.GetSnapshotAsync();
+        ViewBag.AgentModeStatus = _reports.GetStatus();
         return View();
     }
 
@@ -40,6 +43,7 @@ public class AgentController : Controller
         ViewBag.SuggestedQuestions = _agent.GetSuggestedQuestions();
         ViewBag.Context = await _agent.GetContextAsync();
         ViewBag.Snapshot = await _intelligence.GetSnapshotAsync();
+        ViewBag.AgentModeStatus = _reports.GetStatus();
         return View("Index");
     }
 
@@ -461,12 +465,45 @@ public class ReportsController : Controller
     private readonly IDisruptionService _disruptions;
     private readonly IFlowIntelligenceService _flow;
     private readonly IDispatchTripService _trips;
+    private readonly IOperationalReportService _agentReports;
 
     public ReportsController(IEmissionsSummaryService emissions, IPilotMetricsService pilot,
-        IDisruptionService disruptions, IFlowIntelligenceService flow, IDispatchTripService trips)
-    { _emissions = emissions; _pilot = pilot; _disruptions = disruptions; _flow = flow; _trips = trips; }
+        IDisruptionService disruptions, IFlowIntelligenceService flow, IDispatchTripService trips,
+        IOperationalReportService agentReports)
+    { _emissions = emissions; _pilot = pilot; _disruptions = disruptions; _flow = flow; _trips = trips; _agentReports = agentReports; }
 
-    public IActionResult Index() => View();
+    public IActionResult Index()
+    {
+        ViewBag.AgentModeStatus = _agentReports.GetStatus();
+        ViewBag.AgentReportTypes = _agentReports.GetReportTypes();
+        return View();
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AgentReport(string reportType, AgentMode mode = AgentMode.Hybrid, string? scenarioSummary = null, CancellationToken cancellationToken = default)
+    {
+        var result = await _agentReports.GenerateAsync(new OperationalReportRequest
+        {
+            ReportType = reportType,
+            Mode = mode,
+            ScenarioSummary = scenarioSummary ?? string.Empty
+        }, cancellationToken);
+        ViewBag.AgentModeStatus = _agentReports.GetStatus();
+        ViewBag.AgentReportTypes = _agentReports.GetReportTypes();
+        return View("AgentReport", result);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DownloadAgentReport(string reportType, AgentMode mode = AgentMode.Hybrid, string? scenarioSummary = null, CancellationToken cancellationToken = default)
+    {
+        var result = await _agentReports.GenerateAsync(new OperationalReportRequest
+        {
+            ReportType = reportType,
+            Mode = mode,
+            ScenarioSummary = scenarioSummary ?? string.Empty
+        }, cancellationToken);
+        return File(System.Text.Encoding.UTF8.GetBytes(result.Markdown), "text/markdown", $"SmartPort_{result.ReportType.Replace(" ", "_")}_{DateTime.UtcNow:yyyyMMddHHmm}.md");
+    }
 
     public async Task<IActionResult> Operational()
     {
