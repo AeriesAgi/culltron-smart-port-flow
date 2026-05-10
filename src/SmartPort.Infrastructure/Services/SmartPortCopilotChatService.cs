@@ -46,6 +46,9 @@ public class CopilotChatResponse
     public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
     public List<CopilotActionCard> ActionCards { get; set; } = new();
     public string DataNote { get; set; } = "Synthetic demo data · deterministic local response";
+    public string GeneratedBy { get; set; } = "Local";
+    public bool HumanApprovalRequired { get; set; } = true;
+    public bool NotAutomaticallyExecuted { get; set; } = true;
     public bool IsSmallTalk { get; set; }
     public bool IsOutOfScope { get; set; }
     public bool IsVagueButRelated { get; set; }
@@ -76,13 +79,15 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
     private readonly SmartPortDbContext _db;
     private readonly ITruckTrackingService _tracking;
     private readonly ISmartPortIntelligenceService _intelligence;
+    private readonly IAgentNarrativeService _narrative;
 
-    public SmartPortCopilotChatService(IAiAgentService agent, SmartPortDbContext db, ITruckTrackingService tracking, ISmartPortIntelligenceService intelligence)
+    public SmartPortCopilotChatService(IAiAgentService agent, SmartPortDbContext db, ITruckTrackingService tracking, ISmartPortIntelligenceService intelligence, IAgentNarrativeService narrative)
     {
         _agent = agent;
         _db = db;
         _tracking = tracking;
         _intelligence = intelligence;
+        _narrative = narrative;
     }
 
     public async Task<CopilotChatPageModel> BuildPageAsync(string? prompt = null)
@@ -111,13 +116,15 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         new() { Icon = "🚛", Label = "Truck queues", Prompt = "trucks on queue" },
         new() { Icon = "📡", Label = "Track trucks", Prompt = "track delayed trucks" },
         new() { Icon = "🛑", Label = "Hold trucks", Prompt = "which trucks should be held outside the port" },
-        new() { Icon = "⚠️", Label = "Biggest risk", Prompt = "What is the biggest risk right now?" },
+        new() { Icon = "⚠️", Label = "Today’s risk", Prompt = "Summarize today’s port risk" },
+        new() { Icon = "🚛", Label = "Reduce idling", Prompt = "How do we reduce truck idling?" },
+        new() { Icon = "🧠", Label = "Top recommendation", Prompt = "Explain the top recommendation" },
         new() { Icon = "🧭", Label = "Action plan", Prompt = "Generate an operator action plan." },
-        new() { Icon = "🌿", Label = "CO₂ savings", Prompt = "How much CO2 can we save?" },
+        new() { Icon = "🌿", Label = "Emissions brief", Prompt = "Create an emissions reduction brief" },
         new() { Icon = "🚪", Label = "Gate bottleneck", Prompt = "Which gate is becoming a bottleneck?" },
         new() { Icon = "📈", Label = "Business impact", Prompt = "What is the business impact?" },
         new() { Icon = "🌍", Label = "NCIC alignment", Prompt = "Explain NCIC alignment." },
-        new() { Icon = "🗺️", Label = "90-day pilot", Prompt = "What would a 90-day pilot look like?" },
+        new() { Icon = "🗺️", Label = "Pilot needs", Prompt = "What would a pilot need?" },
         new() { Icon = "🔌", Label = "Integrations", Prompt = "What integrations are required?" },
         new() { Icon = "🎬", Label = "Grant summary", Prompt = "Prepare a 2-minute grant summary." }
     };
@@ -149,7 +156,7 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
     {
         var q = prompt.ToLowerInvariant();
         var intent = ClassifyIntent(q);
-        return intent switch
+        var response = intent switch
         {
             "safety" => BuildSafetyRefusal(prompt),
             "greeting" => BuildGreeting(prompt, ctx),
@@ -179,6 +186,42 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
             "out-of-scope" => BuildOutOfScope(prompt),
             _ => BuildRisk(prompt, ctx)
         };
+
+        if (response.IsOperational)
+        {
+            var enhanced = await _narrative.GenerateAsync(new AgentNarrativeRequest
+            {
+                Purpose = "copilot operations planner answer",
+                ReportType = intent switch
+                {
+                    "action-plan" => "Operator Action Plan",
+                    "emissions" => "Emissions Reduction Report",
+                    "scenario" => "Scenario Analysis Report",
+                    "pilot-readiness" => "Pilot Readiness Report",
+                    "recommendations" => "Recommendation Explanation",
+                    _ => "Executive Operations Brief"
+                },
+                UserPrompt = prompt,
+                CurrentPage = "SmartPort Copilot",
+                RequestedMode = AgentMode.Hybrid,
+                Context = ctx,
+                DeterministicRecommendations = ctx.TopRecommendations
+            });
+
+            response.GeneratedBy = enhanced.GeneratedBy.ToString();
+            response.DataNote = enhanced.UsedGemini
+                ? "Synthetic demo data · Gemini enhanced from sanitized context · human approval required"
+                : $"Synthetic demo data · local deterministic response · {enhanced.Status}";
+
+            if (enhanced.UsedGemini && !string.IsNullOrWhiteSpace(enhanced.Narrative))
+            {
+                response.OperationalReasoning = enhanced.Narrative;
+                response.Summary = response.Summary + " Gemini added an enterprise planner explanation grounded only in the supplied synthetic context.";
+                response.ShortAnswer = response.Summary;
+            }
+        }
+
+        return response;
     }
 
     private static string ClassifyIntent(string q)

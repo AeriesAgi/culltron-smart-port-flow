@@ -1,11 +1,56 @@
-@{ ViewData["Title"] = "Reports"; }
+@using SmartPort.Infrastructure.Services
+@{
+    ViewData["Title"] = "Reports";
+    var status = ViewBag.AgentModeStatus as AgentModeStatus;
+    var reportTypes = ViewBag.AgentReportTypes as IReadOnlyList<string> ?? Array.Empty<string>();
+}
 <div class="sp-page-header">
     <div>
-        <div class="sp-agent-badge"><span>📋</span> Reports</div>
+        <div class="sp-agent-badge"><span>📋</span> Reports · Agent Intelligence Desk</div>
         <h1>Operational Reports</h1>
-        <p style="color:var(--sp-text-muted)">Screen-based reports and data exports. All data is synthetic.</p>
+        <p style="color:var(--sp-text-muted)">Screen-based reports, deterministic exports, and optional Gemini-enhanced agent briefs. All operational data is synthetic and sanitized.</p>
     </div>
 </div>
+
+<section class="sp-premium-panel" style="margin:1rem 0 1.25rem;padding:1.25rem">
+    <div class="sp-card__header">
+        <div>
+            <div class="sp-agent-badge"><span class="sp-live-dot"></span> Agent Intelligence Mode</div>
+            <h2 style="margin:.35rem 0">@(status?.CurrentModeLabel ?? "Hybrid Agent Mode")</h2>
+            <p style="color:var(--sp-text-muted);margin:0">Gemini status: <strong>@(status?.GeminiStatus ?? "Not configured")</strong>. Operational recommendations remain human-approved and audit-tracked.</p>
+        </div>
+        <span class="sp-badge sp-badge--@(status?.GeminiConfigured == true && status?.GeminiEnabled == true ? "success" : "info")">@(status?.GeminiConfigured == true ? "Gemini Available" : "Fallback Active")</span>
+    </div>
+    <div class="sp-agent-loop" style="display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:.75rem;margin-top:1rem">
+        @foreach (var step in new[] { "Observe", "Analyze", "Recommend", "Simulate", "Human Approves", "Audit Trail" })
+        {
+            <div class="sp-business-card" style="min-height:86px"><span>Decision Loop</span><strong>@step</strong><small>Explainable and auditable</small></div>
+        }
+    </div>
+</section>
+
+<section class="sp-card" style="padding:1.25rem;margin-bottom:1.25rem">
+    <div class="sp-card__header">
+        <h3 class="sp-card__title">Generate Agent Reports</h3>
+        <span class="sp-card__meta">Button-triggered only · Gemini optional</span>
+    </div>
+    <div class="sp-modules-grid" style="margin-top:1rem">
+        @foreach (var type in reportTypes)
+        {
+            var icon = type.Contains("Emissions") ? "🌿" : type.Contains("Incident") ? "🚨" : type.Contains("Scenario") ? "🔬" : type.Contains("Pilot") ? "🗺️" : type.Contains("Operator") ? "🧭" : type.Contains("Recommendation") ? "🧠" : "🧾";
+            <form asp-action="AgentReport" asp-controller="Reports" method="post" class="sp-module-card" style="text-decoration:none;cursor:pointer">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="reportType" value="@type" />
+                <input type="hidden" name="mode" value="Hybrid" />
+                <div class="sp-module-card__icon">@icon</div>
+                <h3>@type</h3>
+                <p>Generate a structured, audit-friendly report using Gemini when available or local deterministic fallback when not configured.</p>
+                <button class="sp-btn sp-btn--primary" type="submit">Generate @type</button>
+            </form>
+        }
+    </div>
+</section>
+
 <div class="sp-modules-grid" style="margin-top:1rem">
     <a asp-action="Operational" asp-controller="Reports" class="sp-module-card" style="text-decoration:none;cursor:pointer">
         <div class="sp-module-card__icon">🏭</div>
