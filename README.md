@@ -1,3 +1,14 @@
+## Hackathon Submission
+
+- Live Demo: https://smartport.culltron.app/
+- Hugging Face Space: https://huggingface.co/spaces/atrx93/culltron-smart-port-flow
+- Demo Video: https://youtu.be/-R4SJraREP4
+- Pitch Deck: https://canva.link/6s7n1perwny0lbs
+
+This demo uses seeded/synthetic operational data and does not expose real port, customer, or production data.
+
+The live application is deployed on DigitalOcean. AMD Developer Cloud credits are available through DigitalOcean for the hackathon compute pathway and future scaling of AI simulation, forecasting, optimization, and inference workloads.
+
 # Culltron Smart Port Flow
 
 > Premium Smart Port Agentic Operations Copilot demonstrator by Culltron.
