@@ -35,18 +35,18 @@
 </section>
 
 <section id="agentReportText" class="sp-report-sections" style="display:grid;gap:1rem;margin-top:1.25rem">
-    @foreach (var section in Model.Sections)
+    @foreach (var reportSection in Model.Sections)
     {
-        <article class="sp-card sp-report-section sp-report-section--@section.Tone" style="padding:1.25rem">
-            <div class="sp-card__header"><h3 class="sp-card__title">@section.Heading</h3><span class="sp-badge sp-badge--@section.Tone">@section.Tone</span></div>
-            @if (!string.IsNullOrWhiteSpace(section.Body))
+        <article class="sp-card sp-report-section sp-report-section--@(reportSection.Tone)" style="padding:1.25rem">
+            <div class="sp-card__header"><h3 class="sp-card__title">@reportSection.Heading</h3><span class="sp-badge sp-badge--@(reportSection.Tone)">@(reportSection.Tone)</span></div>
+            @if (!string.IsNullOrWhiteSpace(reportSection.Body))
             {
-                <div class="sp-report-body" style="white-space:pre-wrap;color:var(--sp-text-muted);line-height:1.65">@section.Body</div>
+                <div class="sp-report-body" style="white-space:pre-wrap;color:var(--sp-text-muted);line-height:1.65">@reportSection.Body</div>
             }
-            @if (section.Bullets.Any())
+            @if (reportSection.Bullets.Any())
             {
                 <ul style="color:var(--sp-text-muted);line-height:1.7">
-                    @foreach (var bullet in section.Bullets)
+                    @foreach (var bullet in reportSection.Bullets)
                     {
                         <li>@bullet</li>
                     }
