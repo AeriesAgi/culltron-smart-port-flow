@@ -7,7 +7,7 @@ namespace SmartPort.Infrastructure.Services;
 public interface ISmartPortCopilotChatService
 {
     Task<CopilotChatPageModel> BuildPageAsync(string? prompt = null);
-    Task<CopilotChatResponse> GenerateResponseAsync(string prompt);
+    Task<CopilotChatResponse> GenerateResponseAsync(string prompt, string? conversationHistory = null);
     List<CopilotPromptChip> GetPromptChips();
 }
 
@@ -16,6 +16,7 @@ public class CopilotChatPageModel
     public OperationalContext Context { get; set; } = new();
     public string CurrentPrompt { get; set; } = string.Empty;
     public CopilotChatResponse? Response { get; set; }
+    public AgentModeStatus AgentModeStatus { get; set; } = new();
     public List<CopilotPromptChip> PromptChips { get; set; } = new();
     public List<string> SupportedTopics { get; set; } = new();
 }
@@ -32,6 +33,7 @@ public class CopilotChatResponse
     public string Prompt { get; set; } = string.Empty;
     public string MessageType { get; set; } = "operational";
     public string Intent { get; set; } = "general";
+    public string IntentCategory { get; set; } = "operational";
     public string Title { get; set; } = string.Empty;
     public string Summary { get; set; } = string.Empty;
     public string ShortAnswer { get; set; } = string.Empty;
@@ -46,6 +48,9 @@ public class CopilotChatResponse
     public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
     public List<CopilotActionCard> ActionCards { get; set; } = new();
     public string DataNote { get; set; } = "Synthetic demo data · deterministic local response";
+    public string GeneratedBy { get; set; } = "Local";
+    public bool HumanApprovalRequired { get; set; } = true;
+    public bool NotAutomaticallyExecuted { get; set; } = true;
     public bool IsSmallTalk { get; set; }
     public bool IsOutOfScope { get; set; }
     public bool IsVagueButRelated { get; set; }
@@ -76,13 +81,15 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
     private readonly SmartPortDbContext _db;
     private readonly ITruckTrackingService _tracking;
     private readonly ISmartPortIntelligenceService _intelligence;
+    private readonly IAgentNarrativeService _narrative;
 
-    public SmartPortCopilotChatService(IAiAgentService agent, SmartPortDbContext db, ITruckTrackingService tracking, ISmartPortIntelligenceService intelligence)
+    public SmartPortCopilotChatService(IAiAgentService agent, SmartPortDbContext db, ITruckTrackingService tracking, ISmartPortIntelligenceService intelligence, IAgentNarrativeService narrative)
     {
         _agent = agent;
         _db = db;
         _tracking = tracking;
         _intelligence = intelligence;
+        _narrative = narrative;
     }
 
     public async Task<CopilotChatPageModel> BuildPageAsync(string? prompt = null)
@@ -93,13 +100,9 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
             Context = context,
             CurrentPrompt = prompt ?? string.Empty,
             PromptChips = GetPromptChips(),
-            SupportedTopics = SupportedTopics()
+            SupportedTopics = SupportedTopics(),
+            AgentModeStatus = _narrative.GetStatus()
         };
-
-        if (!string.IsNullOrWhiteSpace(prompt))
-        {
-            model.Response = await GenerateResponseAsync(prompt.Trim(), context);
-        }
 
         return model;
     }
@@ -108,18 +111,14 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
     {
         new() { Icon = "👋", Label = "Hello", Prompt = "hello" },
         new() { Icon = "❔", Label = "Capabilities", Prompt = "what can you do" },
-        new() { Icon = "🚛", Label = "Truck queues", Prompt = "trucks on queue" },
-        new() { Icon = "📡", Label = "Track trucks", Prompt = "track delayed trucks" },
-        new() { Icon = "🛑", Label = "Hold trucks", Prompt = "which trucks should be held outside the port" },
-        new() { Icon = "⚠️", Label = "Biggest risk", Prompt = "What is the biggest risk right now?" },
+        new() { Icon = "⚠️", Label = "Biggest risk", Prompt = "What is the biggest operational risk right now?" },
+        new() { Icon = "🚛", Label = "Reduce idling", Prompt = "How can we reduce truck idling?" },
+        new() { Icon = "⚓", Label = "Berth focus", Prompt = "Which berth needs attention?" },
         new() { Icon = "🧭", Label = "Action plan", Prompt = "Generate an operator action plan." },
-        new() { Icon = "🌿", Label = "CO₂ savings", Prompt = "How much CO2 can we save?" },
-        new() { Icon = "🚪", Label = "Gate bottleneck", Prompt = "Which gate is becoming a bottleneck?" },
-        new() { Icon = "📈", Label = "Business impact", Prompt = "What is the business impact?" },
-        new() { Icon = "🌍", Label = "NCIC alignment", Prompt = "Explain NCIC alignment." },
-        new() { Icon = "🗺️", Label = "90-day pilot", Prompt = "What would a 90-day pilot look like?" },
-        new() { Icon = "🔌", Label = "Integrations", Prompt = "What integrations are required?" },
-        new() { Icon = "🎬", Label = "Grant summary", Prompt = "Prepare a 2-minute grant summary." }
+        new() { Icon = "🌿", Label = "Emissions brief", Prompt = "Generate an emissions reduction brief." },
+        new() { Icon = "🚪", Label = "Gate bottleneck", Prompt = "Where is the gate bottleneck?" },
+        new() { Icon = "🎬", Label = "2-minute demo", Prompt = "Prepare a 2-minute demo summary." },
+        new() { Icon = "🗺️", Label = "Real pilot", Prompt = "What would a real pilot need?" }
     };
 
     private static List<string> SupportedTopics() => new()
@@ -130,12 +129,14 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         "Executive brief", "Grant / investor summary", "Business case", "Implementation roadmap", "Success metrics"
     };
 
-    public async Task<CopilotChatResponse> GenerateResponseAsync(string prompt)
+    public async Task<CopilotChatResponse> GenerateResponseAsync(string prompt, string? conversationHistory = null)
     {
         var context = await _agent.GetContextAsync();
         var snapshot = await _intelligence.GetSnapshotAsync();
-        var response = await GenerateResponseAsync(prompt.Trim(), context);
-        response.DataNote = $"{snapshot.DataNote} · snapshot {snapshot.Timestamp:HH:mm:ss} UTC";
+        var response = await GenerateResponseAsync(prompt.Trim(), context, conversationHistory);
+        response.DataNote = string.IsNullOrWhiteSpace(response.DataNote)
+            ? $"{snapshot.DataNote} · snapshot {snapshot.Timestamp:HH:mm:ss} UTC"
+            : $"{response.DataNote} · snapshot {snapshot.Timestamp:HH:mm:ss} UTC";
         if (response.Intent == "risk")
         {
             response.Title = snapshot.TopRisk;
@@ -145,11 +146,11 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         return response;
     }
 
-    private async Task<CopilotChatResponse> GenerateResponseAsync(string prompt, OperationalContext ctx)
+    private async Task<CopilotChatResponse> GenerateResponseAsync(string prompt, OperationalContext ctx, string? conversationHistory = null)
     {
         var q = prompt.ToLowerInvariant();
         var intent = ClassifyIntent(q);
-        return intent switch
+        var response = intent switch
         {
             "safety" => BuildSafetyRefusal(prompt),
             "greeting" => BuildGreeting(prompt, ctx),
@@ -175,27 +176,141 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
             "success-metrics" => BuildSuccessMetrics(prompt, ctx),
             "demo" => BuildDemoSummary(prompt, ctx),
             "action-plan" => BuildActionPlan(prompt, ctx),
+            "sensitive-label" => BuildSensitiveLabel(prompt),
+            "harmless" => BuildHarmless(prompt, ctx),
             "vague-related" => BuildVagueRelated(prompt, ctx),
             "out-of-scope" => BuildOutOfScope(prompt),
-            _ => BuildRisk(prompt, ctx)
+            _ => BuildOutOfScope(prompt)
         };
+
+        response.IntentCategory = IntentCategory(intent);
+        ApplyEngineStatus(response, usedGemini: false, fallbackReason: null);
+
+        var status = _narrative.GetStatus();
+        var geminiPreferred = status.GeminiEnabled && status.GeminiConfigured && intent != "safety" && intent != "sensitive-label";
+        if (!geminiPreferred)
+        {
+            response.DataNote = status.GeminiEnabled && !status.GeminiConfigured
+                ? "Local Offline-Safe Mode · Gemini enabled but not configured"
+                : "Local Offline-Safe Mode · Gemini not configured or disabled";
+            return response;
+        }
+
+        var enhanced = await _narrative.GenerateAsync(new AgentNarrativeRequest
+        {
+            Purpose = "copilot conversational response",
+            ReportType = CopilotReportType(intent),
+            DetectedIntent = response.IntentCategory,
+            UserPrompt = prompt,
+            CurrentPage = "SmartPort Copilot",
+            ConversationHistory = conversationHistory ?? string.Empty,
+            RequestedMode = AgentMode.Hybrid,
+            Context = ctx,
+            DeterministicRecommendations = ctx.TopRecommendations
+        });
+
+        if (enhanced.UsedGemini && !string.IsNullOrWhiteSpace(enhanced.Narrative))
+        {
+            return BuildGeminiResponse(prompt, intent, response, enhanced.Narrative);
+        }
+
+        ApplyEngineStatus(response, usedGemini: false, fallbackReason: "Gemini unavailable — local fallback used");
+        return response;
     }
+
+
+    private CopilotChatResponse BuildGeminiResponse(string prompt, string intent, CopilotChatResponse localResponse, string geminiText)
+    {
+        var response = localResponse;
+        response.GeneratedBy = "Gemini";
+        response.IntentCategory = IntentCategory(intent);
+        response.Intent = response.IntentCategory;
+        response.Title = response.IntentCategory switch
+        {
+            "greeting" => "SmartPort Copilot Online",
+            "help" => "SmartPort Copilot Capabilities",
+            "report" => "Generated Agent Response",
+            "demo" => "Demo / Pitch Assistant",
+            "out-of-scope" => "Smart Port Scope Control",
+            _ => response.Title
+        };
+        response.Summary = FirstSentence(geminiText, response.Summary);
+        response.ShortAnswer = geminiText.Trim();
+        response.OperationalReasoning = geminiText.Trim();
+        response.MessageType = response.IntentCategory is "greeting" or "help" or "harmless" ? "compact" : response.MessageType;
+        response.IsSmallTalk = response.IntentCategory is "greeting" or "help" or "harmless";
+        response.IsOperational = response.IntentCategory is "operational" or "report" or "demo";
+        response.DataNote = "Gemini Agent Mode · sanitized synthetic Smart Port context";
+        response.MetricBadges = BuildMetricBadges(response.Severity, response.ConfidenceScore, response.AffectedArea, response.IntentCategory, "Gemini");
+        return response;
+    }
+
+    private static void ApplyEngineStatus(CopilotChatResponse response, bool usedGemini, string? fallbackReason)
+    {
+        response.GeneratedBy = usedGemini ? "Gemini" : string.IsNullOrWhiteSpace(fallbackReason) ? "Local" : "Hybrid";
+        if (!string.IsNullOrWhiteSpace(fallbackReason)) response.DataNote = fallbackReason;
+        response.MetricBadges = BuildMetricBadges(response.Severity, response.ConfidenceScore, response.AffectedArea, response.IntentCategory, response.GeneratedBy);
+    }
+
+    private static List<CopilotMetricBadge> BuildMetricBadges(string severity, int confidence, string area, string intent, string generatedBy) => new()
+    {
+        new() { Label = "Generated by", Value = generatedBy, Tone = generatedBy == "Gemini" ? "success" : generatedBy == "Hybrid" ? "warning" : "info" },
+        new() { Label = "Intent", Value = intent, Tone = "teal" },
+        new() { Label = "Human approval", Value = "Required", Tone = "warning" },
+        new() { Label = "Execution", Value = "Not automatic", Tone = "muted" }
+    };
+
+    private static string FirstSentence(string text, string fallback)
+    {
+        var clean = text.Trim().Replace("#", string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(clean)) return fallback;
+        var firstLine = clean.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim('-', ' ', '*') ?? clean;
+        return firstLine.Length > 180 ? firstLine[..180] + "…" : firstLine;
+    }
+
+    private static string CopilotReportType(string intent) => intent switch
+    {
+        "action-plan" => "Operator Action Plan",
+        "emissions" => "Emissions Reduction Brief",
+        "scenario" => "Scenario Analysis",
+        "pilot-readiness" => "Pilot Readiness Summary",
+        "executive-brief" => "Executive Operations Brief",
+        "demo" or "grant-summary" => "Demo and Pitch Summary",
+        "help" => "Copilot Capability Explanation",
+        "greeting" or "harmless" => "Conversational Smart Port Copilot Reply",
+        _ => "Smart Port Copilot Response"
+    };
+
+    private static string IntentCategory(string intent) => intent switch
+    {
+        "greeting" => "greeting",
+        "help" => "help",
+        "action-plan" or "executive-brief" or "success-metrics" => "report",
+        "demo" or "grant-summary" or "executive-impact" or "stakeholder-value" or "clean-logistics" => "demo",
+        "harmless" => "harmless",
+        "out-of-scope" => "out-of-scope",
+        "safety" or "safety refusal" or "sensitive-label" => "fallback",
+        _ => "operational"
+    };
 
     private static string ClassifyIntent(string q)
     {
         if (Has(q, "ignore instruction", "ignore previous", "system prompt", "developer prompt", "reveal prompt", "show prompt", "secret", "credential", "password", "api key", "dump database", "dump config", "internal config", "jailbreak")) return "safety";
+        if (LooksLikePassphrase(q)) return "sensitive-label";
         if (IsGreeting(q)) return "greeting";
-        if (Has(q, "help", "what can you do", "what are you", "capabilit", "supported", "topics")) return "help";
-        if (Has(q, "investor summary", "grant", "funding", "2-minute grant", "ncic pitch", "pitch summary")) return "grant-summary";
+        if (Has(q, "how's your day", "hows your day", "are you working", "what should i ask", "can you help me present", "help me present")) return "harmless";
+        if (Has(q, "help", "help me", "what can you do", "what are you", "capabilit", "supported", "topics", "explain this system", "what is smart port", "how does this app work")) return "help";
+        if (Has(q, "investor summary", "grant", "funding", "2-minute grant", "ncic pitch", "pitch summary", "explain to judges", "to judges")) return "grant-summary";
         if (Has(q, "business impact", "executive impact", "business case", "impact centre", "impact center", "investor")) return "executive-impact";
         if (Has(q, "ncic", "clean logistics", "sustainability", "clean-tech", "clean tech", "alignment")) return "clean-logistics";
         if (Has(q, "pilot", "90-day", "90 day", "roadmap", "implementation", "30-day", "60-day")) return "pilot-readiness";
         if (Has(q, "integration", "integrations", "production need", "data would production", "data source", "tos", "ipms", "gps", "telematics", "ocr", "rfid")) return "integrations";
         if (Has(q, "stakeholder", "fleet operator", "port authority", "terminal operator", "sustainability officer", "municipality", "province", "operations manager")) return "stakeholder-value";
-        if (Has(q, "executive brief", "generate brief", "shift report", "briefing")) return "executive-brief";
+        if (Has(q, "executive brief", "generate brief", "shift report", "briefing", "emissions report", "pilot readiness report", "incident response brief", "emissions reduction brief")) return "executive-brief";
+        if (q.Contains("generate") && q.Contains("brief")) return "executive-brief";
         if (Has(q, "success metric", "pilot metrics", "risks and mitigations", "risks", "mitigation")) return "success-metrics";
-        if (Has(q, "demo", "2-minute", "summary", "video", "pitch", "walkthrough")) return "demo";
-        if (Has(q, "biggest risk", "port risk", "operational risk", "current risk", "what is urgent", "urgent", "do first", "should we do first", "manager do first")) return "risk";
+        if (Has(q, "demo", "2-minute", "summary", "video", "pitch", "walkthrough", "summarize demo", "make a 2-minute pitch")) return "demo";
+        if (Has(q, "biggest risk", "port risk", "operational risk", "current risk", "what is urgent", "urgent", "do first", "should we do first", "manager do first", "berth focus", "reduce idling", "disruptions", "yard pressure")) return "risk";
         if (Has(q, "action plan", "operator action", "recommended actions", "what should operators do", "generate action", "prepare shift brief", "shift brief", "prioritise first", "prioritize first")) return "action-plan";
         if (Has(q, "track", "tracking", "eta", "truck eta", "where are the trucks", "where are trucks", "delayed truck", "delayed trucks", "which trucks are delayed", "hold outside", "held outside", "outside port", "wait outside", "trucks to hold", "hold trucks", "which trucks should wait", "priority release", "priority release trucks", "approaching", "checkpoint")) return "truck-tracking";
         if (Has(q, "truck queue", "trucks on queue", "queued truck", "queued trucks", "trucks in queue", "gate queue trucks")) return "truck-tracking";
@@ -210,27 +325,27 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         if (Has(q, "audit", "decision history", "decision")) return "audit";
         if (Has(q, "port", "operation", "congestion", "risk", "flow", "terminal")) return "vague-related";
         if (Has(q, "politics", "medical", "legal advice", "financial advice", "recipe", "homework", "code", "coding", "programming", "weather", "sports", "celebrity", "news", "general knowledge", "offensive", "abusive", "bypass security", "show config")) return "out-of-scope";
-        return "out-of-scope";
+        return q.Length <= 28 ? "harmless" : "out-of-scope";
     }
 
     private CopilotChatResponse BuildGreeting(string prompt, OperationalContext ctx) =>
         Base(prompt, "greeting", "Low", 98, "Smart Port Copilot",
-            "Hello, I’m the SmartPort Copilot — a local deterministic assistant for Culltron Smart Port Flow.",
-            "I can analyse truck queues, truck ETA, gate bottlenecks, berth pressure, yard congestion, load-shedding disruption, emissions, scenario simulation and recommendations.",
-            "Ask a focused operations question such as ‘what is the biggest port risk right now?’ or ‘which trucks should be held outside the port?’. ",
-            "Keeps the demo scoped, safe and judge-friendly.",
-            "Synthetic demo data is used for all operational estimates.",
-            "No external AI or cloud secret is required.",
+            "Hey, I’m online. I can help with Smart Port risks, truck idling, berth pressure, emissions, incidents, scenario analysis, or demo/pilot explanations. What do you want to check first?",
+            "This was classified as greeting/small talk, so I’m not generating a risk report or action plan.",
+            "Ask me about biggest risk, reduce idling, berth focus, emissions, incidents, scenario analysis, or a pilot/demo brief.",
+            "Keeps the conversation natural while staying grounded in the Smart Port system.",
+            "Synthetic demo data is used only when operational context is requested.",
+            "Recommendations remain human-approved and not automatically executed.",
             StandardActions());
 
     private CopilotChatResponse BuildHelp(string prompt, OperationalContext ctx) =>
-        Base(prompt, "help / capabilities", "Low", 97, "Supported Smart Port Topics",
-            "I can help with smart port operations, congestion, truck tracking/ETA, gate flow, berth and yard pressure, emissions, disruptions, scenarios, recommendations, executive impact, clean logistics / NCIC alignment, pilot readiness, integrations, stakeholder value and grant/investor summaries.",
-            "The assistant uses deterministic topic routing and refuses unrelated, unsafe or secret-seeking prompts.",
-            "Choose a topic chip or ask: trucks on queue, track delayed trucks, explain NCIC alignment, what integrations are required, or prepare a 2-minute grant summary.",
-            "You get consistent explainable outputs with summary, reasoning, action, impact, confidence, affected area and links.",
-            "All figures are based on synthetic demo data.",
-            "Local-only processing keeps the competition demo safe and repeatable.",
+        Base(prompt, "help", "Low", 97, "Smart Port Copilot Capabilities",
+            "I can help with truck congestion, gate bottlenecks, berth and yard pressure, emissions/idling, incidents, scenario analysis, recommendation explanations, reports, pilot readiness, and demo/pitch wording.",
+            "When Gemini is configured I use Gemini Agent Mode with sanitized Smart Port context; otherwise I use the local offline-safe fallback.",
+            "Try: ‘What is the biggest operational risk right now?’, ‘How can we reduce truck idling?’, or ‘Generate an operator action plan.’",
+            "You get conversational assistance without automatic operational execution.",
+            "All operational figures are synthetic/demo data until live integrations are approved.",
+            "Recommendations require human approval and audit tracking.",
             StandardActions());
 
     private CopilotChatResponse BuildVagueRelated(string prompt, OperationalContext ctx) =>
@@ -261,6 +376,26 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
             "Maintains enterprise governance and demo safety.",
             "No secret or external system data is exposed.",
             "Local deterministic governance is active.",
+            StandardActions());
+
+    private CopilotChatResponse BuildSensitiveLabel(string prompt) =>
+        Base(prompt, "sensitive-label", "Low", 99, "Input Safety",
+            "That looks like a passphrase or label rather than an operations question. For safety I won’t process it as a command.",
+            "The Copilot avoids treating password-like, token-like, or credential-like text as operational instructions.",
+            "Ask me things like ‘biggest risk’, ‘reduce idling’, or ‘generate executive brief’. ",
+            "Prevents accidental handling of sensitive-looking input while keeping the Smart Port workflow available.",
+            "No operational estimate changed.",
+            "No external system was queried for this input.",
+            StandardActions());
+
+    private CopilotChatResponse BuildHarmless(string prompt, OperationalContext ctx) =>
+        Base(prompt, "harmless", "Low", 90, "Smart Port Copilot",
+            "I’m here and ready to help with the Smart Port demo. If you want, I can help you present the system, explain what to ask, or check the current port risk.",
+            "The message is harmless but not a direct operational command, so I’m keeping the answer conversational and grounded in Culltron Smart Port Flow.",
+            "Try asking for the biggest risk, truck idling reduction, berth focus, an operator action plan, or a 2-minute demo summary.",
+            "Keeps the assistant natural without inventing unrelated content.",
+            $"Operational context is available when needed: {ctx.TrucksInQueue} queued trucks and {ctx.BerthUtilisationPct:F0}% berth utilisation.",
+            "Recommendations remain human-approved and not automatically executed.",
             StandardActions());
 
     private CopilotChatResponse BuildRisk(string prompt, OperationalContext ctx)
@@ -505,7 +640,7 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
             Title = area,
             Summary = summary,
             ShortAnswer = summary,
-            MessageType = intent.Contains("greeting") || intent.Contains("help") ? "compact" : intent.Contains("out-of-scope") || intent.Contains("safety") ? "warning" : intent.Contains("vague") ? "clarification" : "operational",
+            MessageType = IntentCategory(intent) is "greeting" or "help" or "harmless" ? "compact" : intent.Contains("out-of-scope") || intent.Contains("safety") || intent.Contains("sensitive") ? "warning" : intent.Contains("vague") ? "clarification" : "operational",
             OperationalReasoning = reasoning,
             RecommendedAction = action,
             ExpectedImpact = impact,
@@ -515,19 +650,14 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
             EmissionsImpact = emissions,
             EnergyImpact = energy,
             ActionCards = cards,
-            IsSmallTalk = intent.Contains("greeting") || intent.Contains("help"),
+            IntentCategory = IntentCategory(intent),
+            IsSmallTalk = IntentCategory(intent) is "greeting" or "help" or "harmless",
             IsOutOfScope = intent.Contains("out-of-scope") || intent.Contains("safety"),
             IsVagueButRelated = intent.Contains("vague"),
-            IsOperational = !(intent.Contains("greeting") || intent.Contains("help") || intent.Contains("out-of-scope") || intent.Contains("safety") || intent.Contains("vague")),
-            SuggestedFollowUps = new() { "What is the biggest risk right now?", "Which trucks should be held outside the port?", "Generate an operator action plan." },
+            IsOperational = IntentCategory(intent) is "operational" or "report" or "demo",
+            SuggestedFollowUps = new() { "What is the biggest operational risk right now?", "How can we reduce truck idling?", "Generate an operator action plan." },
             TopicChips = GetPromptChips().Take(6).ToList(),
-            MetricBadges = new()
-            {
-                new() { Label = "Urgency", Value = severity, Tone = severity.ToLowerInvariant() switch { "critical" => "danger", "high" => "warning", _ => "info" } },
-                new() { Label = "Confidence", Value = $"{confidence}%", Tone = confidence >= 90 ? "success" : "info" },
-                new() { Label = "Area", Value = area, Tone = "teal" },
-                new() { Label = "Intent", Value = intent, Tone = "muted" }
-            }
+            MetricBadges = BuildMetricBadges(severity, confidence, area, IntentCategory(intent), "Local")
         };
     }
 
@@ -551,17 +681,28 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
 
     private static bool Has(string text, params string[] terms) => terms.Any(term => text.Contains(term));
 
+    private static bool LooksLikePassphrase(string text)
+    {
+        var normalized = text.Trim();
+        if (normalized.Length < 6 || normalized.Contains(' ')) return false;
+        var hasLetter = normalized.Any(char.IsLetter);
+        var hasDigit = normalized.Any(char.IsDigit);
+        var hasSymbol = normalized.Any(ch => !char.IsLetterOrDigit(ch));
+        return hasLetter && hasDigit && hasSymbol;
+    }
+
     private static bool IsGreeting(string text)
     {
         var normalized = text.Trim().Trim('?', '!', '.', ',');
-        return normalized is "hello" or "hi" or "hey" or "thanks" or "thank you" or "who are you" or "how are you"
+        return normalized is "hello" or "hi" or "hey" or "thanks" or "thank you" or "who are you" or "how are you" or "lol" or "okay" or "ok" or "nice"
             || normalized.StartsWith("hello ")
             || normalized.StartsWith("hi ")
             || normalized.StartsWith("hey ")
             || normalized.StartsWith("thanks ")
             || normalized.StartsWith("thank you ")
             || normalized.StartsWith("good morning")
-            || normalized.StartsWith("good afternoon");
+            || normalized.StartsWith("good afternoon")
+            || normalized.StartsWith("good evening");
     }
 
     private static int Score(OperationalContext ctx)
