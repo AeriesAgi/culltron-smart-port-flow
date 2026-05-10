@@ -1,241 +1,241 @@
-## Hackathon Submission
-
-- Live Demo: https://smartport.culltron.app/
-- Hugging Face Space: https://huggingface.co/spaces/atrx93/culltron-smart-port-flow
-- Demo Video: https://youtu.be/-R4SJraREP4
-- Pitch Deck: https://canva.link/6s7n1perwny0lbs
-
-This demo uses seeded/synthetic operational data and does not expose real port, customer, or production data.
-
-The live application is deployed on DigitalOcean. AMD Developer Cloud credits are available through DigitalOcean for the hackathon compute pathway and future scaling of AI simulation, forecasting, optimization, and inference workloads.
-
 # Culltron Smart Port Flow
 
-> Premium Smart Port Agentic Operations Copilot demonstrator by Culltron.
-> ASP.NET Core 8 MVC · PostgreSQL · Entity Framework Core · Docker Compose · synthetic demo data · deterministic local intelligence.
+**Culltron Smart Port Flow is an enterprise-style AI command centre for cleaner, smarter port logistics, combining operational dashboards, scenario simulation, emissions analysis, recommendations, and Gemini-enhanced agentic decision support.**
 
-Culltron Smart Port Flow is a smart-port operations demonstrator that shows how port teams could monitor congestion, truck ETA risk, berth pressure, yard density, load-shedding disruption, incidents, recommendations and indicative emissions/idling impact from one enterprise command-centre UI.
+> Working deployed demo/prototype · ASP.NET Core MVC / .NET 8 · PostgreSQL via Docker Compose · synthetic/demo data · Gemini Agent Mode on the live demo · hybrid local offline-safe fallback · human-approved recommendations.
 
-The product is intentionally **demo-safe**: it uses synthetic operational data, local deterministic rules/scoring, explainable response cards and scoped Copilot intent routing. It does **not** require OpenAI, Gemini, Claude, Azure OpenAI, Anthropic, external map APIs, cloud secrets or internet-dependent AI.
+Culltron Smart Port Flow demonstrates how port, terminal, fleet, sustainability, and municipal stakeholders could observe operational pressure, analyze bottlenecks, simulate disruptions, review emissions/idling impact, and prepare human-approved recommendations from one enterprise command-centre experience.
 
-## Product summary
+This repository is intentionally honest about scope: the current system is a deployed demo/prototype and pilot-ready architecture using synthetic/demo data. It does **not** claim live port/IPMS/Navayuga/Transnet integration, real customer data, signed pilots, guaranteed savings, or production deployment inside an actual port.
 
-Culltron Smart Port Flow supports hackathon judging, NCIC clean-logistics positioning, pilot discovery, grant/funding conversations and future product direction. It is not presented as a live integration to any real port system. Production integrations would connect to partner-approved TOS/IPMS, gate systems, GPS/telematics, berth planning, yard systems, energy/load-shedding schedules and emissions-factor data.
+## Live Demo
 
-## Platform modules
+- **Live demo:** https://smartport.culltron.app/
+- **GitHub repo:** https://github.com/AeriesAgi/culltron-smart-port-flow
+- **Status:** the live demo has Gemini Agent Mode working with synthetic/demo operational context and local fallback safety.
 
-- Landing and public product pages.
-- Dashboard command centre.
-- **AI Command Centre** for system-level operational state, risk scoring, monitoring lanes, confidence and action plans.
-- **SmartPort Copilot Chat** for natural-language, scoped questions into the same deterministic intelligence layer.
-- Truck Tracking & ETA Intelligence.
-- Scenario Simulator.
-- Emissions / Idling impact.
-- Incidents, disruptions and load-shedding response.
-- Recommendations / decision support and audit-style reports.
-- **Executive Impact Centre** for indicative business, time, diesel and CO₂ opportunity.
-- **Clean Logistics Impact** for NCIC-style problem/solution/outcomes framing.
-- **Pilot Readiness** with 30/60/90-day roadmap, required integrations, metrics and risks.
-- **Stakeholder Value** persona cards for port authority, terminal operator, fleet operator, sustainability officer, municipality/province and operations manager.
-- **Executive Brief** print-friendly shift report.
+## Judge Demo Path
 
-## AI Command Centre vs SmartPort Copilot Chat
+Landing → Dashboard → AI Command Centre → SmartPort Copilot Chat → Truck Tracking → Scenario Simulator → Emissions → Recommendations / Reports
 
-### AI Command Centre
+Additional hackathon assets, where available:
 
-Answers: **“What is happening across the port right now?”**
+- **Hugging Face Space:** https://huggingface.co/spaces/atrx93/culltron-smart-port-flow
+- **Demo video:** https://youtu.be/-R4SJraREP4
+- **Pitch deck:** https://canva.link/6s7n1perwny0lbs
 
-It is a system-level intelligence wall, not a chat page. It shows live synthetic/demo operational state, top operational risk, gate/berth/truck/yard/emissions/load-shedding monitoring lanes, confidence indicators, generated recommendations, a deterministic shift brief, operator action plan and links to decision/audit modules.
+## What’s New: Gemini Agent Mode
 
-### SmartPort Copilot Chat
+Culltron Smart Port Flow now includes **Gemini Agent Mode** on the live demo for richer operations summaries, agentic planning language, report drafting, recommendation explanations, and Copilot-style decision support. For self-hosted or local runs, Gemini is enabled only when configured with server-side environment variables; otherwise Hybrid Mode uses the local offline-safe fallback.
 
-Answers: **“What do I want to ask the system?”**
+- **Gemini 2.5 Flash support** via the `gemini-2.5-flash` model setting.
+- **Gemini Agent Mode** for enterprise-style operational answers and structured reports.
+- **Hybrid Mode** so Gemini can enhance operator-facing responses while the local offline-safe baseline remains available.
+- **Local Offline-Safe fallback** when Gemini is unavailable or not configured in a self-hosted/local environment.
+- **Button/user-triggered responses only**; Gemini is not called automatically on page load.
+- **No automatic Gemini calls on page load**, during seed generation, or in background loops.
+- **Synthetic/demo operational context** only.
+- **Human-approved recommendations** only.
+- **No automatic execution** of operational actions.
 
-It supports greetings, help/capabilities, truck queues, truck tracking / ETA, hold-outside-port guidance, gate bottlenecks, berth pressure, yard congestion, vessel delays, emissions / CO₂ / idling, load-shedding, scenario simulation, recommendations, audit history, executive impact, clean logistics / NCIC alignment, pilot readiness, integrations, stakeholder value, executive brief, grant/investor summary and out-of-scope refusal.
+Gemini Agent Mode is active on the live demo and remains a governed enhancement, not a replacement for operator review. Self-hosted/local instances should continue to run safely without a Gemini API key by using the fallback path.
 
-## Local deterministic intelligence
+## Core Features
 
-The intelligence layer is local and deterministic by default:
+- **AI Command Centre** for system-level operational status, risk scoring, monitoring lanes, confidence indicators, and action guidance.
+- **SmartPort Copilot Chat** for scoped natural-language questions about the demo operational state.
+- **Gemini-enhanced operational answers** on the live demo and in configured environments when the user intentionally triggers a response.
+- **Executive/demo summaries** for judges, enterprise AI reviewers, and pilot/investor conversations.
+- **Operator action plans** that translate synthetic/demo risk into clear next-step recommendations.
+- **Scenario analysis** for congestion spikes, vessel delays, berth pressure, crane availability, yard backlog, peak gate pressure, and load-shedding-style disruption.
+- **Truck tracking / ETA** with active trucks, delayed trucks, hold-outside-port candidates, priority-release candidates, geofence/checkpoint labels, and ETA risk.
+- **Berth/gate/yard pressure** views for bottleneck monitoring.
+- **Emissions / idling insights** with indicative fuel, CO₂, and avoidable-idling estimates.
+- **Recommendation review** with explainable decision support and audit-friendly framing.
+- **Reports / Agent Intelligence Desk** for executive operations briefs, scenario reports, operator action plans, emissions reports, incident response notes, pilot readiness summaries, and daily operations reports.
+- **Pilot readiness and stakeholder value** pages for port authority, terminal operator, fleet operator, sustainability officer, municipality/province, and operations manager personas.
 
-- `ISmartPortIntelligenceService` builds the operational snapshot.
-- `SmartPortCopilotChatService` routes supported prompts to fixed, explainable response builders.
-- Truck tracking, simulator, emissions and recommendations use deterministic calculations and seeded/demo data.
-- No paid external AI API or internet-dependent inference is required.
+## Architecture
 
-## Copilot governance and scope control
+Culltron Smart Port Flow is built as a conventional enterprise .NET web application with a clear separation between UI, services, persistence, and Gemini enhancement and fallback safety.
 
-Supported prompts include:
+- **ASP.NET Core MVC / .NET 8** web application with Razor views.
+- **Services layer** for operational intelligence, Copilot responses, scenario simulation, truck tracking, emissions, reports, and recommendations.
+- **PostgreSQL** persistence through Entity Framework Core.
+- **Docker Compose** for local/demo orchestration of the web app and database.
+- **Synthetic seeded data** for demo-safe port operations, truck flow, recommendations, incidents, and metrics.
+- **Gemini service** for configured, user-triggered Gemini Agent Mode responses in live/self-hosted environments.
+- **Local fallback service** for offline-safe responses when Gemini is unavailable or not configured.
+- **Human approval / audit-friendly decision support**: recommendations are reviewed by people and are not automatically executed.
 
-- `What is the biggest risk right now?`
-- `Which trucks should be held outside the port?`
-- `How much CO2 can we save?`
-- `Explain NCIC alignment.`
-- `What would a 90-day pilot look like?`
-- `What integrations are required?`
-- `Generate executive brief.`
-- `Prepare a 2-minute grant summary.`
+Simplified flow:
 
-The Copilot refuses unrelated medical/legal/financial advice, politics, celebrity/news/general knowledge, offensive prompts, prompt-injection attempts, secret/config requests and database dump requests.
+```text
+Razor UI / MVC Controllers
+        ↓
+Application + Infrastructure Services
+        ↓
+Synthetic PostgreSQL operational data
+        ↓
+Operational intelligence + Gemini enhancement / local fallback
+        ↓
+Human-reviewed recommendations, reports, and scenario outputs
+```
 
-## Truck Tracking & ETA Intelligence
+## AI Safety / Grounding
 
-The Truck Tracking page has no external GPS or map API dependency. It displays active trucks, delayed trucks, hold-outside-port candidates, priority-release candidates, estimated queue idling, indicative CO₂ exposure, checkpoint/geofence labels, ETA, delay risk and recommended operator actions.
+- Gemini receives only sanitized operational summaries, such as queue pressure, berth/yard status, active incident summaries, idling/emissions estimates, baseline recommendation summaries, and the selected report or Copilot prompt.
+- No secrets, credentials, API keys, connection strings, private deployment values, or sensitive internal configuration values are sent to Gemini.
+- No live integration claims are made.
+- No real customer data is used.
+- No automatic execution of operational actions occurs.
+- Recommendations require human review and approval.
+- Local fallback remains available when Gemini is unavailable, disabled, or not configured.
+- Gemini responses should use careful wording such as “demo,” “prototype,” “pilot-ready architecture,” “designed to integrate,” and “would require live data integration for production use.”
 
-## Scenario Simulator
+## Environment Variables
 
-The simulator models truck arrival spikes, vessel delays, berth pressure, crane availability, yard backlog, peak gate congestion and load-shedding. Outputs include indicative risk scores, waiting-time changes, idling minutes, fuel cost and CO₂ impact.
-
-## Emissions / idling assumptions
-
-Emissions figures are indicative demo estimates based on idling minutes and fixed diesel/CO₂ assumptions. They are useful for comparing scenarios and explaining avoidable idling, but they are **not verified emissions outcomes**.
-
-## Executive Impact Centre
-
-The Executive Impact Centre shows deterministic demo KPIs for estimated idling minutes avoided, CO₂ reduction potential, diesel/fuel cost saving, gate queue reduction, berth utilisation improvement potential, truck turnaround improvement, energy exposure, operator actions, high-risk items, operational hours saved and dispatch coordination improvement.
-
-## Clean Logistics Impact
-
-The Clean Logistics page frames the demonstrator around congestion, idling, diesel waste, load-shedding disruption and limited decision visibility. It explains the solution, impact areas, demo-first advantage and NCIC-style pilot outcomes while keeping all claims realistic and indicative.
-
-## Pilot Readiness
-
-The Pilot Readiness page defines:
-
-- 30-day pilot setup;
-- 60-day integration prototype;
-- 90-day operational pilot;
-- required integrations;
-- success metrics;
-- risks and mitigations;
-- integration readiness wall.
-
-## Stakeholder Value
-
-Stakeholder cards explain value for port authorities, terminal operators, fleet operators, sustainability officers, municipalities/provinces and operations managers.
-
-## Executive Brief
-
-The Executive Brief page generates a deterministic, print-friendly shift report with date/time, top risk, port flow status, truck queue status, delayed/held trucks, gate/berth/yard pressure, emissions/idling estimate, energy risk, action plan, expected impact, integration readiness note and synthetic-data disclaimer.
-
-## Integration-ready architecture
-
-The codebase includes demo-backed integration interfaces that are active by default:
-
-- `ITruckTelematicsProvider` → `DemoTruckTelematicsProvider`
-- `IGpsTrackingProvider` → `DemoGpsTrackingProvider`
-- `IGateSystemProvider` → `DemoGateSystemProvider`
-- `IPortOperationsProvider` → `DemoPortOperationsProvider`
-- `IEnergyDisruptionProvider` → `DemoEnergyDisruptionProvider`
-- `IEmissionsFactorProvider` → `DemoEmissionsFactorProvider`
-- `IExternalIntegrationHealthService` → `DemoExternalIntegrationHealthService`
-
-Demo mode uses synthetic data. Production integrations would connect to GPS/telematics, TOS/IPMS, gate systems, energy schedules and emissions factors only after partner approval, governance and security review. Integration adapters are prepared but disabled/demo-backed in demo mode.
-
-## Demo vs production distinction
-
-| Area | Demo mode | Production direction |
-| --- | --- | --- |
-| Data | Synthetic/demo seed data | Partner-approved operational feeds |
-| AI | Local deterministic rules/scoring | May remain deterministic or add governed models later |
-| GPS/maps | No external GPS/map API | Telematics/GPS provider via approved adapter |
-| Port systems | No live TOS/IPMS integration | TOS/IPMS adapter after pilot agreement |
-| Emissions | Indicative assumptions | Validated factors/methodology |
-| Deployment | Demonstrator app | Controlled pilot / production pathway |
-
-## Local run instructions
+Use placeholders only in documentation and examples:
 
 ```bash
-dotnet restore SmartPort.sln
-dotnet build SmartPort.sln
+GEMINI_API_KEY=your_key_here
+Gemini__Enabled=true
+Gemini__Mode=Hybrid
+Gemini__Model=gemini-2.5-flash
+```
+
+Security rules:
+
+- Never commit `.env`.
+- Never commit API keys.
+- Use server environment variables, deployment secrets, or a local `.env` excluded from Git.
+- Do not put real keys in `docker-compose.yml`, `Dockerfile`, `appsettings.json`, `appsettings.Development.json`, README examples, screenshots, logs, or source code.
+
+## Local Run
+
+From the repository root:
+
+```bash
+dotnet restore
+dotnet build
 docker compose up --build
 ```
 
-Default application URL:
+Default local URL:
 
 ```text
 http://localhost:8080
 ```
 
-Reset seeded demo data:
+To reset the synthetic/demo database volume for a clean demo run:
 
 ```bash
 docker compose down -v
 docker compose up --build
 ```
 
-## DigitalOcean deployment command
+## Deployment Notes
 
-From the repository root on the droplet:
+For a live server, provide Gemini settings through environment variables, deployment secrets, or an uncommitted `docker-compose.override.yml` plus local `.env` file.
 
-```bash
-git pull && docker compose up -d --build
-```
+- Do not put real keys in `docker-compose.yml`.
+- Do not put real keys in `appsettings.json`.
+- Do not put real keys in README.
+- Do not put real keys in committed scripts, screenshots, logs, or issue comments.
+- The public repo is safe only because secrets live outside Git.
+- Keep Gemini calls user-triggered and observable.
+- Keep the local fallback path available for demo resilience.
 
-If a full reset is intentionally required for a demo environment:
-
-```bash
-docker compose down -v && docker compose up -d --build
-```
-
-## Limitations
-
-- Synthetic/demo data only.
-- No live Transnet, TOS/IPMS, GPS, telematics, gate OCR/RFID, energy schedule or external emissions-factor integration is claimed.
-- No verified emissions outcome is claimed.
-- No paid external AI API is required or used by default.
-- The platform is a demonstrator and pilot-ready direction, not a claimed production rollout.
-
-## Next phase roadmap
-
-- Partner-approved pilot site and baseline metrics.
-- One integration at a time: gate queue, truck dispatch/telematics, berth/vessel schedule, energy disruption, emissions factors.
-- Operator feedback loop and recommendation adoption tracking.
-- Export/reporting hardening for pilot review.
-- Security, role model and audit workflow review.
-
-## Gemini Agent Intelligence Mode
-
-Culltron Smart Port Flow now includes an optional **Gemini Agent Intelligence Mode** for richer enterprise operations briefs, report generation, recommendation explanation, scenario analysis, emissions planning, incident response notes, pilot-readiness summaries, and Copilot enhancements.
-
-Gemini is optional. The deterministic local Smart Port intelligence engine remains the default safety fallback, and the application must continue to run without any Gemini API key. Gemini enhances, explains, summarizes, and structures operator-facing text; it does not silently replace deterministic operational scoring, recommendations, audit controls, or human approvals.
-
-### Running without Gemini
-
-No setup is required. Leave `GEMINI_API_KEY` unset and keep the default configuration:
-
-```json
-"Gemini": {
-  "Enabled": false,
-  "Model": "gemini-2.5-flash",
-  "TimeoutSeconds": 20,
-  "MaxOutputTokens": 2048
-}
-```
-
-The UI will show local fallback / not configured status, and report buttons will still generate useful deterministic Smart Port outputs.
-
-### Running with Gemini locally
-
-Set the key as a server-side environment variable only, then enable Gemini configuration through environment variables or local, uncommitted settings:
+Example container environment check:
 
 ```bash
-export GEMINI_API_KEY="your_new_key_here"
-export Gemini__Enabled=true
-export Gemini__Mode=Hybrid
+docker compose exec web sh -lc 'test -n "$GEMINI_API_KEY" && echo "GEMINI_API_KEY present" || echo "GEMINI_API_KEY missing"; printenv | grep -E "^Gemini__"'
 ```
 
-Then run the app normally. Gemini calls are button-triggered only from the Copilot / Agent Reports workflow; the app does not call Gemini automatically on page load, during seed generation, or in loops.
+## Hackathon / Competition Framing
 
-### Docker and deployment notes
+- **For Enterprise AI:** “Enterprise AI Command Centre for Cleaner Port Logistics”
+- **For AI Agent / Agent Builder:** “Agentic Operations Planner for Smart Ports”
 
-For Docker or production hosting, inject the key through the runtime environment or secret manager instead of committed files. For example, use your platform's environment-variable settings or a Docker secret to provide `GEMINI_API_KEY` to the web container at runtime. Do not place the key in `appsettings.json`, `appsettings.Development.json`, `Dockerfile`, `docker-compose.yml`, `launchSettings.json`, README examples, screenshots, logs, or source code.
+Recommended narrative:
 
-### Security and data-boundary notes
+```text
+observe → analyze → recommend → simulate → human approves → audit trail
+```
 
-Never commit Gemini keys. The application reads the key only from `GEMINI_API_KEY`, never logs it, and never displays it in UI or diagnostics. Gemini receives only sanitized operational summaries such as truck queue estimates, berth/yard pressure, active incidents, idling/emissions estimates, deterministic recommendation summaries, and the requested report type. Do not send secrets, connection strings, credentials, private configs, customer data, API tokens, or sensitive internal values.
+Culltron Smart Port Flow is best framed as a pilot-ready agentic operations layer: it watches synthetic/demo operational pressure, explains risk, proposes next actions, supports what-if planning, estimates clean-logistics impact, and leaves final decisions with human operators.
 
-Gemini prompts are grounded in the Culltron Smart Port Flow prototype/demo context. Responses must not invent real Transnet access, live IPMS access, Navayuga integration, production deployment at a port, real customer data, guaranteed savings, or signed pilot agreements. Use careful wording such as “prototype,” “demo,” “pilot-ready architecture,” “designed to integrate,” “can support,” and “would require live data integration for production use.”
+## Current Limitations / Honest Scope
 
-### Demo testing
+- Uses synthetic/demo data.
+- Not connected to live port systems yet.
+- Not connected to live Transnet, IPMS, Navayuga, TOS, GPS/telematics, gate OCR/RFID, energy schedule, customer, or external emissions-factor systems.
+- Production pilot would require live data integration, security review, stakeholder workflow mapping, and operational validation.
+- Savings, emissions, turnaround, and clean-logistics impact are estimated/demo outputs until validated in a real pilot.
+- Recommendations are decision support, not automated operational execution.
 
-Use the visible button-triggered report actions, such as Executive Operations Brief, Scenario Analysis Report, Operator Action Plan, Emissions Reduction Report, Incident Response Report, Pilot Readiness Report, and Daily Port Operations Report. With no key configured, verify local fallback output. With a key configured and Gemini enabled, test only a few intentional calls for demo usage.
+## Pilot Readiness Path
+
+- **Phase 1: Demo validation** — confirm the problem framing, dashboard story, Copilot usefulness, report outputs, and stakeholder interest.
+- **Phase 2: Data mapping and stakeholder discovery** — map required data sources, operational workflows, decision rights, security constraints, and success metrics.
+- **Phase 3: Sandbox integration** — connect approved sample/sandbox feeds for gate queues, truck dispatch/telematics, berth/vessel schedules, incidents, energy disruption, and emissions factors.
+- **Phase 4: Controlled pilot** — run with limited operational scope, human approval, audit logs, baseline comparisons, and measured outcomes.
+- **Phase 5: Operational scale-up** — expand to more workflows, users, integrations, reporting, governance, and enterprise controls after pilot validation.
+
+## Demo Script
+
+Two-minute judge walkthrough:
+
+1. **Problem:** congestion, idling, emissions, vessel delays, yard pressure, gate queues, and disruptions are hard to coordinate across disconnected tools.
+2. **Solution:** Culltron Smart Port Flow provides an enterprise-style Smart Port command centre for synthetic/demo operations.
+3. **Gemini Copilot:** open SmartPort Copilot Chat on the live demo and ask `what is the biggest operational risk right now?`.
+4. **Action plan:** ask `generate an operator action plan`.
+5. **Scenario simulator:** show what-if planning for a congestion, vessel delay, or load-shedding-style disruption scenario.
+6. **Emissions:** show clean logistics impact through indicative idling, diesel, and CO₂ estimates.
+7. **Close:** this is a working deployed demo/prototype with pilot-ready architecture, local fallback, Gemini Agent Mode, synthetic/demo data, and human-approved recommendations.
+
+See [`docs/demo-script.md`](docs/demo-script.md) for a longer judge route and fallback plan.
+
+## Troubleshooting
+
+### Gemini not visible or not enhancing responses
+
+Check that server-side configuration is present and enabled:
+
+```bash
+GEMINI_API_KEY=your_key_here
+Gemini__Enabled=true
+Gemini__Mode=Hybrid
+Gemini__Model=gemini-2.5-flash
+```
+
+Then verify the running container environment without printing any secret value:
+
+```bash
+docker compose exec web sh -lc 'test -n "$GEMINI_API_KEY" && echo "GEMINI_API_KEY present" || echo "GEMINI_API_KEY missing"; printenv | grep -E "^Gemini__"'
+```
+
+If Gemini is unavailable, disabled, rate-limited, or not configured, the local fallback still works for demo-safe summaries, operator action plans, and reports.
+
+### Local app not reachable
+
+- Confirm Docker is running.
+- Run `docker compose up --build` from the repository root.
+- Open `http://localhost:8080`.
+- If the database state is stale, run `docker compose down -v` and then `docker compose up --build` to recreate seeded synthetic/demo data.
+
+## Security Checklist
+
+- [ ] No API keys committed.
+- [ ] `.env` ignored and not committed.
+- [ ] Public repo contains only placeholders.
+- [ ] Gemini calls are user-triggered.
+- [ ] Synthetic/demo data only.
+- [ ] Human approval required for recommendations.
+- [ ] No automatic operational execution.
+- [ ] No live integration claims.
+- [ ] Local fallback remains available.
+
+## Repository Notes
+
+This demo supports hackathon judging, enterprise AI review, pilot discovery, grant/funding conversations, and product direction discussions. Production integrations would require partner-approved system access, security review, workflow validation, and operational governance before use with live data.
