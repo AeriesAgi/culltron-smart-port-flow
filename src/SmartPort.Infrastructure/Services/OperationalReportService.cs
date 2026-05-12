@@ -106,7 +106,7 @@ public class OperationalReportService : IOperationalReportService
             },
             var t when t.Contains("Pilot", StringComparison.OrdinalIgnoreCase) => new List<ReportSectionDto>
             {
-                new() { Heading = "What the System Can Already Do", Tone = "success", Bullets = new() { "Demonstrate synthetic port command-center KPIs.", "Generate deterministic recommendations and AI-enhanced reports.", "Model scenarios, truck queues, idling/emissions and audit-friendly actions." } },
+                new() { Heading = "What the System Can Already Do", Tone = "success", Bullets = new() { "Demonstrate synthetic port command-center KPIs.", "Generate baseline recommendations and Gemini-enhanced reports.", "Model scenarios, truck queues, idling/emissions and audit-friendly actions." } },
                 new() { Heading = "Data Integrations Needed", Tone = "info", Bullets = new() { "Gate/OCR/RFID events and truck GPS/telematics.", "TOS/IPMS-style berth, vessel and yard feeds when formally approved.", "Incident, energy/load-shedding and emissions-factor data." } },
                 new() { Heading = "Controls / Security Needed", Tone = "warning", Bullets = new() { "Server-side API-key management only.", "Role-based access, audit logs and human approvals.", "Data minimisation, redaction and partner-approved data boundaries." } },
                 new() { Heading = "Pilot Phases and Next Steps", Tone = "teal", Bullets = new() { "Phase 1: demo workflow validation.", "Phase 2: one approved data feed and baseline metrics.", "Phase 3: supervised recommendations and weekly impact review.", "Production claims require live integration validation." } }

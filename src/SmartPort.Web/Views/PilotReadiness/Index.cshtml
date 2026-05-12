@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Pilot Readiness";
     var integrations = ViewBag.Integrations as IReadOnlyList<IntegrationProviderStatus> ?? Array.Empty<IntegrationProviderStatus>();
+    var pilotReport = ViewBag.PilotReport as SmartPortReadinessReportDto;
     var timeline = new[] {
         new { Title = "30-day pilot setup", Steps = new[] { "Confirm pilot site", "Define stakeholders", "Identify data owners", "Collect sample operational data", "Configure demo KPIs", "Validate workflows", "Define baseline metrics" } },
         new { Title = "60-day integration prototype", Steps = new[] { "Connect gate/queue data", "Connect telematics or dispatch data", "Connect berth/vessel schedule data", "Validate emissions assumptions", "Connect disruption feeds", "Operator feedback cycle" } },
@@ -11,6 +12,26 @@
     var risks = new[] { "Data availability", "Operator adoption", "Integration complexity", "Network/power reliability", "Change management", "Data quality", "Stakeholder alignment" };
 }
 <section class="sp-business-hero sp-premium-panel"><div><div class="sp-agent-badge"><span class="sp-live-dot"></span> Pilot plan · production integrations disabled in demo</div><h1>Pilot Readiness</h1><p>A practical 30/60/90-day roadmap for moving the demonstrator toward a controlled pilot without claiming live production integration.</p></div></section>
+
+@if (pilotReport != null)
+{
+<section class="sp-kpi-grid">
+    <article class="sp-kpi-card"><span>Current data mode</span><strong>@pilotReport.CurrentMode</strong><small>Synthetic/demo remains default</small></article>
+    <article class="sp-kpi-card"><span>Pilot readiness score</span><strong>@pilotReport.ReadinessScore%</strong><small>@pilotReport.ReadinessLabel</small></article>
+    <article class="sp-kpi-card"><span>Seed mappings</span><strong>@pilotReport.MappedFields.Count</strong><small>@pilotReport.MissingFields.Count pilot audit mappings pending</small></article>
+    <article class="sp-kpi-card"><span>Live integration</span><strong>Not active</strong><small>Requires approvals and credentials</small></article>
+</section>
+<section class="sp-card sp-muted-panel">
+    <div class="sp-card__header"><h3 class="sp-card__title">Pilot Readiness Report</h3><a asp-controller="Integration" asp-action="PilotReport">Open full report</a></div>
+    <p>@pilotReport.NoLiveIntegrationDisclaimer</p>
+    <div class="sp-chip-cloud">
+        @foreach (var step in pilotReport.NextPilotSteps.Take(4))
+        {
+            <span>@step</span>
+        }
+    </div>
+</section>
+}
 <section class="sp-timeline-grid">
 @foreach (var phase in timeline)
 {

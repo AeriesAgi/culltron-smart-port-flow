@@ -47,7 +47,7 @@ public class CopilotChatResponse
     public string EnergyImpact { get; set; } = string.Empty;
     public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
     public List<CopilotActionCard> ActionCards { get; set; } = new();
-    public string DataNote { get; set; } = "Synthetic demo data · deterministic local response";
+    public string DataNote { get; set; } = "Synthetic demo data · Gemini/local fallback response";
     public string GeneratedBy { get; set; } = "Local";
     public bool HumanApprovalRequired { get; set; } = true;
     public bool NotAutomaticallyExecuted { get; set; } = true;
@@ -365,7 +365,7 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
             "Try asking: ‘What is the biggest port risk right now?’ or ‘How can we reduce truck idling?’. ",
             "Keeps the assistant safe, scoped and presentation-ready.",
             "Synthetic demo data is only used for smart port operations questions.",
-            "Local deterministic scope control is active.",
+            "Hybrid scope control is active with local fallback.",
             StandardActions());
 
     private CopilotChatResponse BuildSafetyRefusal(string prompt) =>
@@ -375,7 +375,7 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
             "Ask about port congestion, truck ETA, gate queues, emissions, disruptions, scenario risk or recommended operator actions instead.",
             "Maintains enterprise governance and demo safety.",
             "No secret or external system data is exposed.",
-            "Local deterministic governance is active.",
+            "Hybrid governance is active with local fallback.",
             StandardActions());
 
     private CopilotChatResponse BuildSensitiveLabel(string prompt) =>
@@ -542,7 +542,7 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
     private CopilotChatResponse BuildExecutiveImpact(string prompt, OperationalContext ctx) =>
         Base(prompt, "executive impact", "Medium", 92, "Executive Impact Centre",
             $"Business impact is the ability to reduce avoidable idling, improve truck release timing and give stakeholders an auditable shift-level action plan. Current demo exposure is {ctx.TotalIdlingMinutesToday:F0} idling minutes and {ctx.EstimatedCo2Today:F1} kg CO₂.",
-            "The response is deterministic and uses synthetic demo data from queues, berth/yard pressure, disruptions and recommendations. Savings are indicative and not verified outcomes.",
+            "The response uses synthetic demo data from queues, berth/yard pressure, disruptions and recommendations. Savings are indicative and not verified outcomes.",
             "Open the Executive Impact Centre, review the assumptions panel, then generate an Executive Brief for the pilot conversation.",
             "Creates a credible value narrative for judges, NCIC reviewers, funders and pilot stakeholders without claiming live operational deployment.",
             "Indicative reduction opportunity comes from dispatch metering and hold-outside-port decisions, not verified emissions accounting.",
@@ -572,7 +572,7 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
     private CopilotChatResponse BuildIntegrations(string prompt, OperationalContext ctx) =>
         Base(prompt, "integration readiness", "Medium", 90, "Integration Readiness",
             "Production would require partner-approved TOS/IPMS or port-operations data, gate OCR/RFID, truck GPS/telematics, fleet dispatch, energy/load-shedding schedules, emissions factors, incident logs and reporting/export pathways.",
-            "The app includes integration-ready interfaces with deterministic demo providers active by default, so the demo runs without internet, API keys or external systems.",
+            "The app includes integration-ready interfaces with SyntheticDemo providers active by default, so the demo runs without internet, API keys or external systems.",
             "Use the Integration Readiness wall to discuss data needed, business value, complexity and risk per integration.",
             "Creates a credible technical path from demonstrator to pilot without claiming live integration.",
             "Emissions factors would need partner-approved assumptions or verified datasets in production.",
@@ -592,7 +592,7 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
     private CopilotChatResponse BuildExecutiveBrief(string prompt, OperationalContext ctx) =>
         Base(prompt, "executive brief", "Medium", 92, "Executive Brief",
             $"Executive brief: current demo state has {ctx.VesselsInPort} vessels in port, {ctx.TrucksInQueue} queued trucks, {ctx.BerthUtilisationPct:F0}% berth utilisation, {ctx.YardOccupancyPct:F1}% yard occupancy and {ctx.ActiveDisruptions} disruptions.",
-            "The brief is deterministic and print-friendly; it includes top risk, queue state, delayed/held trucks, gate/berth/yard pressure, idling estimate, recommended action plan and demo disclaimer.",
+            "The brief is print-friendly and includes top risk, queue state, delayed/held trucks, gate/berth/yard pressure, idling estimate, recommended action plan and demo disclaimer.",
             "Open /Brief, print/save as PDF, or copy the brief into the meeting notes.",
             "Useful for judges, grant reviewers, pilot stakeholders and shift handover.",
             $"Indicative emissions/idling: {ctx.TotalIdlingMinutesToday:F0} minutes and {ctx.EstimatedCo2Today:F1} kg CO₂.",
@@ -601,7 +601,7 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
 
     private CopilotChatResponse BuildGrantSummary(string prompt, OperationalContext ctx) =>
         Base(prompt, "grant / investor summary", "Medium", 91, "Grant / Investor Summary",
-            "Culltron Smart Port Flow is a pilot-ready smart-port demonstrator for cleaner logistics: local deterministic intelligence turns synthetic port, queue, ETA, disruption and emissions signals into explainable operator actions.",
+            "Culltron Smart Port Flow is a pilot-ready smart-port demonstrator for cleaner logistics: Gemini Agent Mode and local fallback turn synthetic port, queue, ETA, disruption and emissions signals into explainable operator actions.",
             "The value proposition is reduced avoidable idling, better truck flow, improved resilience during energy disruption, transparent recommendations and a clear integration pathway for future production pilots.",
             "Use a 2-minute narrative: problem, solution, demo-safe architecture, indicative impact, 90-day pilot plan, required integrations and stakeholder value.",
             "Gives grant and investor audiences a realistic path from demonstrator to partner-validated pilot.",
@@ -621,10 +621,10 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
 
     private CopilotChatResponse BuildDemoSummary(string prompt, OperationalContext ctx) =>
         Base(prompt, "demo", "Medium", 94, "Competition Demo Narrative",
-            "Culltron Smart Port Flow is a local deterministic Smart Port Copilot that converts synthetic port telemetry into explainable operator actions.",
+            "Culltron Smart Port Flow is a hybrid Smart Port Copilot that converts synthetic port telemetry into explainable operator actions.",
             $"The live demo shows {ctx.VesselsInPort} vessels in port, {ctx.TrucksInQueue} queued trucks, {ctx.YardOccupancyPct:F1}% yard occupancy, {ctx.ActiveDisruptions} disruptions and {ctx.EstimatedCo2Today:F1} kg CO₂ from idling today.",
             "Narrate Landing → Dashboard → AI Command Centre → SmartPort Copilot Chat → Truck Tracking → Scenario Simulator → Emissions → Recommendations/Audit.",
-            "Judges see premium UI, deterministic AI, scenario planning, sustainability impact and accountable decision history in under three minutes.",
+            "Judges see premium UI, Gemini/local fallback AI, scenario planning, sustainability impact and accountable decision history in under three minutes.",
             "Highlight CO₂/idling savings as a measurable business and sustainability outcome.",
             ctx.LoadSheddingActive ? "Mention active load-shedding response as a South African port reality." : "Mention that load-shedding can be simulated without live external feeds.",
             StandardActions());

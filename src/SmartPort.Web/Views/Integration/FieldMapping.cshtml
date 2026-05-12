@@ -1,0 +1,47 @@
+@model IReadOnlyList<SmartPort.Application.Interfaces.SmartPortFieldMappingDto>
+@using SmartPort.Application.Interfaces
+@{
+    ViewData["Title"] = "Field Mapping";
+    var missing = ViewBag.MissingMappings as IReadOnlyList<SmartPortFieldMappingDto> ?? Array.Empty<SmartPortFieldMappingDto>();
+}
+<section class="sp-business-hero sp-premium-panel">
+    <div>
+        <div class="sp-agent-badge"><span class="sp-live-dot"></span> Pilot field mapping · sample exports required next</div>
+        <h1>Field Mapping</h1>
+        <p>Seeded mappings show how controlled pilot data can be normalized into typed Smart Port readings without claiming any active live third-party integration.</p>
+    </div>
+    <div class="sp-command-actions">
+        <a class="sp-btn sp-btn--primary" asp-action="PilotReport">Pilot Report</a>
+        <a class="sp-btn sp-btn--outline" asp-action="DataSources">Data Sources</a>
+    </div>
+</section>
+
+<section class="sp-card">
+    <div class="sp-card__header"><h3 class="sp-card__title">Seed mappings</h3><span class="sp-card__meta">@Model.Count mapped fields</span></div>
+    <div class="sp-table-wrap">
+        <table class="sp-table">
+            <thead><tr><th>Source field</th><th>Target DTO</th><th>Target field</th><th>Example</th><th>Notes</th></tr></thead>
+            <tbody>
+            @foreach (var mapping in Model)
+            {
+                <tr><td><code>@mapping.SourceField</code></td><td>@mapping.TargetDto</td><td><code>@mapping.TargetField</code></td><td>@mapping.ExampleValue</td><td>@mapping.Notes</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="sp-card">
+    <div class="sp-card__header"><h3 class="sp-card__title">Remaining pilot audit mappings</h3><span class="sp-card__meta">@missing.Count missing until sample partner data exists</span></div>
+    <div class="sp-table-wrap">
+        <table class="sp-table">
+            <thead><tr><th>Source field</th><th>Target DTO</th><th>Target field</th><th>Why it matters</th></tr></thead>
+            <tbody>
+            @foreach (var mapping in missing)
+            {
+                <tr><td><code>@mapping.SourceField</code></td><td>@mapping.TargetDto</td><td><code>@mapping.TargetField</code></td><td>@mapping.Notes</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>

@@ -1,0 +1,37 @@
+@model IReadOnlyList<SmartPort.Application.Interfaces.SmartPortConnectorStatusDto>
+@{
+    ViewData["Title"] = "Connector Health";
+}
+<section class="sp-business-hero sp-premium-panel">
+    <div>
+        <div class="sp-agent-badge"><span class="sp-live-dot"></span> Connector health · live adapters locked</div>
+        <h1>Connector Health</h1>
+        <p>SyntheticDemo is active by default. CSV, REST API, database, manual entry and webhook paths are prepared for controlled pilots but disabled until real endpoints, credentials and approvals exist.</p>
+    </div>
+    <div class="sp-command-actions">
+        <a class="sp-btn sp-btn--primary" asp-action="Index">Integration Readiness</a>
+        <a class="sp-btn sp-btn--outline" asp-action="PilotReport">Pilot Report</a>
+    </div>
+</section>
+
+<section class="sp-card">
+    <div class="sp-card__header"><h3 class="sp-card__title">Connector modes</h3><span class="sp-card__meta">No live third-party access claimed</span></div>
+    <div class="sp-table-wrap">
+        <table class="sp-table">
+            <thead><tr><th>Mode</th><th>Connector</th><th>Enabled</th><th>Status</th><th>Data required</th><th>Notes</th></tr></thead>
+            <tbody>
+            @foreach (var connector in Model)
+            {
+                <tr>
+                    <td>@connector.Mode</td>
+                    <td>@connector.ConnectorName</td>
+                    <td>@(connector.IsEnabled ? "Yes" : "No")</td>
+                    <td>@connector.Status</td>
+                    <td>@connector.DataRequired</td>
+                    <td>@connector.Notes</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>

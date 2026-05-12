@@ -82,6 +82,17 @@ Operational intelligence + Gemini enhancement / local fallback
 Human-reviewed recommendations, reports, and scenario outputs
 ```
 
+
+## Pilot Integration Readiness Layer
+
+This prototype currently runs on synthetic/demo data. The codebase includes an integration-ready architecture for onboarding real port operations data such as CSV exports, REST APIs, databases, manual entries, and webhooks during a controlled pilot. No live third-party port system access is claimed in this demo.
+
+- **Default mode:** `SyntheticDemo` remains the safe default and requires no internet, API key, live endpoint, or partner credential.
+- **Prepared connector modes:** `CsvImport`, `RestApi`, `Database`, `ManualEntry`, and `Webhook`. Live connector paths stay disabled until real endpoints/credentials and pilot approvals exist.
+- **Typed pilot DTOs:** vessel ETA, berth status, yard capacity, truck queue, container flow, disruption event, energy constraint, emissions/idling, Smart Port decision events, and recommendation audit events.
+- **Integration pages:** Integration Readiness, Data Sources, Field Mapping, Connector Health, and Pilot Readiness Report.
+- **Required live data for a controlled pilot:** vessel ETA/voyage updates, berth occupancy, yard capacity, truck queue and gate timing, container volume/dwell exceptions, incidents/disruptions, energy/load-shedding constraints, idling/emissions assumptions, recommendation review users, and audit references.
+
 ## AI Safety / Grounding
 
 - Gemini receives only sanitized operational summaries, such as queue pressure, berth/yard status, active incident summaries, idling/emissions estimates, baseline recommendation summaries, and the selected report or Copilot prompt.

@@ -46,6 +46,15 @@ The system is a working deployed demo/prototype and pilot-ready architecture. It
 - **Local fallback service:** keeps the system usable when Gemini is unavailable or not configured.
 - **Human approval and audit-friendly decision support:** recommendations are not automatically executed.
 
+
+## Pilot Integration Readiness Layer
+
+The integration layer is designed for controlled pilot onboarding while keeping SyntheticDemo as the default. It defines typed readings for vessel ETA, berth status, yard capacity, truck queues, container flow, disruptions, energy constraints, emissions/idling, decision events, and recommendation audit events.
+
+Prepared connector modes are `SyntheticDemo`, `CsvImport`, `RestApi`, `Database`, `ManualEntry`, and `Webhook`. Non-demo connectors are architecture-ready but disabled until real endpoints, credentials, sample payloads, data-sharing approval, and pilot governance exist.
+
+The Integration Readiness pages expose data sources, seed field mappings, connector health, and a pilot readiness report without claiming live third-party port system access.
+
 ## Data and AI Boundary
 
 Gemini receives only sanitized operational summaries from synthetic/demo context. It should not receive secrets, credentials, connection strings, API keys, private deployment values, customer data, or live operational data in the public demo.

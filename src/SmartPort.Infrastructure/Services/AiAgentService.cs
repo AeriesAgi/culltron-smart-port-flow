@@ -95,8 +95,8 @@ public class AiAgentService : IAiAgentService
     {
         var ctx = await GetContextAsync();
 
-        // Always use the local deterministic engine. This project intentionally avoids
-        // paid AI APIs, cloud secrets, and internet-dependent inference paths.
+        // Legacy agent path: keep a local fallback answer available. Gemini Agent Mode
+        // is handled by the narrative/reporting services when configured.
         return BuildDeterministicAnswer(question.ToLower().Trim(), ctx);
     }
 
@@ -178,7 +178,7 @@ public class AiAgentService : IAiAgentService
         new() { Question = "What is the energy risk level right now?" },
     };
 
-    // ─── Deterministic Engine ─────────────────────────────────────────────────
+    // ─── Local Fallback Engine ─────────────────────────────────────────────────
 
     private AgentAnswer BuildDeterministicAnswer(string q, OperationalContext ctx)
     {

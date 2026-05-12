@@ -1,0 +1,37 @@
+@model SmartPort.Application.Interfaces.SmartPortReadinessReportDto
+@{
+    ViewData["Title"] = "Pilot Readiness Report";
+}
+<section class="sp-business-hero sp-premium-panel">
+    <div>
+        <div class="sp-agent-badge"><span class="sp-live-dot"></span> Pilot report · @Model.CurrentMode mode</div>
+        <h1>Pilot Readiness Report</h1>
+        <p>Current synthetic mode, required live data, mapped and missing fields, risks, recommendations and next pilot steps for controlled onboarding.</p>
+    </div>
+    <div class="sp-command-actions">
+        <a class="sp-btn sp-btn--primary" asp-action="FieldMapping">Review Mapping</a>
+        <a class="sp-btn sp-btn--outline" asp-action="Health">Connector Health</a>
+    </div>
+</section>
+
+<section class="sp-kpi-grid">
+    <article class="sp-kpi-card"><span>Mode</span><strong>@Model.CurrentMode</strong><small>Default working demo mode</small></article>
+    <article class="sp-kpi-card"><span>Readiness</span><strong>@Model.ReadinessScore%</strong><small>@Model.ReadinessLabel</small></article>
+    <article class="sp-kpi-card"><span>Mapped fields</span><strong>@Model.MappedFields.Count</strong><small>@Model.MissingFields.Count missing audit mappings</small></article>
+    <article class="sp-kpi-card"><span>Generated</span><strong>@Model.GeneratedAtUtc.ToString("HH:mm")</strong><small>UTC report timestamp</small></article>
+</section>
+
+<section class="sp-command-layout">
+    <article class="sp-card"><h3>Required live port data</h3><ul class="sp-action-list">@foreach (var item in Model.RequiredLivePortData){<li>@item</li>}</ul></article>
+    <article class="sp-card"><h3>Risks</h3><ul class="sp-action-list">@foreach (var item in Model.Risks){<li>@item</li>}</ul></article>
+</section>
+
+<section class="sp-command-layout">
+    <article class="sp-card"><h3>Recommendations</h3><ul class="sp-action-list">@foreach (var item in Model.Recommendations){<li>@item</li>}</ul></article>
+    <article class="sp-card"><h3>Next pilot steps</h3><ol class="sp-action-list">@foreach (var item in Model.NextPilotSteps){<li>@item</li>}</ol></article>
+</section>
+
+<section class="sp-card sp-muted-panel">
+    <h3>No live integration disclaimer</h3>
+    <p>@Model.NoLiveIntegrationDisclaimer</p>
+</section>

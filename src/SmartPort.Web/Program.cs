@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using SmartPort.Application.Interfaces;
 using SmartPort.Infrastructure.Persistence;
@@ -58,6 +59,7 @@ builder.Services.Configure<AiAgentSettings>(
     builder.Configuration.GetSection("AiAgent"));
 builder.Services.Configure<GeminiSettings>(
     builder.Configuration.GetSection("Gemini"));
+builder.Services.AddSingleton(BuildSmartPortIntegrationSettings(builder.Configuration));
 
 // ─── Existing port services ───────────────────────────────────────────────────
 builder.Services.AddScoped<IDashboardService,      DashboardService>();
@@ -102,6 +104,25 @@ builder.Services.AddScoped<IPortOperationsProvider, DemoPortOperationsProvider>(
 builder.Services.AddScoped<IEnergyDisruptionProvider, DemoEnergyDisruptionProvider>();
 builder.Services.AddScoped<IEmissionsFactorProvider, DemoEmissionsFactorProvider>();
 builder.Services.AddScoped<IExternalIntegrationHealthService, DemoExternalIntegrationHealthService>();
+builder.Services.AddScoped<SyntheticSmartPortConnector>();
+builder.Services.AddScoped<CsvSmartPortConnector>();
+builder.Services.AddScoped<RestSmartPortConnector>();
+builder.Services.AddScoped<DatabaseSmartPortConnector>();
+builder.Services.AddScoped<ManualSmartPortConnector>();
+builder.Services.AddScoped<ISyntheticSmartPortConnector>(sp => sp.GetRequiredService<SyntheticSmartPortConnector>());
+builder.Services.AddScoped<ICsvSmartPortConnector>(sp => sp.GetRequiredService<CsvSmartPortConnector>());
+builder.Services.AddScoped<IRestSmartPortConnector>(sp => sp.GetRequiredService<RestSmartPortConnector>());
+builder.Services.AddScoped<IDatabaseSmartPortConnector>(sp => sp.GetRequiredService<DatabaseSmartPortConnector>());
+builder.Services.AddScoped<IManualSmartPortConnector>(sp => sp.GetRequiredService<ManualSmartPortConnector>());
+builder.Services.AddScoped<ISmartPortDataConnector>(sp => sp.GetRequiredService<SyntheticSmartPortConnector>());
+builder.Services.AddScoped<ISmartPortDataConnector>(sp => sp.GetRequiredService<CsvSmartPortConnector>());
+builder.Services.AddScoped<ISmartPortDataConnector>(sp => sp.GetRequiredService<RestSmartPortConnector>());
+builder.Services.AddScoped<ISmartPortDataConnector>(sp => sp.GetRequiredService<DatabaseSmartPortConnector>());
+builder.Services.AddScoped<ISmartPortDataConnector>(sp => sp.GetRequiredService<ManualSmartPortConnector>());
+builder.Services.AddScoped<IWebhookSmartPortIngestionService, WebhookSmartPortIngestionService>();
+builder.Services.AddScoped<ISmartPortIntegrationHealthService, SmartPortIntegrationHealthService>();
+builder.Services.AddScoped<ISmartPortFieldMappingService, SmartPortFieldMappingService>();
+builder.Services.AddScoped<ISmartPortReadinessScoringService, SmartPortReadinessScoringService>();
 
 // ─── MVC ──────────────────────────────────────────────────────────────────────
 builder.Services.AddControllersWithViews(options =>
@@ -168,3 +189,24 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+static SmartPortIntegrationSettings BuildSmartPortIntegrationSettings(IConfiguration configuration)
+{
+    var section = configuration.GetSection("SmartPortIntegration");
+    var settings = new SmartPortIntegrationSettings
+    {
+        PilotApproved = bool.TryParse(section["PilotApproved"], out var pilotApproved) && pilotApproved,
+        CsvImportEnabled = bool.TryParse(section["CsvImportEnabled"], out var csvEnabled) && csvEnabled,
+        RestApiEnabled = bool.TryParse(section["RestApiEnabled"], out var restEnabled) && restEnabled,
+        DatabaseEnabled = bool.TryParse(section["DatabaseEnabled"], out var databaseEnabled) && databaseEnabled,
+        ManualEntryEnabled = bool.TryParse(section["ManualEntryEnabled"], out var manualEnabled) && manualEnabled,
+        WebhookEnabled = bool.TryParse(section["WebhookEnabled"], out var webhookEnabled) && webhookEnabled
+    };
+
+    if (Enum.TryParse<SmartPortDataMode>(section["Mode"], ignoreCase: true, out var mode))
+    {
+        settings.Mode = mode;
+    }
+
+    return settings;
+}

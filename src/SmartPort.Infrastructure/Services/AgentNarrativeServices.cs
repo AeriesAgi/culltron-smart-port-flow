@@ -44,7 +44,7 @@ public class AgentNarrativeResult
     public AgentMode GeneratedBy { get; set; } = AgentMode.Local;
     public bool UsedGemini { get; set; }
     public bool FallbackActive { get; set; }
-    public string Status { get; set; } = "Local deterministic";
+    public string Status { get; set; } = "Local fallback";
     public DateTime GeneratedAtUtc { get; set; } = DateTime.UtcNow;
     public string InputContextSummary { get; set; } = string.Empty;
     public string SafetyNote { get; set; } = "Human approval required. Not automatically executed.";
@@ -129,7 +129,7 @@ public class LocalAgentNarrativeService : IAgentNarrativeService
         narrative.AppendLine();
         narrative.AppendLine(request.ReportType.Contains("Pilot", StringComparison.OrdinalIgnoreCase)
             ? "Pilot note: this is a prototype/demo and pilot-ready architecture. Production use would require approved live data integrations, security controls and partner validation."
-            : "Governance note: this report uses synthetic/demo operational summaries and deterministic rules; live production claims require validated integrations.");
+            : "Governance note: this report uses synthetic/demo operational summaries and baseline rules; live production claims require validated integrations.");
 
         var result = new AgentNarrativeResult
         {
@@ -138,7 +138,7 @@ public class LocalAgentNarrativeService : IAgentNarrativeService
             GeneratedBy = AgentMode.Local,
             UsedGemini = false,
             FallbackActive = request.RequestedMode != AgentMode.Local,
-            Status = request.RequestedMode == AgentMode.Local ? "Local deterministic" : "Local deterministic fallback",
+            Status = request.RequestedMode == AgentMode.Local ? "Local fallback" : "Local fallback",
             InputContextSummary = BuildContextSummary(ctx, request)
         };
         return Task.FromResult(result);
@@ -149,7 +149,7 @@ public class LocalAgentNarrativeService : IAgentNarrativeService
         CurrentMode = AgentMode.Local,
         GeminiConfigured = false,
         GeminiEnabled = false,
-        GeminiStatus = "Local deterministic fallback active"
+        GeminiStatus = "Local fallback active"
     };
 
     public static string BuildContextSummary(OperationalContext ctx, AgentNarrativeRequest request) =>
@@ -243,7 +243,7 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
         {
-            _logger.LogWarning("Gemini narrative generation failed; falling back to local deterministic response.");
+            _logger.LogWarning("Gemini narrative generation failed; falling back to local response.");
             return Failure(request, "Gemini network or response error");
         }
     }
@@ -295,7 +295,7 @@ Structured operational summary (sanitized synthetic/demo data):
 - Emissions/idling: {{ctx.TotalIdlingMinutesToday:F0}} idling minutes; {{ctx.EstimatedCo2Today:F1}} kg CO2 estimate
 - Energy/load-shedding active: {{ctx.LoadSheddingActive}}; road congestion active: {{ctx.RoadCongestionActive}}; gate delay active: {{ctx.GateDelayActive}}
 - Top disruptions: {{string.Join("; ", ctx.TopDisruptions.Take(4))}}
-- Deterministic recommendation summary: {{string.Join("; ", recs.Take(6))}}
+- Baseline recommendation summary: {{string.Join("; ", recs.Take(6))}}
 - Available modules/pages: Dashboard, AI Command Centre, Copilot, Truck Tracking, Scenario Simulator, Emissions, Recommendations/Audit, Reports, Pilot Readiness, Executive Brief
 - Data note: synthetic/demo data only; not live production port data
 """;
