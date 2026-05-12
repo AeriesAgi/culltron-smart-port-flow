@@ -9,7 +9,7 @@
 </div>
 
 <div class="sp-alert sp-alert--info" style="margin-bottom:1.5rem">
-    <i>ℹ</i> The current MVP uses a deterministic Flow Intelligence Engine for reliable demo operation without external API dependencies. This page explains the GPU scaling roadmap for production rollout.
+    <i>ℹ</i> The current MVP uses Hybrid Mode with local fallback for reliable demo operation. This page explains the GPU scaling roadmap for production rollout.
 </div>
 
 <!-- Current State -->
@@ -20,12 +20,12 @@
             <div class="sp-module-card">
                 <div class="sp-module-card__icon">🧠</div>
                 <h3>Flow Intelligence Engine</h3>
-                <p>Rules-based congestion scoring and dispatch recommendations running on standard CPU. Deterministic, reliable, no external API calls.</p>
+                <p>Rules-based congestion scoring and dispatch recommendations running on standard CPU with Gemini enhancement available when configured.</p>
             </div>
             <div class="sp-module-card">
                 <div class="sp-module-card__icon">🔬</div>
                 <h3>Scenario Simulator</h3>
-                <p>Deterministic rule-based simulation of port congestion scenarios. Computes risk scores and impact estimates locally.</p>
+                <p>Rule-based simulation of port congestion scenarios computes risk scores and impact estimates locally.</p>
             </div>
             <div class="sp-module-card">
                 <div class="sp-module-card__icon">🌿</div>
@@ -35,7 +35,7 @@
             <div class="sp-module-card">
                 <div class="sp-module-card__icon">🤖</div>
                 <h3>AI Agent (Fallback Mode)</h3>
-                <p>Deterministic question-answering engine using live operational data. Optional LLM enhancement layer when API key provided.</p>
+                <p>SmartPort Copilot question-answering over synthetic/demo operational data with Gemini enhancement when configured.</p>
             </div>
         </div>
     </div>
@@ -93,7 +93,7 @@
     <table class="sp-table">
         <thead><tr><th>Phase</th><th>Capability</th><th>AMD Technology</th><th>Timeline</th><th>Dependencies</th></tr></thead>
         <tbody>
-            <tr><td><span class="sp-badge sp-badge--success">Current</span></td><td>Deterministic Flow Intelligence Engine</td><td>CPU only — no GPU required</td><td>MVP ready</td><td>None</td></tr>
+            <tr><td><span class="sp-badge sp-badge--success">Current</span></td><td>Hybrid Flow Intelligence Engine</td><td>CPU only — no GPU required</td><td>MVP ready</td><td>None</td></tr>
             <tr><td><span class="sp-badge sp-badge--info">Phase 2</span></td><td>Open-source LLM inference for AI Agent</td><td>AMD ROCm + vLLM (Mistral 7B)</td><td>Month 3–6</td><td>AMD Developer Cloud credits</td></tr>
             <tr><td><span class="sp-badge sp-badge--info">Phase 2</span></td><td>Time-series congestion forecasting</td><td>AMD MI300X + PyTorch/ROCm</td><td>Month 4–8</td><td>6 months of operational data</td></tr>
             <tr><td><span class="sp-badge sp-badge--warning">Phase 3</span></td><td>Digital twin simulation at corridor scale</td><td>AMD GPU cluster + custom sim engine</td><td>Month 9–18</td><td>Port operator data partnership</td></tr>
@@ -106,5 +106,5 @@
 <!-- Honest statement -->
 <div class="sp-card" style="padding:1.25rem;border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04)">
     <h4 style="margin:0 0 .75rem">Honest Current State</h4>
-    <p style="color:var(--sp-text-muted);font-size:.9375rem;margin:0">The current Culltron SmartPort AI Agent MVP runs entirely on CPU using a deterministic rules-based intelligence engine. This was a deliberate design choice to ensure 100% reliable demo operation without dependency on external APIs or GPU infrastructure. The AMD GPU acceleration capabilities described above represent the production scaling roadmap. AMD Developer Cloud credits would be used to begin Phase 2 LLM inference and forecasting model development following the pilot validation period.</p>
+    <p style="color:var(--sp-text-muted);font-size:.9375rem;margin:0">The current Culltron SmartPort AI Agent MVP runs on CPU with Hybrid Mode and a local offline-safe fallback. This keeps the demo reliable while Gemini Agent Mode is configured separately through server-side environment variables. The AMD GPU acceleration capabilities described above represent the production scaling roadmap for forecasting and optimization after pilot validation.</p>
 </div>

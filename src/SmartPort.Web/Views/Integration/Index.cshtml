@@ -1,0 +1,53 @@
+@model SmartPort.Application.Interfaces.SmartPortReadinessReportDto
+@{
+    ViewData["Title"] = "Integration Readiness";
+}
+<section class="sp-business-hero sp-premium-panel">
+    <div>
+        <div class="sp-agent-badge"><span class="sp-live-dot"></span> SyntheticDemo default · live connectors disabled</div>
+        <h1>Integration Readiness</h1>
+        <p>Connector architecture for a controlled pilot: CSV imports, REST APIs, databases, manual entries and webhooks can be onboarded after approvals while the working demo continues to run on synthetic data.</p>
+    </div>
+    <div class="sp-command-actions">
+        <a class="sp-btn sp-btn--primary" asp-action="PilotReport">Open Pilot Readiness Report</a>
+        <a class="sp-btn sp-btn--outline" asp-action="DataSources">Review Data Sources</a>
+    </div>
+</section>
+
+<section class="sp-kpi-grid">
+    <article class="sp-kpi-card"><span>Current mode</span><strong>@Model.CurrentMode</strong><small>Synthetic/demo data remains default</small></article>
+    <article class="sp-kpi-card"><span>Readiness score</span><strong>@Model.ReadinessScore%</strong><small>@Model.ReadinessLabel</small></article>
+    <article class="sp-kpi-card"><span>Mapped fields</span><strong>@Model.MappedFields.Count</strong><small>@Model.MissingFields.Count missing for pilot audit trail</small></article>
+    <article class="sp-kpi-card"><span>Live connectors</span><strong>Disabled</strong><small>Require endpoint, credentials and approval</small></article>
+</section>
+
+<section class="sp-command-layout">
+    <article class="sp-card">
+        <div class="sp-card__header"><h3 class="sp-card__title">Connector Health</h3><a asp-action="Health">View all</a></div>
+        <div class="sp-table-wrap">
+            <table class="sp-table">
+                <thead><tr><th>Mode</th><th>Connector</th><th>Status</th><th>Enabled</th></tr></thead>
+                <tbody>
+                @foreach (var connector in Model.ConnectorHealth)
+                {
+                    <tr><td>@connector.Mode</td><td>@connector.ConnectorName</td><td>@connector.Status</td><td>@(connector.IsEnabled ? "Yes" : "No")</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </article>
+    <article class="sp-card">
+        <div class="sp-card__header"><h3 class="sp-card__title">Pilot Recommendations</h3><a asp-action="PilotReport">Report</a></div>
+        <ul class="sp-action-list">
+        @foreach (var item in Model.Recommendations)
+        {
+            <li>@item</li>
+        }
+        </ul>
+    </article>
+</section>
+
+<section class="sp-card sp-muted-panel">
+    <h3>No live integration disclaimer</h3>
+    <p>@Model.NoLiveIntegrationDisclaimer</p>
+</section>

@@ -8,9 +8,9 @@
 
 <section class="sp-command-hero sp-premium-panel">
     <div>
-        <div class="sp-agent-badge"><span class="sp-live-dot"></span> AI Agent Command Centre · Local deterministic intelligence</div>
+        <div class="sp-agent-badge"><span class="sp-live-dot"></span> AI Agent Command Centre · Gemini Agent Mode / local fallback</div>
         <h1>AI Command Centre</h1>
-        <p>System-level operational intelligence, risk scoring, autonomous monitoring lanes and recommended actions for the synthetic smart-port demo state.</p>
+        <p>System-level operational intelligence, risk scoring, monitoring lanes and human-reviewed recommended actions for the synthetic smart-port demo state.</p>
         <div class="sp-command-actions">
             <button class="sp-btn sp-btn--primary" type="button" data-shift-brief>Generate Shift Brief</button>
             <a class="sp-btn sp-btn--outline" asp-controller="Copilot" asp-action="Index" asp-route-prompt="what should operators do first">Open Copilot Chat</a>
@@ -50,7 +50,7 @@
 
 <div class="sp-alert sp-alert--info" style="margin-bottom:1.25rem">
     <i data-feather="info"></i>
-    <span>This page is not a chat screen. It answers “what is happening across the port right now?” using synthetic demo data and deterministic local rules. Production integrations would connect to TOS/IPMS, gate systems, GPS/telematics and energy data.</span>
+    <span>This page is not a chat screen. It answers “what is happening across the port right now?” using synthetic demo data, Gemini Agent Mode when triggered, and local fallback. Controlled pilot integrations would connect to approved TOS/IPMS, gate systems, GPS/telematics and energy data.</span>
 </div>
 
 @if (snapshot != null)
@@ -119,7 +119,7 @@
         </article>
 
         <aside class="sp-card sp-shift-brief-card">
-            <div class="sp-card__header"><h3 class="sp-card__title">Deterministic Shift Brief</h3><span class="sp-card__meta">Generated locally</span></div>
+            <div class="sp-card__header"><h3 class="sp-card__title">Shift Brief</h3><span class="sp-card__meta">Generated from synthetic context</span></div>
             <p id="shiftBriefText">@snapshot.ShiftBrief</p>
             <div class="sp-command-focus-lists">
                 <h4>Hold outside port</h4>

@@ -66,6 +66,7 @@
         <div class="sp-nav__section">
             <span class="sp-nav__label">Pilot</span>
             <a asp-controller="PilotReadiness" asp-action="Index" class="sp-nav__item @(ctrl=="PilotReadiness"?"active":"")"><span class="sp-nav__icon">🗺️</span><span>Pilot Readiness</span></a>
+            <a asp-controller="Integration" asp-action="Index" class="sp-nav__item @(ctrl=="Integration"?"active":"")"><span class="sp-nav__icon">🔌</span><span>Integration Readiness</span></a>
             <a asp-controller="Stakeholders" asp-action="Index" class="sp-nav__item @(ctrl=="Stakeholders"?"active":"")"><span class="sp-nav__icon">🤝</span><span>Stakeholder Value</span></a>
             <a asp-controller="Pilot" asp-action="Index" class="sp-nav__item @(ctrl=="Pilot"?"active":"")"><span class="sp-nav__icon">📊</span><span>Pilot Metrics</span></a>
         </div>
@@ -145,10 +146,10 @@
     </button>
     <aside class="sp-ai-help-drawer" id="aiHelpDrawer" aria-hidden="true">
         <div class="sp-ai-help-drawer__head">
-            <div><strong>Ask about this page</strong><small>@ViewData["Title"] · Local deterministic Copilot</small></div>
+            <div><strong>Ask about this page</strong><small>@ViewData["Title"] · Gemini Agent Mode / local fallback</small></div>
             <button type="button" id="aiHelpClose" aria-label="Close Copilot helper">×</button>
         </div>
-        <div class="sp-ai-help-drawer__badges"><span>Offline-safe</span><span>Synthetic demo data</span><span>No external AI API</span></div>
+        <div class="sp-ai-help-drawer__badges"><span>Hybrid mode</span><span>Synthetic demo data</span><span>User-triggered AI</span></div>
         <div class="sp-ai-help-drawer__prompts">
             @foreach (var prompt in promptSet)
             {

@@ -1,0 +1,62 @@
+@model SmartPort.Application.Interfaces.SmartPortConnectorSnapshot
+@using SmartPort.Application.Interfaces
+@{
+    ViewData["Title"] = "Data Sources";
+    var health = ViewBag.Health as IReadOnlyList<SmartPortConnectorStatusDto> ?? Array.Empty<SmartPortConnectorStatusDto>();
+}
+<section class="sp-business-hero sp-premium-panel">
+    <div>
+        <div class="sp-agent-badge"><span class="sp-live-dot"></span> Current mode: @Model.Mode</div>
+        <h1>Data Sources</h1>
+        <p>Typed pilot data readings are seeded from SyntheticDemo by default. Real CSV/API/database/manual/webhook sources remain disabled until approved for a controlled pilot.</p>
+    </div>
+    <div class="sp-command-actions">
+        <a class="sp-btn sp-btn--primary" asp-action="FieldMapping">Field Mapping</a>
+        <a class="sp-btn sp-btn--outline" asp-action="Health">Connector Health</a>
+    </div>
+</section>
+
+<section class="sp-command-layout">
+    <article class="sp-card">
+        <h3>Required live data domains</h3>
+        <div class="sp-chip-cloud">
+            <span>Vessel ETA</span><span>Berth status</span><span>Yard capacity</span><span>Truck queues</span><span>Container volume</span><span>Disruptions</span><span>Energy constraints</span><span>Idling/emissions</span><span>Decisions</span><span>Recommendation audit</span>
+        </div>
+    </article>
+    <article class="sp-card">
+        <h3>Connector modes</h3>
+        <div class="sp-chip-cloud">
+            @foreach (var connector in health)
+            {
+                <span>@connector.Mode · @(connector.IsEnabled ? "enabled" : "disabled")</span>
+            }
+        </div>
+    </article>
+</section>
+
+<section class="sp-card">
+    <div class="sp-card__header"><h3 class="sp-card__title">Synthetic readings sample</h3><span class="sp-card__meta">Generated @Model.GeneratedAtUtc.ToString("u")</span></div>
+    <div class="sp-table-wrap">
+        <table class="sp-table">
+            <thead><tr><th>Reading</th><th>Key value</th><th>Operational use</th><th>Notes</th></tr></thead>
+            <tbody>
+                @foreach (var item in Model.VesselEtas)
+                { <tr><td>VesselEtaReading</td><td>@item.VesselName · ETA @item.EstimatedArrival.ToString("u")</td><td>Vessel ETA / berth planning</td><td>@item.Notes</td></tr> }
+                @foreach (var item in Model.BerthStatuses)
+                { <tr><td>BerthStatusReading</td><td>@item.BerthCode · @item.Status</td><td>Berth pressure</td><td>@item.Notes</td></tr> }
+                @foreach (var item in Model.YardCapacities)
+                { <tr><td>YardCapacityReading</td><td>@item.YardBlock · @item.CapacityPercent%</td><td>Yard capacity</td><td>@item.Notes</td></tr> }
+                @foreach (var item in Model.TruckQueues)
+                { <tr><td>TruckQueueReading</td><td>@item.GateName · @item.QueueLength trucks</td><td>Gate smoothing</td><td>@item.Notes</td></tr> }
+                @foreach (var item in Model.ContainerFlows)
+                { <tr><td>ContainerFlowReading</td><td>@item.FlowDirection · @item.Volume containers</td><td>Container flow</td><td>@item.Notes</td></tr> }
+                @foreach (var item in Model.Disruptions)
+                { <tr><td>DisruptionEventReading</td><td>@item.DisruptionType · @item.Severity</td><td>Incident response</td><td>@item.Notes</td></tr> }
+                @foreach (var item in Model.EnergyConstraints)
+                { <tr><td>EnergyConstraintReading</td><td>@item.ConstraintType</td><td>Energy planning</td><td>@item.Notes</td></tr> }
+                @foreach (var item in Model.EmissionsIdling)
+                { <tr><td>EmissionsIdlingReading</td><td>@item.IdlingMinutes min · @item.EstimatedCo2Kg kg CO₂</td><td>Clean logistics</td><td>@item.Notes</td></tr> }
+            </tbody>
+        </table>
+    </div>
+</section>

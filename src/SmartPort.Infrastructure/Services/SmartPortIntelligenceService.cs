@@ -8,7 +8,7 @@ public interface ISmartPortIntelligenceService
 public class SmartPortOperationsSnapshot
 {
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-    public string DataNote { get; set; } = "Synthetic demo data · deterministic local rules/scoring engine";
+    public string DataNote { get; set; } = "Synthetic demo data · hybrid Gemini/local fallback rules and scoring";
     public int VesselsInPort { get; set; }
     public int VesselsAtAnchor { get; set; }
     public decimal BerthUtilisation { get; set; }
@@ -82,7 +82,7 @@ public class SmartPortIntelligenceService : ISmartPortIntelligenceService
             EmissionsIdlingEstimateKg = Math.Max(ctx.EstimatedCo2Today, trucks.EstimatedCo2Kg),
             IdlingMinutes = Math.Max(ctx.TotalIdlingMinutesToday, trucks.TotalIdlingMinutes),
             TopGateBottleneck = trucks.GatePressureScore >= 70 ? "Gate approach / outer staging interface" : "Primary gate queue under watch",
-            DelayedTrucks = delayed.Count > 0 ? delayed : new() { "No delayed truck fallback beyond deterministic demo thresholds." },
+            DelayedTrucks = delayed.Count > 0 ? delayed : new() { "No delayed truck fallback beyond demo thresholds." },
             HoldOutsidePortCandidates = hold.Count > 0 ? hold : new() { "No current hold candidate above risk threshold." },
             PriorityReleaseCandidates = priority.Count > 0 ? priority : new() { "No priority release candidate above urgency threshold." },
             TopRisk = topRisk.title,
@@ -119,7 +119,7 @@ public class SmartPortIntelligenceService : ISmartPortIntelligenceService
             EscalationActions = new()
             {
                 ctx.LoadSheddingActive ? "Escalate energy playbook and reefer protection." : "Keep energy disruption playbook ready for the next simulated window.",
-                "Notify dispatchers where ETA risk exceeds deterministic threshold.",
+                "Notify dispatchers where ETA risk exceeds the demo threshold.",
                 "Escalate persistent gate or berth pressure to operations manager."
             },
             ActionLinks = new()
@@ -151,10 +151,10 @@ public class SmartPortIntelligenceService : ISmartPortIntelligenceService
     private static (string title, string reason, string area, string consequence) ResolveTopRisk(OperationalContext ctx, TruckTrackingDashboardDto trucks)
     {
         if (ctx.LoadSheddingActive) return ("Energy disruption may slow gate and reefer operations", "Load-shedding is active, so gate automation and cold-chain handoffs need protection.", "Energy / Gate / Reefers", "Manual processing and reefer priority issues can increase truck waits.");
-        if (trucks.HoldOutsidePortCount > 0 || ctx.TrucksInQueue > 14) return ("Gate queue pressure with avoidable truck idling", "Queue depth and approaching-truck ETA risk exceed deterministic hold thresholds.", "Gate / Truck Flow", "Trucks may join the live queue too early, increasing diesel waste and CO₂ exposure.");
+        if (trucks.HoldOutsidePortCount > 0 || ctx.TrucksInQueue > 14) return ("Gate queue pressure with avoidable truck idling", "Queue depth and approaching-truck ETA risk exceed hold thresholds.", "Gate / Truck Flow", "Trucks may join the live queue too early, increasing diesel waste and CO₂ exposure.");
         if (ctx.BerthUtilisationPct > 85 || ctx.VesselsAtAnchor > 0) return ("Berth pressure can cascade into yard and gate congestion", "Berth utilisation or anchorage pressure is high in the snapshot.", "Berths / Yard", "Late discharge windows may shift appointment plans and grow yard density.");
         if (ctx.YardOccupancyPct > 82) return ("Yard density is constraining dispatch reliability", "Yard occupancy and dwell alerts reduce usable ground slots.", "Yard / Dispatch", "Container availability issues can force truck rework and extra idling.");
-        return ("Monitor gate queue and dispatch pacing", "No critical threshold is active, but deterministic scoring keeps gate, berth, yard and emissions under watch.", "Port Operations", "Without pacing, normal peaks can still become queues.");
+        return ("Monitor gate queue and dispatch pacing", "No critical threshold is active, but baseline scoring keeps gate, berth, yard and emissions under watch.", "Port Operations", "Without pacing, normal peaks can still become queues.");
     }
 
     private static int Score(OperationalContext ctx, TruckTrackingDashboardDto trucks)

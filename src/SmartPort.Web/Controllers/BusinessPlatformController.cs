@@ -63,13 +63,20 @@ public class CleanLogisticsController : Controller
 public class PilotReadinessController : Controller
 {
     private readonly IExternalIntegrationHealthService _integrationHealth;
-    public PilotReadinessController(IExternalIntegrationHealthService integrationHealth) => _integrationHealth = integrationHealth;
+    private readonly ISmartPortReadinessScoringService _readinessScoring;
+
+    public PilotReadinessController(IExternalIntegrationHealthService integrationHealth, ISmartPortReadinessScoringService readinessScoring)
+    {
+        _integrationHealth = integrationHealth;
+        _readinessScoring = readinessScoring;
+    }
 
     [Route("PilotReadiness")]
     [Route("Roadmap")]
     public async Task<IActionResult> Index()
     {
         ViewBag.Integrations = await _integrationHealth.GetIntegrationHealthAsync();
+        ViewBag.PilotReport = await _readinessScoring.GetPilotReadinessReportAsync();
         return View();
     }
 }
