@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartPort.Application.Interfaces;
+using SmartPort.Application.DTOs;
 using SmartPort.Domain.Enums;
 using SmartPort.Infrastructure.Services;
 
@@ -155,14 +156,71 @@ public class FleetController : Controller
 {
     private readonly IFleetVehicleService _fleet;
     private readonly IOrganisationService _orgs;
-    public FleetController(IFleetVehicleService fleet, IOrganisationService orgs) { _fleet = fleet; _orgs = orgs; }
+    private readonly IFleetDriverQueueService _queue;
+    private readonly INotificationService _notifications;
+    public FleetController(IFleetVehicleService fleet, IOrganisationService orgs, IFleetDriverQueueService queue, INotificationService notifications)
+    {
+        _fleet = fleet; _orgs = orgs; _queue = queue; _notifications = notifications;
+    }
 
-    public async Task<IActionResult> Index(FleetVehicleFilterDto filter)
+    [AllowAnonymous]
+    [HttpGet("/fleet")]
+    public async Task<IActionResult> Index(string? fleetOperatorId)
+    {
+        var summary = await _queue.GetFleetSummaryAsync(fleetOperatorId);
+        return View(summary);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("/fleet/trucks")]
+    public async Task<IActionResult> Trucks(string? fleetOperatorId)
+    {
+        var trucks = await _queue.GetTrucksAsync(fleetOperatorId);
+        return View(trucks);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("/fleet/trucks/{id}")]
+    public async Task<IActionResult> TruckDetail(string id)
+    {
+        var truck = await _queue.GetTruckAsync(id);
+        if (truck == null) return NotFound();
+        truck.NotificationHistory = (await _notifications.GetHistoryAsync(id)).ToList();
+        return View(truck);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("/fleet/owner-demo")]
+    public async Task<IActionResult> OwnerDemo() => View("Index", await _queue.GetFleetSummaryAsync("durban-freight"));
+
+    [AllowAnonymous]
+    [HttpGet("/fleet/notifications")]
+    public async Task<IActionResult> Notifications(string? reference)
+    {
+        var refs = await _queue.GetDemoReferencesAsync();
+        var selected = string.IsNullOrWhiteSpace(reference) ? refs.First() : reference;
+        ViewBag.DemoReferences = refs;
+        ViewBag.SelectedReference = selected;
+        return View(await _notifications.GetHistoryAsync(selected));
+    }
+
+    [AllowAnonymous]
+    [HttpPost("/fleet/notify/{reference}/{channel}")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> SendNotification(string reference, NotificationChannel channel)
+    {
+        var eventType = channel == NotificationChannel.AndroidPush ? NotificationEventType.QueueStatusChanged : NotificationEventType.AiInstructionUpdated;
+        await _notifications.SendAsync(reference, channel, eventType);
+        return Redirect(Request.Headers.Referer.ToString() ?? "/fleet/notifications");
+    }
+
+    [HttpGet("/fleet/vehicles")]
+    public async Task<IActionResult> Vehicles(FleetVehicleFilterDto filter)
     {
         var result = await _fleet.GetVehiclesAsync(filter);
         ViewBag.Filter = filter;
         ViewBag.Organisations = await _orgs.GetAllAsync();
-        return View(result);
+        return View("Vehicles", result);
     }
 
     public async Task<IActionResult> Detail(int id)

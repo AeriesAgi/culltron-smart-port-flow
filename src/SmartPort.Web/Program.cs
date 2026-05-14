@@ -124,11 +124,26 @@ builder.Services.AddScoped<ISmartPortIntegrationHealthService, SmartPortIntegrat
 builder.Services.AddScoped<ISmartPortFieldMappingService, SmartPortFieldMappingService>();
 builder.Services.AddScoped<ISmartPortReadinessScoringService, SmartPortReadinessScoringService>();
 
+builder.Services.AddSingleton<IFleetDriverQueueService, DemoFleetDriverQueueService>();
+builder.Services.AddSingleton<INotificationTemplateService, NotificationTemplateService>();
+builder.Services.AddSingleton<IInAppNotificationService, InAppNotificationService>();
+builder.Services.AddHttpClient<WhatsAppCloudApiNotificationSender>();
+builder.Services.AddSingleton<SimulatedWhatsAppNotificationSender>();
+builder.Services.AddSingleton<IWhatsAppNotificationSender>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var connectorReady = string.Equals(config["SMARTPORT_NOTIFICATION_MODE"], "ConnectorReady", StringComparison.OrdinalIgnoreCase);
+    return connectorReady ? sp.GetRequiredService<WhatsAppCloudApiNotificationSender>() : sp.GetRequiredService<SimulatedWhatsAppNotificationSender>();
+});
+builder.Services.AddSingleton<IPushNotificationSender, SimulatedPushNotificationSender>();
+builder.Services.AddSingleton<INotificationService, DriverNotificationService>();
+builder.Services.AddSingleton<IMobileDeviceRegistrationService, MobileDeviceRegistrationService>();
+
 // ─── MVC ──────────────────────────────────────────────────────────────────────
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
-});
+}).AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
 builder.Services.AddHttpContextAccessor();
 

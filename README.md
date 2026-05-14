@@ -250,3 +250,48 @@ If Gemini is unavailable, disabled, rate-limited, or not configured, the local f
 ## Repository Notes
 
 This demo supports hackathon judging, enterprise AI review, pilot discovery, grant/funding conversations, and product direction discussions. Production integrations would require partner-approved system access, security review, workflow validation, and operational governance before use with live data.
+
+## Smart Port Fleet & Driver Queue Companion
+
+Smart Port now extends from the control room to fleet owners and drivers. AI queue recommendations can be viewed on a fleet owner dashboard, converted into in-app notifications, simulated WhatsApp messages, and Android companion app updates.
+
+### Web workflows
+- `/fleet` — fleet owner dashboard with queue KPIs, emissions/idling avoided, high-risk trucks, and latest AI queue recommendation.
+- `/fleet/trucks` — truck cards showing driver, queue number, ETA/call-forward, gate, status, AI instruction, delay risk, and notification status.
+- `/fleet/trucks/{id}` — truck detail with driver data, appointment, timeline, Gemini/fallback explanation, notification history, QR/reference placeholder, and send/simulate notification actions.
+- `/fleet/owner-demo` — pre-filtered owner demo.
+- `/fleet/notifications` — in-app, simulated WhatsApp, and Android push notification history.
+- `/driver`, `/driver/demo`, `/driver/status/{reference}`, `/truck/check`, `/truck/status/{reference}` — mobile-first driver queue portal.
+
+### Demo references
+Try `SPQ-2026-0042`, `SPQ-2026-0043`, `SPQ-2026-0044`, or truck registrations such as `KZN-482-TR`.
+
+### Notification modes
+Demo mode is the default and requires no paid services. It stores notification records, shows **Simulated WhatsApp Sent**, displays in-app alerts, and lets Android pull notification history through the API.
+
+Connector-ready WhatsApp Cloud API support is disabled by default and configured only through environment variables:
+
+```bash
+SMARTPORT_NOTIFICATIONS_ENABLED=true
+SMARTPORT_NOTIFICATION_MODE=Demo # or ConnectorReady later
+SMARTPORT_WHATSAPP_ENABLED=false
+SMARTPORT_WHATSAPP_ACCESS_TOKEN=
+SMARTPORT_WHATSAPP_PHONE_NUMBER_ID=
+SMARTPORT_WHATSAPP_BUSINESS_ACCOUNT_ID=
+SMARTPORT_WHATSAPP_APP_SECRET=
+SMARTPORT_PUBLIC_BASE_URL=https://smartport.culltron.app
+```
+
+Production note: business-initiated WhatsApp messages may require approved templates. Hackathon/demo mode uses simulated WhatsApp sending and costs nothing.
+
+### Mobile APIs
+- `GET /api/mobile/truck/status/{reference}`
+- `POST /api/mobile/truck/check`
+- `GET /api/mobile/notifications/{reference}`
+- `POST /api/mobile/driver/acknowledge`
+- `GET /api/mobile/driver/demo`
+- `POST /api/mobile/device/register`
+- `POST /api/mobile/device/unregister`
+
+### Android companion app
+A Kotlin Android project lives in `mobile/SmartPortDriverCompanion`. It uses the Smart Port backend URL `https://smartport.culltron.app` by default, has no hardcoded secrets, and can acknowledge `Seen`, `Holding`, or `Proceeding` through the backend API.

@@ -1,0 +1,5 @@
+@using SmartPort.Application.DTOs
+@model IReadOnlyList<FleetTruckDto>
+@{ ViewData["Title"] = "Fleet Trucks"; }
+<div class="sp-toolbar"><h1>Fleet Trucks</h1><a class="sp-btn sp-btn--outline" href="/fleet">Dashboard</a></div>
+<div class="fleet-cards">@foreach(var t in Model){<article class="sp-card truck-card"><div class="truck-card__head"><h2>@t.TruckRegistration</h2><span class="sp-badge sp-badge--@((t.DelayRisk==QueueDelayRisk.High||t.DelayRisk==QueueDelayRisk.Critical)?"high":"green")">@t.DelayRisk risk</span></div><p>@t.DriverName · @t.FleetOperatorName</p><dl class="driver-dl"><dt>Queue</dt><dd>@t.QueueNumber</dd><dt>Call-forward</dt><dd>@t.EtaCallForwardTime.ToLocalTime().ToString("HH:mm")</dd><dt>Gate</dt><dd>@t.AssignedGate</dd><dt>Status</dt><dd>@t.CurrentStatus</dd></dl><p>@t.CurrentInstruction.Instruction</p><p class="sp-muted">WhatsApp @t.WhatsAppNotificationStatus · In-app @t.InAppNotificationStatus · Updated @t.LastUpdated.ToLocalTime().ToString("HH:mm")</p><a class="sp-btn sp-btn--primary" href="/fleet/trucks/@t.BookingReference">Open</a></article>}</div>
