@@ -84,3 +84,14 @@ Open **Emissions** to show indicative clean-logistics impact through idling, fue
 ## Required truth statement
 
 “All operational data in this demo is synthetic/demo data. Culltron Smart Port Flow is a working deployed demo/prototype and pilot-ready architecture, not a live production deployment inside an actual port. It does not claim live Transnet, IPMS, Navayuga, TOS, gate, GPS/telematics, customer, energy, or emissions-factor integration. Gemini Agent Mode receives only sanitized operational summaries and is triggered by user action. Recommendations require human review and are not automatically executed. Savings and impact estimates are demo outputs until validated in a controlled pilot.”
+
+## Fleet & Driver Queue Companion Demo Flow
+
+1. Control room detects congestion.
+2. Gemini/fallback AI creates queue recommendation.
+3. Fleet owner sees trucks and instructions at `/fleet`.
+4. Driver receives simulated WhatsApp/in-app update.
+5. Driver opens mobile web page or Android companion.
+6. Driver sees queue number, ETA, gate, and instruction.
+7. Driver acknowledges.
+8. Dashboard shows reduced idling/emissions impact.

@@ -1,0 +1,6 @@
+@using SmartPort.Application.DTOs
+@model IReadOnlyList<DriverContactProfileDto>
+@{ ViewData["Title"] = "Fleet Drivers"; var status = ViewBag.WhatsAppStatus as WhatsAppConnectorStatusDto ?? new(); }
+<section class="sp-page-hero fleet-hero"><div><span class="sp-badge sp-badge--ai">Driver contact safety</span><h1>Fleet owner driver management</h1><p>Live WhatsApp messages are only sent to approved test numbers. Demo records use simulated WhatsApp notifications.</p></div><a class="sp-btn sp-btn--primary" href="/fleet/drivers/create">+ Add driver</a></section>
+<div class="sp-card sp-mb"><strong>WhatsApp mode:</strong> <span class="sp-badge sp-badge--ai">@status.Mode</span> @status.SafetyMessage</div>
+<div class="sp-card"><table class="sp-table"><thead><tr><th>Driver</th><th>Truck</th><th>Fleet</th><th>WhatsApp</th><th>Safety</th></tr></thead><tbody>@foreach(var d in Model){<tr><td>@d.DriverName</td><td>@d.AssignedTruckRegistration</td><td>@d.AssignedFleetOperatorName</td><td>@(string.IsNullOrWhiteSpace(d.NormalizedWhatsAppNumber)?"Not captured":d.NormalizedWhatsAppNumber)</td><td><span class="sp-badge sp-badge--@(d.IsLiveWhatsAppSafe?"success":"warning")">@(d.IsLiveWhatsAppSafe?"LiveTest approved":"Demo/sim only")</span></td></tr>}</tbody></table></div>

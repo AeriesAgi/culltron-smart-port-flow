@@ -124,11 +124,32 @@ builder.Services.AddScoped<ISmartPortIntegrationHealthService, SmartPortIntegrat
 builder.Services.AddScoped<ISmartPortFieldMappingService, SmartPortFieldMappingService>();
 builder.Services.AddScoped<ISmartPortReadinessScoringService, SmartPortReadinessScoringService>();
 
+builder.Services.AddSingleton<ILocationEtaService, LocationEtaService>();
+builder.Services.AddSingleton<IQueueOptimizationService, QueueOptimizationService>();
+builder.Services.AddSingleton<IFleetDriverQueueService, DemoFleetDriverQueueService>();
+builder.Services.AddSingleton<IOperationalStateMachineService, OperationalStateMachineService>();
+builder.Services.AddSingleton<IExecutionPlanService, ExecutionPlanService>();
+builder.Services.AddSingleton<IDriverStatusCommandService, DriverStatusCommandService>();
+builder.Services.AddSingleton<INotificationTemplateService, NotificationTemplateService>();
+builder.Services.AddSingleton<IInAppNotificationService, InAppNotificationService>();
+builder.Services.AddHttpClient<WhatsAppCloudApiNotificationSender>();
+builder.Services.AddSingleton<SimulatedWhatsAppNotificationSender>();
+builder.Services.AddSingleton<IWhatsAppNotificationSender>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var mode = config["SMARTPORT_WHATSAPP_MODE"] ?? config["SMARTPORT_NOTIFICATION_MODE"] ?? "Demo";
+    var connectorMode = string.Equals(mode, "ConnectorReady", StringComparison.OrdinalIgnoreCase) || string.Equals(mode, "LiveTest", StringComparison.OrdinalIgnoreCase);
+    return connectorMode ? sp.GetRequiredService<WhatsAppCloudApiNotificationSender>() : sp.GetRequiredService<SimulatedWhatsAppNotificationSender>();
+});
+builder.Services.AddSingleton<IPushNotificationSender, SimulatedPushNotificationSender>();
+builder.Services.AddSingleton<INotificationService, DriverNotificationService>();
+builder.Services.AddSingleton<IMobileDeviceRegistrationService, MobileDeviceRegistrationService>();
+
 // ─── MVC ──────────────────────────────────────────────────────────────────────
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
-});
+}).AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
 builder.Services.AddHttpContextAccessor();
 

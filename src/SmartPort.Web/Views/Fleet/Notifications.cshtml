@@ -1,0 +1,6 @@
+@using SmartPort.Application.DTOs
+@model IReadOnlyList<DriverNotificationDto>
+@{ ViewData["Title"] = "WhatsApp & In-app Notifications"; var refs = ViewBag.DemoReferences as IReadOnlyList<string> ?? Array.Empty<string>(); var selected = ViewBag.SelectedReference as string ?? refs.FirstOrDefault(); }
+<div class="sp-toolbar"><div><h1>WhatsApp Notifications</h1><p>Demo mode stores in-app, simulated WhatsApp, and Android push records without paid providers.</p></div><a href="/fleet" class="sp-btn sp-btn--outline">Fleet dashboard</a></div>
+<form method="get" class="sp-card sp-mb"><select class="sp-form__select" name="reference">@foreach(var r in refs){<option selected="@(r==selected)">@r</option>}</select><button class="sp-btn sp-btn--primary">Load history</button></form>
+<article class="sp-card"><h2>Notification history for @selected</h2>@foreach(var n in Model){<div class="notification-row"><span class="sp-badge sp-badge--ai">@n.Channel</span><strong>@n.Status</strong><p>@n.Message</p><small>@n.RecipientName · @n.EventType · @n.Timestamp.ToLocalTime().ToString("g")</small></div>}</article>

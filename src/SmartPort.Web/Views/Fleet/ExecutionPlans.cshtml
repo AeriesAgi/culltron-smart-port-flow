@@ -1,0 +1,4 @@
+@using SmartPort.Application.DTOs
+@model IReadOnlyList<ExecutionPlanDto>
+@{ ViewData["Title"] = "Execution Plans"; }
+<form method="post" action="/execution/plans/generate"><button class="sp-btn sp-btn--primary">Generate execution plan</button></form><div class="sp-card">@foreach(var p in Model){<p><a href="/execution/plans/@p.PlanId">@p.ScenarioName</a> · @p.CreatedAt.ToLocalTime().ToString("g") · @p.ExpectedCo2KgAvoided.ToString("N1") kg CO₂</p>}</div>
