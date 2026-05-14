@@ -194,6 +194,67 @@ public class FleetController : Controller
     public async Task<IActionResult> OwnerDemo() => View("Index", await _queue.GetFleetSummaryAsync("durban-freight"));
 
     [AllowAnonymous]
+    [HttpGet("/fleet/drivers")]
+    public async Task<IActionResult> Drivers()
+    {
+        ViewBag.FleetOperators = (await _queue.GetFleetSummaryAsync()).FleetOperators;
+        ViewBag.Trucks = await _queue.GetTrucksAsync();
+        ViewBag.WhatsAppStatus = _queue.GetWhatsAppConnectorStatus();
+        return View(await _queue.GetDriverContactsAsync());
+    }
+
+    [AllowAnonymous]
+    [HttpGet("/fleet/drivers/create")]
+    public async Task<IActionResult> CreateDriver()
+    {
+        ViewBag.FleetOperators = (await _queue.GetFleetSummaryAsync()).FleetOperators;
+        ViewBag.Trucks = await _queue.GetTrucksAsync();
+        ViewBag.WhatsAppStatus = _queue.GetWhatsAppConnectorStatus();
+        return View("DriverForm", new SaveDriverContactRequestDto());
+    }
+
+    [AllowAnonymous]
+    [HttpPost("/fleet/drivers")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> SaveDriver(SaveDriverContactRequestDto request)
+    {
+        try { await _queue.SaveDriverContactAsync(request); TempData["Success"] = "Driver WhatsApp contact saved."; }
+        catch (ArgumentException ex) { TempData["Warning"] = ex.Message; }
+        return RedirectToAction(nameof(Drivers));
+    }
+
+    [AllowAnonymous]
+    [HttpGet("/fleet/trucks/create")]
+    public async Task<IActionResult> CreateQueueTruck()
+    {
+        ViewBag.FleetOperators = (await _queue.GetFleetSummaryAsync()).FleetOperators;
+        ViewBag.Drivers = await _queue.GetDriverContactsAsync();
+        return View("TruckForm", new SaveFleetQueueTruckRequestDto());
+    }
+
+    [AllowAnonymous]
+    [HttpPost("/fleet/trucks/save")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> SaveQueueTruck(SaveFleetQueueTruckRequestDto request)
+    {
+        var truck = await _queue.SaveTruckAsync(request);
+        TempData["Success"] = "Truck/job assignment saved.";
+        return Redirect($"/fleet/trucks/{truck.BookingReference}");
+    }
+
+    [AllowAnonymous]
+    [HttpGet("/fleet/settings")]
+    public IActionResult Settings() { ViewBag.WhatsAppStatus = _queue.GetWhatsAppConnectorStatus(); return View(); }
+
+    [AllowAnonymous]
+    [HttpGet("/fleet/download-app")]
+    public async Task<IActionResult> DownloadApp() { ViewBag.DemoReferences = await _queue.GetDemoReferencesAsync(); return View(); }
+
+    [AllowAnonymous]
+    [HttpGet("/fleet/data-sources")]
+    public async Task<IActionResult> DataSources() { ViewBag.WhatsAppStatus = _queue.GetWhatsAppConnectorStatus(); return View(await _queue.GetDataSourcesAsync()); }
+
+    [AllowAnonymous]
     [HttpGet("/fleet/notifications")]
     public async Task<IActionResult> Notifications(string? reference)
     {

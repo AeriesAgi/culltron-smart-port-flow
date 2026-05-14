@@ -1,0 +1,4 @@
+@using SmartPort.Application.DTOs
+@model ExecutionPlanDto
+@{ ViewData["Title"] = "Execution Plan"; }
+<div class="sp-card"><h1>@Model.ScenarioName</h1><p>@Model.Explanation</p><p>Expected: @Model.ExpectedIdlingMinutesAvoided min idling avoided / @Model.ExpectedCo2KgAvoided.ToString("N1") kg CO₂</p>@foreach(var a in Model.TruckActions){<div class="notification-row"><strong>@a.TruckRegistration</strong> · @a.ActionType<p>@a.Reason</p><small>@a.NotificationText</small></div>}</div>

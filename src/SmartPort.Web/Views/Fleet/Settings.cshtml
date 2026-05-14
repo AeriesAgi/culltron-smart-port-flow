@@ -1,0 +1,3 @@
+@using SmartPort.Application.DTOs
+@{ ViewData["Title"] = "Fleet Settings"; var status = ViewBag.WhatsAppStatus as WhatsAppConnectorStatusDto ?? new(); }
+<div class="sp-card"><h1>WhatsApp settings</h1><p>Mode: <strong>@status.Mode</strong></p><p>@status.SafetyMessage</p><p>Credentials configured: @status.CredentialsConfigured · Live sending allowed: @status.LiveSendingAllowed</p></div>

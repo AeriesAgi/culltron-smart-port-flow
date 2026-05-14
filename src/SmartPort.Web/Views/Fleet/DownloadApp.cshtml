@@ -1,0 +1,2 @@
+@{ ViewData["Title"] = "Android Companion"; var refs = ViewBag.DemoReferences as IReadOnlyList<string> ?? Array.Empty<string>(); }
+<div class="sp-card"><h1>Smart Port Driver Companion Android app</h1><p>Source is under <code>/mobile/SmartPortDriverCompanion</code>. Default backend URL: https://smartport.culltron.app</p><p>Demo references: @string.Join(", ", refs)</p><p>Build APK in Android Studio; Android SDK is not required for the web build.</p></div>

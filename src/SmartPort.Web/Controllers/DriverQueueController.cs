@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using SmartPort.Application.DTOs;
 using SmartPort.Application.Interfaces;
@@ -72,8 +73,10 @@ public class MobileApiController : ControllerBase
     private readonly IFleetDriverQueueService _queue;
     private readonly INotificationService _notifications;
     private readonly IMobileDeviceRegistrationService _devices;
-    public MobileApiController(IFleetDriverQueueService queue, INotificationService notifications, IMobileDeviceRegistrationService devices)
-    { _queue = queue; _notifications = notifications; _devices = devices; }
+    private readonly IDriverStatusCommandService _commands;
+    private readonly ISmartPortCopilotChatService _copilot;
+    public MobileApiController(IFleetDriverQueueService queue, INotificationService notifications, IMobileDeviceRegistrationService devices, IDriverStatusCommandService commands, ISmartPortCopilotChatService copilot)
+    { _queue = queue; _notifications = notifications; _devices = devices; _commands = commands; _copilot = copilot; }
 
     [HttpGet("/api/mobile/truck/status/{reference}")]
     public async Task<IActionResult> TruckStatus(string reference)
@@ -97,6 +100,40 @@ public class MobileApiController : ControllerBase
         return truck == null ? NotFound(new { message = "Truck/reference not found" }) : Ok(truck);
     }
 
+    [HttpPost("/api/mobile/driver/confirm-status")]
+    public async Task<IActionResult> ConfirmStatus([FromBody] DriverEventRequestDto request)
+    {
+        var source = string.Equals(request.SourceLabel, "WhatsApp", StringComparison.OrdinalIgnoreCase) ? DataProvenanceType.WhatsAppDriverCheckIn : DataProvenanceType.AndroidDriverApp;
+        var truck = await _queue.RecordDriverEventAsync(request.Reference, request.EventType, source);
+        return truck == null ? NotFound(new { message = "Truck/reference not found" }) : Ok(truck);
+    }
+
+    [HttpPost("/api/mobile/driver/location-checkin")]
+    public async Task<IActionResult> LocationCheckIn([FromBody] DriverEventRequestDto request)
+    {
+        var truck = await _queue.RecordLocationCheckInAsync(request.Reference, request.Latitude, request.Longitude, request.LocationLabel, DataProvenanceType.WhatsAppDriverCheckIn);
+        return truck == null ? NotFound(new { message = "Truck/reference not found" }) : Ok(truck);
+    }
+
+    [HttpPost("/api/mobile/driver/command")]
+    public async Task<IActionResult> DriverCommand([FromBody] DriverCommandRequestDto request) => Ok(await _commands.HandleCommandAsync(request));
+
+    [HttpPost("/api/mobile/copilot/driver")]
+    public async Task<IActionResult> DriverCopilot([FromBody] CopilotQuestionRequestDto request)
+    {
+        var truck = await _queue.GetTruckAsync(request.Reference);
+        var prompt = $"Driver asks about Smart Port queue job {request.Reference}: {request.Question}. Keep answer scoped to status, ETA, gate, staging and instruction.";
+        var response = await _copilot.GenerateResponseAsync(prompt);
+        return Ok(new CopilotResponseDto { Answer = response.ShortAnswer, SuggestedAction = response.RecommendedAction, Source = response.GeneratedBy, RelatedTruckStatus = truck });
+    }
+
+    [HttpPost("/api/mobile/copilot/fleet")]
+    public async Task<IActionResult> FleetCopilot([FromBody] CopilotQuestionRequestDto request)
+    {
+        var response = await _copilot.GenerateResponseAsync($"Fleet owner asks: {request.Question}. Summarize fleet queue plan and driver actions only.");
+        return Ok(new CopilotResponseDto { Answer = response.ShortAnswer, SuggestedAction = response.RecommendedAction, Source = response.GeneratedBy });
+    }
+
     [HttpGet("/api/mobile/driver/demo")]
     public async Task<IActionResult> Demo() => Ok(new { references = await _queue.GetDemoReferencesAsync(), backend = "Smart Port Fleet & Driver Queue Companion" });
 
@@ -105,4 +142,73 @@ public class MobileApiController : ControllerBase
 
     [HttpPost("/api/mobile/device/unregister")]
     public async Task<IActionResult> Unregister([FromBody] MobileDeviceRegistrationDto request) { await _devices.UnregisterAsync(request.Reference, request.DeviceToken); return Ok(new { status = "unregistered" }); }
+}
+
+[ApiController]
+[IgnoreAntiforgeryToken]
+public class WhatsAppWebhookController : ControllerBase
+{
+    private readonly IConfiguration _config;
+    private readonly IFleetDriverQueueService _queue;
+    private readonly IDriverStatusCommandService _commands;
+    public WhatsAppWebhookController(IConfiguration config, IFleetDriverQueueService queue, IDriverStatusCommandService commands) { _config = config; _queue = queue; _commands = commands; }
+
+    [HttpGet("/webhooks/whatsapp")]
+    public IActionResult Verify([FromQuery(Name = "hub.mode")] string? mode, [FromQuery(Name = "hub.verify_token")] string? token, [FromQuery(Name = "hub.challenge")] string? challenge)
+    {
+        return mode == "subscribe" && !string.IsNullOrWhiteSpace(token) && token == _config["SMARTPORT_WHATSAPP_VERIFY_TOKEN"] ? Content(challenge ?? string.Empty, "text/plain") : Unauthorized();
+    }
+
+    [HttpPost("/webhooks/whatsapp")]
+    public async Task<IActionResult> Inbound([FromBody] JsonElement payload)
+    {
+        var handled = 0;
+        foreach (var msg in ExtractMessages(payload))
+        {
+            var contacts = await _queue.GetDriverContactsAsync();
+            var sender = NormalizeInbound(msg.From);
+            var driver = contacts.FirstOrDefault(c => c.NormalizedWhatsAppNumber.Replace("+", string.Empty) == sender && c.IsLiveWhatsAppSafe);
+            if (driver == null) continue;
+            var truck = (await _queue.GetTrucksAsync()).FirstOrDefault(t => t.TruckRegistration == driver.AssignedTruckRegistration);
+            if (truck == null) continue;
+            if (msg.Latitude.HasValue || msg.Longitude.HasValue)
+            {
+                await _queue.RecordLocationCheckInAsync(truck.BookingReference, msg.Latitude, msg.Longitude, msg.Text, DataProvenanceType.WhatsAppDriverCheckIn, "WhatsApp LiveTest");
+            }
+            else
+            {
+                await _commands.HandleCommandAsync(new DriverCommandRequestDto { Reference = truck.BookingReference, SenderWhatsAppNumber = sender, CommandText = msg.Text, Actor = driver.DriverName, Source = DataProvenanceType.WhatsAppDriverCheckIn });
+            }
+            handled++;
+        }
+        return Ok(new { status = "received", handled });
+    }
+
+    private static string NormalizeInbound(string value) => new(value.Where(char.IsDigit).ToArray());
+    private static IEnumerable<InboundWhatsAppMessage> ExtractMessages(JsonElement payload)
+    {
+        if (!payload.TryGetProperty("entry", out var entries)) yield break;
+        foreach (var entry in entries.EnumerateArray())
+        {
+            if (!entry.TryGetProperty("changes", out var changes)) continue;
+            foreach (var change in changes.EnumerateArray())
+            {
+                if (!change.TryGetProperty("value", out var value) || !value.TryGetProperty("messages", out var messages)) continue;
+                foreach (var message in messages.EnumerateArray())
+                {
+                    var from = message.TryGetProperty("from", out var f) ? f.GetString() ?? string.Empty : string.Empty;
+                    if (message.TryGetProperty("text", out var text) && text.TryGetProperty("body", out var body)) yield return new(from, body.GetString() ?? string.Empty, null, null);
+                    else if (message.TryGetProperty("location", out var loc))
+                    {
+                        var label = loc.TryGetProperty("name", out var n) ? n.GetString() ?? "WhatsApp shared location" : "WhatsApp shared location";
+                        var lat = loc.TryGetProperty("latitude", out var la) ? la.GetDecimal() : (decimal?)null;
+                        var lng = loc.TryGetProperty("longitude", out var lo) ? lo.GetDecimal() : (decimal?)null;
+                        yield return new(from, label, lat, lng);
+                    }
+                    else if (message.TryGetProperty("interactive", out var interactive)) yield return new(from, interactive.ToString(), null, null);
+                }
+            }
+        }
+    }
+    private sealed record InboundWhatsAppMessage(string From, string Text, decimal? Latitude, decimal? Longitude);
 }
