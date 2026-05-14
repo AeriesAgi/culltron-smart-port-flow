@@ -112,3 +112,14 @@ Emphasize that Gemini-enhanced responses are available when configured, user-tri
 3. Open `http://localhost:8080`.
 4. Use prompt chips or short prompts rather than typing long prompts during recording.
 5. If a scenario result takes too long, continue to Truck Tracking and Emissions; the synthetic/demo data keeps the story coherent.
+
+## Fleet & Driver Queue Companion Demo Flow
+
+1. Control room detects gate congestion and berth/yard pressure.
+2. Gemini Agent Mode or deterministic fallback creates a queue recommendation.
+3. Fleet owner opens `/fleet` and sees all trucks, high-risk vehicles, AI instructions, and idling/CO₂ avoided.
+4. Operator opens a truck detail and sends an in-app alert, simulated WhatsApp notification, or simulated Android app notification.
+5. Driver opens `/driver/demo`, `/driver/status/SPQ-2026-0042`, or the Android companion app.
+6. Driver sees queue number, appointment, call-forward ETA, assigned gate, staging instruction, reason, delay risk, emissions impact, and notification history.
+7. Driver acknowledges `Seen`, `Holding`, or `Proceeding`.
+8. Fleet dashboard and APIs show the acknowledgement path and reduced idling/emissions impact.
