@@ -1,3 +1,13 @@
 # Enterprise Market Readiness
 
-Smart Port is positioned as pilot-ready architecture, not a production claim. It includes Identity roles, human-approved actions, audit/demo history, Gemini/fallback resilience, mobile token auth, WhatsApp verification, Docker/PostgreSQL deployment, synthetic data disclaimers and connector-ready boundaries. Pilot hardening should add approved credentials, data-sharing agreements, rate limiting, observability, managed secrets, formal security testing and validated operational KPIs.
+Smart Port is demo-ready for judging and connector-ready for pilots. It is not represented as a live production integration.
+
+Statuses:
+
+- Demo Ready: role login, Gemini/fallback console, execution loop, fleet/driver pages, mobile API, governance and audit views.
+- Configured: Identity policies, environment-based secrets, health endpoints, Docker/PostgreSQL deployment shape.
+- Connector Ready: IPMS/TOS/gate/fleet/GPS/WhatsApp data-source boundaries.
+- Needs Pilot Credentials: live WhatsApp, live Gemini, live port/fleet/GPS feeds.
+- Production Hardening Required: SSO, secrets vault, observability, DR, rate limiting, pen test and runbooks.
+
+Pilot pathway: NDA → systems identification → field mapping → sandbox connector → supervised pilot → KPI validation → production hardening.

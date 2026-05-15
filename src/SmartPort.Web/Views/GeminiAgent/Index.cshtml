@@ -3,27 +3,48 @@
 @{
     ViewData["Title"] = "Gemini Operations Agent";
     var status = ViewBag.Status as AgentModeStatus ?? new AgentModeStatus();
+    var readiness = ViewBag.Readiness as SmartPort.Web.Controllers.GeminiReadinessViewModel ?? new SmartPort.Web.Controllers.GeminiReadinessViewModel(false, false, "Hybrid demo", "gemini-2.5-flash", "Local deterministic fallback active", "No generation yet", null);
+    var intelligence = ViewBag.Intelligence as SmartPort.Web.Controllers.OperationalIntelligenceViewModel ?? new SmartPort.Web.Controllers.OperationalIntelligenceViewModel(80, 72, 84, 76, 79, 82, 3, "Synthetic queue pressure", 48000, 91, 84);
     var history = ViewBag.History as IReadOnlyList<SmartPort.Web.Controllers.GeminiAgentHistoryItem> ?? Array.Empty<SmartPort.Web.Controllers.GeminiAgentHistoryItem>();
+    var last = ViewBag.LastHistory as SmartPort.Web.Controllers.GeminiAgentHistoryItem;
+    var actions = new[] { "Gemini Operations Brief", "Fleet Owner Action Plan", "Driver Instruction Brief", "Disruption Recovery Plan", "Emissions/Idling Impact Brief", "Executive Judge Summary", "Risk & Governance Review", "Integration/Pilot Readiness Brief" };
 }
 <section class="sp-page-hero">
   <div>
-    <span class="sp-badge">Enterprise AI operations · synthetic demo data</span>
-    <h1>Gemini Operations Agent</h1>
-    <p>Decision-support agent for structured port, fleet, driver, WhatsApp, emissions and execution-plan context. Recommendations are human-approved and audit-visible.</p>
+    <span class="sp-badge">Enterprise AI operations agent · synthetic demo data · connector-ready pilots</span>
+    <h1>Gemini Operations Agent Console</h1>
+    <p>Smart Port turns port signals into execution plans, fleet actions, driver instructions, WhatsApp/mobile simulations, audit records and emissions/idling impact. Gemini enhances reasoning when configured; deterministic fallback always works.</p>
+    @if (!readiness.ApiKeyConfigured || !readiness.Enabled)
+    {
+      <p class="sp-alert sp-alert--info">Local deterministic fallback active — Gemini can be enabled through GEMINI_API_KEY and Gemini__Enabled=true.</p>
+    }
   </div>
-  <form method="post" action="/gemini-agent/generate"><button class="sp-btn sp-btn--primary">Generate Gemini Operations Brief</button></form>
+  <form method="post" action="/gemini-agent/generate">
+    <input type="hidden" name="briefType" value="Gemini Operations Brief" />
+    <button class="sp-btn sp-btn--primary">Generate Gemini Operations Brief</button>
+  </form>
 </section>
 
-<div class="sp-grid sp-grid--3">
-  <article class="sp-card"><h3>Gemini readiness</h3><p><strong>GEMINI_API_KEY:</strong> @(ViewBag.GeminiApiKeyConfigured ? "Configured" : "Not configured")</p><p><strong>Gemini__Enabled:</strong> @ViewBag.GeminiEnabled</p><p><strong>Gemini__Mode:</strong> @ViewBag.GeminiMode</p><p><strong>Gemini__Model:</strong> @ViewBag.GeminiModel</p><p><strong>Last Gemini generation:</strong> @(status.LastGeneratedBriefUtc?.ToString("u") ?? "Not yet this session")</p><p><strong>Fallback:</strong> @status.GeminiStatus</p></article>
-  <article class="sp-card"><h3>Agent inputs</h3><p>Truck queue: <strong>@Model.TotalTrucks</strong></p><p>Gate pressure: <strong>@Model.TrucksWaiting waiting / @Model.TrucksHolding holding</strong></p><p>Berth readiness: <strong>@Model.BerthReadiness.Count zones</strong></p><p>Yard occupancy: <strong>synthetic high-pressure demo snapshot</strong></p><p>WhatsApp/driver state: <strong>@Model.LatestNotifications.Count notifications</strong></p><p>Emissions estimate: <strong>@Model.TotalCo2KgAvoided kg CO₂ avoided</strong></p></article>
-  <article class="sp-card"><h3>Gemini vs fallback</h3><p><strong>Deterministic recommendation:</strong> @Model.LatestAiQueueRecommendation</p><p><strong>Gemini explanation:</strong> @(status.GeminiConfigured ? "Available when configured" : "Local Fallback Active")</p><p><strong>Safety:</strong> Human approval required before fleet/driver notifications.</p></article>
+<div class="sp-grid sp-grid--4">
+  <article class="sp-card"><h3>API key</h3><p class="sp-kpi">@(readiness.ApiKeyConfigured ? "Yes" : "No")</p><p>Gemini API key configured.</p></article>
+  <article class="sp-card"><h3>Enabled</h3><p class="sp-kpi">@(readiness.Enabled ? "Yes" : "No")</p><p>Gemini__Enabled runtime flag.</p></article>
+  <article class="sp-card"><h3>Mode/model</h3><p><strong>@readiness.Mode</strong></p><p>@readiness.Model</p></article>
+  <article class="sp-card"><h3>Fallback/latency</h3><p><strong>@readiness.FallbackStatus</strong></p><p>Last: @readiness.LastGenerationStatus · @(readiness.LastLatencyMs?.ToString() ?? "n/a") ms</p></article>
 </div>
 
-<section class="sp-card sp-mt"><h2>Agent workflow trace</h2><ol class="sp-timeline"><li>Read operational state</li><li>Detect bottleneck</li><li>Compare deterministic fallback plan</li><li>Ask Gemini for reasoning/explanation when configured</li><li>Generate human-approved action plan</li><li>Save audit entry</li><li>Push to fleet/driver channels only if approved</li></ol></section>
+<section class="sp-grid sp-grid--3 sp-mt">
+  <article class="sp-card"><h2>Operational inputs</h2><ul class="sp-list"><li>Active truck queue count: <strong>@Model.TotalTrucks</strong></li><li>Gate pressure: <strong>@Model.TrucksWaiting waiting / @Model.TrucksHolding holding</strong></li><li>Berth/yard readiness: <strong>@Model.BerthReadiness.Count berth zones / @Model.StagingAreas.Count staging areas</strong></li><li>Active incidents/disruptions: <strong>@Model.DelayedOrRescheduledTrucks</strong></li><li>Driver confirmations: <strong>@Model.TrucksProceeding proceeding</strong></li><li>WhatsApp/mobile notification state: <strong>@Model.LatestNotifications.Count recent events</strong></li><li>Emissions/idling estimate: <strong>@Model.TotalIdlingMinutesAvoided min / @Model.TotalCo2KgAvoided kg CO₂</strong></li><li>Execution plans: <strong>@(Model.LatestExecutionPlan?.PlanId[..8] ?? "generate to create")</strong></li><li>Data source mode: <strong>synthetic demo, live connector-ready</strong></li></ul></article>
+  <article class="sp-card"><h2>Operational Intelligence Score</h2><p class="sp-kpi">@intelligence.OverallScore/100</p><ul class="sp-list"><li>Congestion risk: @intelligence.CongestionRisk</li><li>Execution readiness: @intelligence.ExecutionReadiness</li><li>Emissions impact: @intelligence.EmissionsImpact</li><li>Driver response state: @intelligence.DriverResponseState</li><li>Integration confidence: @intelligence.IntegrationConfidence</li><li>Data quality score: @intelligence.DataQualityScore</li><li>Connector readiness score: @intelligence.ConnectorReadinessScore</li></ul></article>
+  <article class="sp-card"><h2>Business impact</h2><p><strong>Bottleneck reason:</strong> @intelligence.BottleneckReason</p><p><strong>ETA risk:</strong> @(Model.HighRiskTrucks.Count) high-risk trucks need action.</p><p><strong>Yard/gate pressure:</strong> Controlled release recommended.</p><p><strong>Trucks needing action:</strong> @intelligence.TrucksNeedingAction</p><p><strong>Execution plan ROI:</strong> R @intelligence.ExecutionPlanRoiRand.ToString("N0") synthetic demo value protected through less idling and fewer misses.</p></article>
+</section>
 
-<section class="sp-card sp-mt"><h2>Action plan generator</h2><div class="sp-action-row">@foreach (var label in new[] { "Gemini Operations Brief", "Fleet Owner Action Plan", "Driver Instructions", "Judge Demo Summary", "Risk & Governance Review" }) { <form method="post" action="/gemini-agent/generate"><input type="hidden" name="briefType" value="@label" /><button class="sp-btn sp-btn--outline">@label</button></form> }</div></section>
+<section class="sp-card sp-mt"><h2>Agent workflow trace</h2><ol class="sp-timeline"><li>Read operational state from synthetic/demo fleet, gate, staging, berth and notification signals.</li><li>Detect bottleneck: @intelligence.BottleneckReason.</li><li>Generate deterministic baseline plan that can run without Gemini.</li><li>Ask Gemini for reasoning/explanation if configured and enabled.</li><li>Compare Gemini narrative against fallback execution constraints.</li><li>Produce human-approved action plan for fleet owner and driver channels.</li><li>Save audit entry with input signals, source model, recommendation and approval state.</li><li>Push recommended action to fleet/driver channel only after approval; demo sends remain simulated unless pilot credentials are configured.</li></ol></section>
 
-<section class="sp-card sp-mt"><h2>Audit/history for this demo session</h2>@if (!history.Any()) { <p>No generated briefs yet. Generate one to create a session audit record.</p> } else { <div class="sp-table-wrap"><table class="sp-table"><thead><tr><th>Time</th><th>Type</th><th>Source</th><th>Plan</th><th>Summary</th></tr></thead><tbody>@foreach (var item in history) { <tr><td>@item.GeneratedAtUtc.ToString("HH:mm:ss") UTC</td><td>@item.BriefType</td><td>@item.GeneratedBy</td><td><a href="/execution/plans/@item.PlanId">@item.PlanId[..8]</a></td><td>@item.Summary</td></tr> }</tbody></table></div> }</section>
+<section class="sp-card sp-mt"><h2>Agent action generators</h2><div class="sp-action-row">@foreach (var label in actions) { <form method="post" action="/gemini-agent/generate"><input type="hidden" name="briefType" value="@label" /><button class="sp-btn sp-btn--outline">Generate @label</button></form> }</div></section>
 
-<section class="sp-card sp-mt"><h2>Why this matters</h2><ul><li>Reduces truck idling by coordinating hold, staging and gate-release actions.</li><li>Improves port/fleet/driver coordination with a shared operational state.</li><li>Works with synthetic data today and is connector-ready for a controlled pilot.</li><li>Keeps humans in control: no automatic live-system changes are claimed or performed.</li></ul></section>
+<section class="sp-grid sp-grid--2 sp-mt">
+  <article class="sp-card"><h2>Gemini vs deterministic fallback</h2>@if (last == null) { <p>Generate any brief to compare deterministic recommendation with Gemini-enhanced reasoning.</p> } else { <p><strong>Deterministic recommendation:</strong> @last.DeterministicRecommendation</p><p><strong>Gemini-enhanced recommendation:</strong> @last.GeminiEnhancedRecommendation</p><p><strong>Differences:</strong> @last.Differences</p><p><strong>Confidence/caveat:</strong> Connector-ready demo using synthetic data; human approval gates every external action.</p><p><strong>Human approval status:</strong> @last.ApprovalStatus</p><p><strong>Audit event saved:</strong> @last.GeneratedAtUtc.ToString("u") for plan <a href="/execution/plans/@last.PlanId">@last.PlanId[..8]</a>.</p> }</article>
+  <article class="sp-card"><h2>Governance shortcuts</h2><p>Agent safety checks block secret exfiltration, approval bypasses and autonomous production sends.</p><p><a class="sp-btn sp-btn--primary" href="/agent-governance">Open Agent Governance</a> <a class="sp-btn sp-btn--outline" href="/ops-ingest">Open Ops Ingest</a></p><p><a href="/enterprise-readiness">Enterprise readiness checklist</a> explains what is demo-ready, configured, connector-ready and still requires pilot credentials.</p></article>
+</section>
+
+<section class="sp-card sp-mt"><h2>Audit/history for this demo session</h2>@if (!history.Any()) { <p>No generated briefs yet. Generate one to create a session audit record.</p> } else { <div class="sp-table-wrap"><table class="sp-table"><thead><tr><th>Timestamp</th><th>Action type</th><th>Source model</th><th>Input signals used</th><th>Recommended action</th><th>Approval</th></tr></thead><tbody>@foreach (var item in history) { <tr><td>@item.GeneratedAtUtc.ToString("u")</td><td>@item.BriefType</td><td>@item.SourceModel</td><td>@item.InputSignalsUsed</td><td>@item.RecommendedAction</td><td>@item.ApprovalStatus</td></tr> }</tbody></table></div> }</section>
