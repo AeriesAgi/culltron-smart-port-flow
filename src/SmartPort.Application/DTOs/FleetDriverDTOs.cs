@@ -149,7 +149,24 @@ public class FleetQueueSummaryDto
 }
 
 public class DataSourceReadinessDto { public string Badge { get; set; } = string.Empty; public DataProvenanceType SourceType { get; set; } public string CurrentDemoSource { get; set; } = string.Empty; public string RealWorldSource { get; set; } = string.Empty; public string RequiredData { get; set; } = string.Empty; public string SmartPortPlugIn { get; set; } = string.Empty; public string PilotReadinessLevel { get; set; } = string.Empty; }
-public class WhatsAppConnectorStatusDto { public WhatsAppMode Mode { get; set; } = WhatsAppMode.Demo; public bool Enabled { get; set; } public bool CredentialsConfigured { get; set; } public bool LiveSendingAllowed { get; set; } public string SafetyMessage { get; set; } = "Live WhatsApp messages are only sent to approved test numbers. Demo records use simulated WhatsApp notifications."; }
+public class WhatsAppConnectorStatusDto
+{
+    public WhatsAppMode Mode { get; set; } = WhatsAppMode.Demo;
+    public bool Enabled { get; set; }
+    public bool AccessTokenConfigured { get; set; }
+    public bool PhoneNumberIdConfigured { get; set; }
+    public bool BusinessAccountIdConfigured { get; set; }
+    public bool VerifyTokenConfigured { get; set; }
+    public bool PublicBaseUrlConfigured { get; set; }
+    public string GraphVersion { get; set; } = "v20.0";
+    public string PublicBaseUrl { get; set; } = string.Empty;
+    public string WebhookCallbackUrl { get; set; } = string.Empty;
+    public bool ApprovedDriverAvailable { get; set; }
+    public bool CredentialsConfigured { get; set; }
+    public bool LiveSendingAllowed { get; set; }
+    public string SafetyMessage { get; set; } = "Live WhatsApp messages are only sent to approved test numbers. Demo records use simulated WhatsApp notifications.";
+    public List<string> LiveTestReadinessChecks { get; set; } = new();
+}
 public class MobileDeviceRegistrationDto { public string Reference { get; set; } = string.Empty; public string DeviceToken { get; set; } = string.Empty; public string Platform { get; set; } = "Android"; public string AppVersion { get; set; } = string.Empty; }
 public class DriverCheckRequestDto { public string Reference { get; set; } = string.Empty; }
 public class DriverAcknowledgementRequestDto { public string Reference { get; set; } = string.Empty; [JsonConverter(typeof(JsonStringEnumConverter))] public DriverAcknowledgement Acknowledgement { get; set; } }

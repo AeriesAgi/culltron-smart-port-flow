@@ -1,27 +1,30 @@
-# Smart Port Android Driver Companion
+# Smart Port Android / Mobile Companion
 
-The Android companion in `mobile/SmartPortDriverCompanion` is a Kotlin client for Smart Port backend APIs. It reads queue status, notification history, and writes driver acknowledgements through the web backend.
+The mobile companion consists of backend mobile APIs plus native Android source under `/mobile/SmartPortDriverCompanion`.
 
-## Demo mode
-No Firebase, WhatsApp, billing, or secrets are required. The app pulls notification history from Smart Port and displays simulated WhatsApp/in-app/Android push records.
+## Backend URL
+Default Android backend: `https://smartport.culltron.app`.
+Local emulator guidance: `https://10.0.2.2:5001` or a forwarded Codespaces/deployed URL.
 
-## Backend APIs
-- `GET /api/mobile/truck/status/{reference}`
-- `POST /api/mobile/truck/check`
-- `GET /api/mobile/notifications/{reference}`
-- `POST /api/mobile/driver/acknowledge`
-- `GET /api/mobile/driver/demo`
-- `POST /api/mobile/device/register`
-- `POST /api/mobile/device/unregister`
+## Demo references
+`SPQ-2026-0042`, `SPQ-2026-0043`, `SPQ-2026-0044`, `SPQ-2026-0045`, `SPQ-2026-0046`, `SPQ-2026-0047`.
 
-## Future Firebase setup
-Use environment variables only: `SMARTPORT_PUSH_ENABLED`, `SMARTPORT_PUSH_PROVIDER=Firebase`, `SMARTPORT_FIREBASE_PROJECT_ID`, `SMARTPORT_FIREBASE_SERVICE_ACCOUNT_PATH`, or `SMARTPORT_FIREBASE_CREDENTIALS_JSON`. Never hardcode Firebase credentials in Android or server source.
+## Mobile APIs to smoke test
+```bash
+curl http://localhost:5000/api/mobile/truck/status/SPQ-2026-0042
+curl http://localhost:5000/api/mobile/notifications/SPQ-2026-0042
+curl -X POST http://localhost:5000/api/mobile/driver/confirm-status -H 'Content-Type: application/json' -d '{"reference":"SPQ-2026-0042","eventType":"DriverConfirmedHolding","sourceLabel":"Android"}'
+curl -X POST http://localhost:5000/api/mobile/driver/location-checkin -H 'Content-Type: application/json' -d '{"reference":"SPQ-2026-0042","eventType":"WhatsAppLocationShared","sourceLabel":"WhatsApp","latitude":-29.8587,"longitude":31.0218,"locationLabel":"Durban staging area demo"}'
+curl -X POST http://localhost:5000/api/mobile/driver/command -H 'Content-Type: application/json' -d '{"reference":"SPQ-2026-0042","commandText":"BREAK 15","actor":"Driver Demo"}'
+curl -X POST http://localhost:5000/api/mobile/copilot/driver -H 'Content-Type: application/json' -d '{"reference":"SPQ-2026-0042","question":"How long until I am called forward?"}'
+curl -X POST http://localhost:5000/api/mobile/copilot/fleet -H 'Content-Type: application/json' -d '{"question":"Which trucks should move first?"}'
+```
 
+## Android build
+1. Open `/mobile/SmartPortDriverCompanion` in Android Studio.
+2. Let Gradle sync.
+3. Set backend URL if not using `https://smartport.culltron.app`.
+4. Build a debug APK.
+5. Optional demo path: `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk`.
 
-## Enterprise Execution Platform Update
-
-Smart Port now models an execution loop: Control Room/AI Simulator → Execution Plan Generator → Fleet Owner Operations Console → Driver Web Portal/Android Companion → WhatsApp Demo or LiveTest notifications → Driver Status Assistant → audit-ready ETA, queue, status, timeline and emissions impact updates. The deterministic state machine and queue optimizer work without Gemini; Gemini/Copilot remains an optional explanation layer. Demo Mode is free and safe, no SMS is used, no paid provider is required, and LiveTest WhatsApp is gated by environment variables plus manually approved/consented tester numbers. WhatsApp location check-ins are event-based driver shares, not continuous GPS tracking.
-
-Supported driver commands include STATUS, ETA, HOW LONG, WHAT NOW, WHERE MUST I GO, HELP, READY, BREAK 15, LUNCH 30, DELAYED 20, HOLDING, ARRIVED_STAGING, PROCEEDING_GATE, ARRIVED_GATE, COMPLETED, ISSUE and LOCATION_SHARED. Fleet and mobile APIs expose current status, allowed next actions, timeline, last location check-in and impact values.
-
-90-second demo: control room detects congestion; execution plan recommends truck actions; fleet owner sees affected trucks; driver receives simulated or LiveTest WhatsApp instruction; driver asks HOW LONG or WHAT NOW; driver checks in or confirms staging/gate; Smart Port updates ETA/status/timeline/dashboard; Android shows the same state and Copilot answer; idling/CO2 impact updates; audit trail records the decision.
+The app stores no Gemini key, WhatsApp token or API secrets and does not duplicate backend AI logic.

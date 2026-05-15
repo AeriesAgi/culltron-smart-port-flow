@@ -158,9 +158,11 @@ public class FleetController : Controller
     private readonly IOrganisationService _orgs;
     private readonly IFleetDriverQueueService _queue;
     private readonly INotificationService _notifications;
-    public FleetController(IFleetVehicleService fleet, IOrganisationService orgs, IFleetDriverQueueService queue, INotificationService notifications)
+    private readonly IDriverStatusCommandService _commands;
+    private readonly ISmartPortCopilotChatService _copilot;
+    public FleetController(IFleetVehicleService fleet, IOrganisationService orgs, IFleetDriverQueueService queue, INotificationService notifications, IDriverStatusCommandService commands, ISmartPortCopilotChatService copilot)
     {
-        _fleet = fleet; _orgs = orgs; _queue = queue; _notifications = notifications;
+        _fleet = fleet; _orgs = orgs; _queue = queue; _notifications = notifications; _commands = commands; _copilot = copilot;
     }
 
     [AllowAnonymous]
@@ -186,6 +188,7 @@ public class FleetController : Controller
         var truck = await _queue.GetTruckAsync(id);
         if (truck == null) return NotFound();
         truck.NotificationHistory = (await _notifications.GetHistoryAsync(id)).ToList();
+        ViewBag.WhatsAppStatus = _queue.GetWhatsAppConnectorStatus();
         return View(truck);
     }
 
@@ -244,11 +247,22 @@ public class FleetController : Controller
 
     [AllowAnonymous]
     [HttpGet("/fleet/settings")]
-    public IActionResult Settings() { ViewBag.WhatsAppStatus = _queue.GetWhatsAppConnectorStatus(); return View(); }
+    public async Task<IActionResult> Settings() { ViewBag.WhatsAppStatus = _queue.GetWhatsAppConnectorStatus(); ViewBag.GeminiStatus = (await _copilot.BuildPageAsync()).AgentModeStatus; return View(); }
+
+    [AllowAnonymous]
+    [HttpPost("/fleet/settings/test-gemini")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> TestGemini()
+    {
+        var response = await _copilot.GenerateResponseAsync("Smart Port settings test: explain the next safe action for the current demo queue in two sentences.");
+        TempData["GeminiTest"] = $"{response.GeneratedBy}: {response.ShortAnswer}";
+        return Redirect("/fleet/settings");
+    }
 
     [AllowAnonymous]
     [HttpGet("/fleet/download-app")]
-    public async Task<IActionResult> DownloadApp() { ViewBag.DemoReferences = await _queue.GetDemoReferencesAsync(); return View(); }
+    [HttpGet("/mobile/download")]
+    public async Task<IActionResult> DownloadApp() { ViewBag.DemoReferences = await _queue.GetDemoReferencesAsync(); ViewBag.ApkExists = System.IO.File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "downloads", "SmartPortDriverCompanion.apk")); return View(); }
 
     [AllowAnonymous]
     [HttpGet("/fleet/data-sources")]
@@ -271,8 +285,46 @@ public class FleetController : Controller
     public async Task<IActionResult> SendNotification(string reference, NotificationChannel channel)
     {
         var eventType = channel == NotificationChannel.AndroidPush ? NotificationEventType.QueueStatusChanged : NotificationEventType.AiInstructionUpdated;
-        await _notifications.SendAsync(reference, channel, eventType);
+        var forceDemo = string.Equals(Request.Query["mode"], "demo", StringComparison.OrdinalIgnoreCase);
+        if (forceDemo && channel == NotificationChannel.WhatsApp)
+        {
+            var truck = await _queue.GetTruckAsync(reference);
+            if (truck != null) await _notifications.RecordAsync(reference, NotificationChannel.WhatsApp, NotificationStatus.SimulatedSent, eventType, $"Simulated WhatsApp: {truck.LatestNotification}", DataProvenanceType.SyntheticDemoData, "Fleet owner");
+        }
+        else
+        {
+            await _notifications.SendAsync(reference, channel, eventType);
+        }
         return Redirect(Request.Headers.Referer.ToString() ?? "/fleet/notifications");
+    }
+
+    [AllowAnonymous]
+    [HttpPost("/fleet/trucks/{reference}/action")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> TruckAction(string reference, string commandText)
+    {
+        var result = await _commands.HandleCommandAsync(new DriverCommandRequestDto { Reference = reference, CommandText = commandText, Actor = "Fleet operations console", Source = DataProvenanceType.ManualOperatorInput });
+        TempData[result.Success ? "Success" : "Warning"] = result.ReplyMessage;
+        return Redirect($"/fleet/trucks/{reference}");
+    }
+
+    [AllowAnonymous]
+    [HttpPost("/fleet/trucks/{reference}/request-location")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> RequestLocation(string reference)
+    {
+        await _notifications.SendAsync(reference, NotificationChannel.WhatsApp, NotificationEventType.WhatsAppLocationCheckIn);
+        return Redirect($"/fleet/trucks/{reference}");
+    }
+
+    [AllowAnonymous]
+    [HttpPost("/fleet/trucks/{reference}/copilot")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> TruckCopilot(string reference, string question)
+    {
+        var response = await _copilot.GenerateResponseAsync($"Fleet owner asks about truck {reference}: {question}. Keep the answer to Smart Port queue operations and next driver action.");
+        TempData["CopilotAnswer"] = response.ShortAnswer;
+        return Redirect($"/fleet/trucks/{reference}");
     }
 
     [HttpGet("/fleet/vehicles")]
