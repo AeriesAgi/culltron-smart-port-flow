@@ -4,3 +4,13 @@
 @foreach (var item in new[]{("Command-centre dashboard","Premium internal dashboard with port, gate, truck and impact signals."),("Execution plan generator","AI/fallback plan that converts congestion into truck-level actions."),("Fleet owner console","Fleet queue, truck detail, notification controls and settings readiness."),("Driver queue companion","Mobile-first status, allowed actions and Copilot answers."),("WhatsApp LiveTest readiness","Meta webhook verification, inbound commands, statuses, location and safety blocking."),("Android companion","Kotlin source, configurable backend URL and CI APK artifact workflow."),("Gemini/fallback Copilot","GEMINI_API_KEY driven responses with deterministic fallback when absent."),("Emissions and idling impact","Transparent estimates tied to queue and execution-plan actions."),("Audit trail","Notification history and operational events preserve what changed and why.")}){<article><h3>@item.Item1</h3><p>@item.Item2</p></article>}
 </div></div></section>
 <section class="spx-section"><div class="container spx-split"><div><span class="spx-kicker">Safe demo boundaries</span><h2>Protected internal routes</h2><p>Dashboard, Fleet, Driver, Truck, Execution, Copilot, Reports, Disruptions, Recommendations and mobile APIs sit behind the demo access boundary. The WhatsApp webhook remains public for Meta verification and inbound delivery.</p></div><div class="spx-metric-stack"><div><strong>/demo-access</strong><span>Role credentials when enabled</span></div><div><strong>/webhooks/whatsapp</strong><span>Public callback, token verified</span></div><div><strong>/api/mobile/*</strong><span>Backend-only AI and messaging secrets</span></div></div></div></section>
+
+<section class="container spx-section enterprise-ai-refresh">
+  <div class="spx-pilot">
+    <span class="spx-kicker">Enterprise AI logistics demo</span>
+    <h2>Features: Gemini Agent operations loop</h2>
+    <p>Smart Port is presented as a prototype and pilot-ready architecture using synthetic demo data, connector-ready integrations, human-approved AI recommendations, mobile driver status, WhatsApp/demo notifications, audit trail and idling/emissions impact.</p>
+    <a class="sp-btn sp-btn--primary" href="/demo-access">Try role-based demo</a>
+    <a class="sp-btn sp-btn--outline" href="/demo-tour">Judge demo tour</a>
+  </div>
+</section>

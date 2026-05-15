@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartPort.Infrastructure.Services;
+using SmartPort.Shared.Constants;
 
 namespace SmartPort.Web.Controllers;
 
-[Authorize]
+[Authorize(Policy = Policies.CanAccessGeminiAgent)]
 public class CopilotController : Controller
 {
     private readonly ISmartPortCopilotChatService _chat;

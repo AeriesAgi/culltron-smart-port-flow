@@ -68,6 +68,8 @@ public class AuthController : Controller
     public async Task<IActionResult> Logout()
     {
         await _signInManager.SignOutAsync();
+        Response.Cookies.Delete(DemoAccessController.CookieName);
+        Response.Cookies.Delete(DemoAccessController.RoleCookieName);
         _logger.LogInformation("User logged out.");
         return RedirectToAction("Index", "Home");
     }

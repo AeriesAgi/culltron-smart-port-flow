@@ -2,3 +2,13 @@
 @{ Layout = "_LayoutPublic"; ViewData["Title"] = "Contact"; }
 <section class="spx-page-hero"><div class="container spx-split"><div><span class="spx-kicker">Contact</span><h1>Discuss a Smart Port pilot or demo review</h1><p>Contact details are available on request for pilots, judging follow-up and deployment discussions. This form records an enquiry for the local demo experience.</p><div class="spx-metric-stack"><div><strong>Culltron Smart Port Flow</strong><span>Enterprise AI operations prototype with demo and pilot-integration readiness.</span></div><div><strong>smartport.culltron.app</strong><span>Public deployment domain when applicable.</span></div><div><strong>culltron.app</strong><span>Contact: available on request.</span></div></div></div>
 <form asp-action="Contact" method="post" class="spx-contact-form"><h2>Send an enquiry</h2>@Html.AntiForgeryToken()<div asp-validation-summary="All" class="sp-form__errors"></div><label asp-for="FullName">Full name</label><input asp-for="FullName" /><label asp-for="Email">Email address</label><input asp-for="Email" /><label asp-for="Organisation">Organisation</label><input asp-for="Organisation" /><label asp-for="Enquiry">Enquiry type</label><select asp-for="Enquiry"><option>Pilot programme</option><option>Product demo</option><option>Technical integration</option><option>Partnership</option></select><label asp-for="Message">Message</label><textarea asp-for="Message" rows="5" placeholder="Tell us which workflow you want to evaluate."></textarea><button type="submit" class="sp-btn sp-btn--primary">Send Message</button>@if (TempData["Success"] != null){<div class="spx-access__note">@TempData["Success"]</div>}</form></div></section>
+
+<section class="container spx-section enterprise-ai-refresh">
+  <div class="spx-pilot">
+    <span class="spx-kicker">Enterprise AI logistics demo</span>
+    <h2>Contact: Gemini Agent operations loop</h2>
+    <p>Smart Port is presented as a prototype and pilot-ready architecture using synthetic demo data, connector-ready integrations, human-approved AI recommendations, mobile driver status, WhatsApp/demo notifications, audit trail and idling/emissions impact.</p>
+    <a class="sp-btn sp-btn--primary" href="/demo-access">Try role-based demo</a>
+    <a class="sp-btn sp-btn--outline" href="/demo-tour">Judge demo tour</a>
+  </div>
+</section>

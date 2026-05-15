@@ -10,7 +10,7 @@ namespace SmartPort.Web.Controllers;
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
-[Authorize]
+[Authorize(Policy = Policies.CanAccessControlRoom)]
 public class DashboardController : Controller
 {
     private readonly IDashboardService _dashboard;
@@ -407,7 +407,7 @@ public class DocumentsController : Controller
 
 // ─── Analytics ────────────────────────────────────────────────────────────────
 
-[Authorize(Policy = Policies.CanViewAnalytics)]
+[Authorize(Policy = Policies.CanAccessReports)]
 public class AnalyticsController : Controller
 {
     private readonly IAnalyticsService _analytics;

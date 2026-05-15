@@ -1,0 +1,15 @@
+@{ ViewData["Title"] = "Enterprise Readiness"; var rows = new[] {
+("Authentication & roles", "Ready for demo", "Seeded Identity roles protect command, fleet, driver and report surfaces."),
+("Audit trail", "Ready for demo", "Generated plans, notifications and driver actions are visible in demo history."),
+("Human approval", "Ready for demo", "Agent recommendations are not auto-executed."),
+("Gemini/fallback resilience", "Ready for demo", "Local fallback remains available when Gemini is not configured."),
+("Data source readiness", "Connector-ready", "Synthetic data today; pilot connectors require approved credentials."),
+("WhatsApp readiness", "Needs pilot credentials", "Webhook verification requires token; outbound live test requires Meta credentials and approved senders."),
+("Android readiness", "Ready for demo", "APK build uses Java/Kotlin 17 and mobile demo token auth."),
+("API readiness", "Connector-ready", "Mobile API requires X-SmartPort-Mobile-Token."),
+("Deployment readiness", "Connector-ready", "Docker/PostgreSQL compose path and forwarded headers support reverse proxy deployment."),
+("Security boundaries", "Future production hardening", "Secrets stay in env vars; production would add managed secrets, rate limits and formal pen testing."),
+("Privacy/data disclaimer", "Ready for demo", "Synthetic demo data; no live Transnet/IPMS/customer integration claimed."),
+("Pilot integration steps", "Connector-ready", "Validate data-sharing, map fields, test shadow mode, then human-approved pilot actions.") }; }
+<section class="sp-page-hero"><div><span class="sp-badge">Pilot-ready architecture</span><h1>Enterprise Readiness Checklist</h1><p>Market-facing view of what is demo-ready, connector-ready, credential-dependent, and future production hardening.</p></div></section>
+<div class="sp-grid sp-grid--3 sp-mt">@foreach (var row in rows) { <article class="sp-card"><span class="sp-badge">@row.Item2</span><h3>@row.Item1</h3><p>@row.Item3</p></article> }</div>

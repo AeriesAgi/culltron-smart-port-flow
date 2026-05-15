@@ -1,53 +1,33 @@
 @model SmartPort.Web.Controllers.LoginViewModel
+@inject IConfiguration Configuration
 @{
     Layout = "_LayoutPublic";
     ViewData["Title"] = "Sign In";
+    var showDemoCredentials = string.Equals(Configuration["SMARTPORT_SHOW_DEMO_CREDENTIALS"], "true", StringComparison.OrdinalIgnoreCase);
 }
 
 <div class="sp-auth-page">
     <div class="sp-auth-card">
         <div class="sp-auth-card__header">
-            <a href="/" class="sp-pub-logo">
-                <span class="sp-pub-logo__mark">⬡</span>
-                <span class="sp-pub-logo__text">SmartPort</span>
-            </a>
+            <a href="/" class="sp-pub-logo"><span class="sp-pub-logo__mark">⬡</span><span class="sp-pub-logo__text">SmartPort</span></a>
             <h1>Sign in to Operations</h1>
-            <p>Access the port management platform</p>
+            <p>Use normal Identity credentials or open the role-based demo access flow.</p>
         </div>
 
         <form asp-controller="Auth" asp-action="Login" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
             @Html.AntiForgeryToken()
-
             <div asp-validation-summary="All" class="sp-form__errors"></div>
-
-            <div class="sp-form__group">
-                <label asp-for="Email" class="sp-form__label">Email Address</label>
-                <input asp-for="Email" class="sp-form__input" placeholder="you@organisation.co.za" autocomplete="email" autofocus />
-                <span asp-validation-for="Email" class="sp-form__error"></span>
-            </div>
-
-            <div class="sp-form__group">
-                <label asp-for="Password" class="sp-form__label">Password</label>
-                <input asp-for="Password" class="sp-form__input" placeholder="••••••••" autocomplete="current-password" />
-                <span asp-validation-for="Password" class="sp-form__error"></span>
-            </div>
-
-            <div class="sp-form__row sp-form__row--split">
-                <label class="sp-form__checkbox-label">
-                    <input asp-for="RememberMe" type="checkbox" class="sp-form__checkbox" />
-                    Keep me signed in for 8 hours
-                </label>
-            </div>
-
+            <div class="sp-form__group"><label asp-for="Email" class="sp-form__label">Email Address</label><input asp-for="Email" class="sp-form__input" placeholder="you@organisation.co.za" autocomplete="email" autofocus /><span asp-validation-for="Email" class="sp-form__error"></span></div>
+            <div class="sp-form__group"><label asp-for="Password" class="sp-form__label">Password</label><input asp-for="Password" class="sp-form__input" placeholder="••••••••" autocomplete="current-password" /><span asp-validation-for="Password" class="sp-form__error"></span></div>
+            <div class="sp-form__row sp-form__row--split"><label class="sp-form__checkbox-label"><input asp-for="RememberMe" type="checkbox" class="sp-form__checkbox" /> Keep me signed in for 8 hours</label></div>
             <button type="submit" class="sp-btn sp-btn--primary sp-btn--full">Sign In</button>
         </form>
 
-        <div class="sp-auth-card__footer">
-            <div class="sp-auth-demo-creds">
-                <h4>Demo Access</h4>
-                <p>Operational demo screens use the Judge Demo Access flow. Use the access code shared by the Culltron Smart Port team.</p>
-                <a href="/demo-access" class="sp-btn sp-btn--outline sp-btn--full">Open Demo Access</a>
-            </div>
-        </div>
+        @if (showDemoCredentials)
+        {
+            <div class="sp-auth-demo-creds"><h4>Seeded demo users</h4><p><code>admin@smartport.culltron.app</code>, <code>fleet.owner@smartport.culltron.app</code>, <code>driver@smartport.culltron.app</code>, <code>judge@smartport.culltron.app</code></p><p>Password: <code>SmartPort@2026!</code></p></div>
+        }
+
+        <div class="sp-auth-card__footer"><div class="sp-auth-demo-creds"><h4>Role-based Demo Access</h4><p>Judges should use `/demo-access` so the correct seeded Identity user is signed in and demo cookies are set for UI convenience.</p><a href="/demo-access" class="sp-btn sp-btn--outline sp-btn--full">Open Demo Access</a></div></div>
     </div>
 </div>
