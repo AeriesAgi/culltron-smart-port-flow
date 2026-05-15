@@ -1,31 +1,4 @@
-@{ Layout = "_LayoutPublic"; ViewData["Title"] = "About SmartPort"; }
-<section class="sp-hero sp-hero--sm"><div class="sp-hero__bg"></div>
-    <div class="container sp-hero__inner"><h1 class="sp-hero__headline">About SmartPort</h1><p class="sp-hero__sub">An enterprise AI operations prototype for smarter port flow.</p></div>
-</section>
-<section class="sp-section sp-section--white"><div class="container">
-    <div class="sp-split">
-        <div class="sp-split__text">
-            <h2>Our Mission</h2>
-            <p>Culltron Smart Port Flow demonstrates how AI-assisted recommendations can become auditable execution across control-room teams, fleet owners and drivers.</p>
-            <p>The prototype connects queue planning, gate/staging instructions, driver confirmations, WhatsApp location check-ins, Android/mobile APIs and emissions impact tracking using synthetic demo data.</p>
-        </div>
-        <div class="sp-split__text">
-            <h2>Pilot-ready architecture</h2>
-            <p>The current demo does not claim live IPMS, terminal, port authority or telematics integration. It is designed to show the workflow and the backend integration points required for a controlled pilot.</p>
-            <p>The platform is built on ASP.NET Core 8, PostgreSQL, and a clean domain model designed to integrate with approved TOS, gate, berth, yard, fleet and messaging feeds over time.</p>
-        </div>
-    </div>
-</div></section>
-<section class="sp-section sp-section--dark"><div class="container">
-    <div class="sp-section__header"><h2>Technology Foundation</h2></div>
-    <div class="sp-modules-grid">
-        <div class="sp-module-card"><div class="sp-module-card__icon">⚙️</div><h3>ASP.NET Core 8</h3><p>Enterprise-grade .NET backend with MVC architecture, robust auth, and clean domain separation.</p></div>
-        <div class="sp-module-card"><div class="sp-module-card__icon">🗄️</div><h3>PostgreSQL 16</h3><p>Production-ready relational database with ACID compliance and excellent performance at scale.</p></div>
-        <div class="sp-module-card"><div class="sp-module-card__icon">🔐</div><h3>Role-Based Access</h3><p>ASP.NET Core Identity with 5 operational roles and policy-based authorization throughout.</p></div>
-        <div class="sp-module-card"><div class="sp-module-card__icon">🐳</div><h3>Docker Ready</h3><p>Containerised deployment via Docker Compose. Runs on any cloud or on-premise Linux server.</p></div>
-    </div>
-</div></section>
-<section class="sp-section sp-section--cta"><div class="container sp-section--cta__inner">
-    <h2>Interested in a pilot?</h2><p>Use the demo to discuss controlled pilots, integration readiness and operational evaluation.</p>
-    <a asp-controller="Home" asp-action="Contact" class="sp-btn sp-btn--primary sp-btn--lg">Contact Our Team</a>
-</div></section>
+@{ Layout = "_LayoutPublic"; ViewData["Title"] = "About"; }
+<section class="spx-page-hero"><div class="container spx-split"><div><span class="spx-kicker">About Culltron Smart Port Flow</span><h1>Enterprise AI operations prototype for smarter port flow</h1><p>The product demonstrates how AI-assisted recommendations can become auditable execution across control-room teams, fleet owners and drivers without overstating live integration.</p><a href="/demo-access" class="sp-btn sp-btn--primary sp-btn--lg">Open Demo Access</a></div><div class="spx-map-visual spx-map-visual--compact"><div class="spx-map-grid"></div><div class="spx-container-stack"><span></span><span></span><span></span><span></span></div></div></div></section>
+<section class="spx-section spx-section--deep"><div class="container spx-split"><div class="spx-glow-card"><span class="spx-kicker">Mission</span><h2>Reduce idle time through coordinated execution</h2><p>Smart Port turns congestion signals into clear truck actions: hold, stage, proceed, reschedule, report an issue or complete. Drivers receive status and instructions through web, Android and WhatsApp-ready channels.</p></div><div class="spx-glow-card"><span class="spx-kicker">Architecture</span><h2>Built for pilot integration</h2><p>The ASP.NET Core backend, PostgreSQL data model and integration services are designed for approved pilot connectors to TOS/IPMS, gate, berth, yard, fleet, WhatsApp Cloud API and AI providers.</p></div></div></section>
+<section class="spx-section"><div class="container"><div class="spx-section__head"><span class="spx-kicker">Honest scope</span><h2>What the prototype does and does not claim</h2><p>Demo mode uses synthetic operational data. It is integration-ready for real keys and controlled pilot feeds, but no live port/IPMS/TOS, production GPS tracking or SMS capability is claimed.</p></div></div></section>

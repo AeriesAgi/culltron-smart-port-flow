@@ -1,25 +1,11 @@
-@{ Layout = "_LayoutPublic"; ViewData["Title"] = "The Platform"; }
-<section class="sp-hero sp-hero--sm"><div class="sp-hero__bg"></div>
-    <div class="container sp-hero__inner"><h1 class="sp-hero__headline">The SmartPort Platform</h1><p class="sp-hero__sub">A complete operations intelligence system for modern port and terminal management.</p></div>
+@{ Layout = "_LayoutPublic"; ViewData["Title"] = "Platform"; }
+<section class="spx-page-hero">
+  <div class="container spx-split">
+    <div><span class="spx-kicker">Pilot-Ready Integration Architecture</span><h1>The Smart Port operational execution platform</h1><p>Culltron Smart Port Flow connects a control-room signal to a truck-level execution plan, fleet-owner workflow, driver companion, WhatsApp LiveTest path, Copilot answer and auditable impact trail.</p><div class="spx-actions"><a href="/demo-access" class="sp-btn sp-btn--primary sp-btn--lg">Request Demo</a><a href="/#modules" class="sp-btn sp-btn--outline sp-btn--lg">View Platform</a></div></div>
+    <div class="spx-map-visual"><div class="spx-map-grid"></div><div class="spx-ship"></div><div class="spx-truck-path"></div><div class="spx-container-stack"><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
+  </div>
 </section>
-<section class="sp-section sp-section--white"><div class="container">
-    <div class="sp-section__header"><h2>End-to-End Port Operations</h2><p>From vessel approach to cargo delivery — every step tracked, monitored, and optimised.</p></div>
-    <div class="sp-modules-grid">
-        <div class="sp-module-card"><div class="sp-module-card__icon">⚓</div><h3>Vessel Scheduling</h3><p>Full vessel lifecycle from expected arrival through berthing to departure. ETAs, delays, voyage records, and turnaround performance.</p></div>
-        <div class="sp-module-card"><div class="sp-module-card__icon">🗓️</div><h3>Berth Planning</h3><p>Visual berth planner with occupancy timeline, assignment workflow, conflict detection, and utilisation analytics.</p></div>
-        <div class="sp-module-card"><div class="sp-module-card__icon">📦</div><h3>Container Management</h3><p>ISO 6346 container tracking, dwell time monitoring, yard slot management, reefer and hazardous cargo tracking.</p></div>
-        <div class="sp-module-card"><div class="sp-module-card__icon">🏗️</div><h3>Yard Operations</h3><p>Block-level yard occupancy, zone management (import/export/reefer/hazmat), near-capacity and critical alerts.</p></div>
-        <div class="sp-module-card"><div class="sp-module-card__icon">🚛</div><h3>Gate &amp; Landside</h3><p>Truck appointment management, queue monitoring across all gates, OCR/RFID integration readiness, transaction logs.</p></div>
-        <div class="sp-module-card"><div class="sp-module-card__icon">📋</div><h3>Document Control</h3><p>Bill of lading, manifests, customs declarations, DG declarations, phytosanitary certificates — full approval workflow.</p></div>
-        <div class="sp-module-card"><div class="sp-module-card__icon">⚠️</div><h3>Incident Management</h3><p>Full incident lifecycle: raise, acknowledge, assign, resolve. Severity triage, audit trail, corrective action tracking.</p></div>
-        <div class="sp-module-card"><div class="sp-module-card__icon">🤖</div><h3>AI Recommendations</h3><p>Rules-based intelligence engine that monitors operational metrics and generates actionable recommendations.</p></div>
-        <div class="sp-module-card"><div class="sp-module-card__icon">📊</div><h3>Analytics</h3><p>Throughput trends, turnaround analysis, berth efficiency, yard density, and crane productivity with date range filtering.</p></div>
-    </div>
-</div></section>
-<section class="sp-section sp-section--cta"><div class="container sp-section--cta__inner">
-    <h2>Ready to see it in action?</h2>
-    <div class="sp-hero__actions">
-        <a href="/demo-access" class="sp-btn sp-btn--primary sp-btn--lg">Try the Demo</a>
-        <a asp-controller="Home" asp-action="Contact" class="sp-btn sp-btn--outline-light sp-btn--lg">Talk to Us</a>
-    </div>
-</div></section>
+<section class="spx-section spx-section--deep"><div class="container"><div class="spx-section__head"><span class="spx-kicker">Smart Port Product Modules</span><h2>From signal to execution</h2><p>Every module is linked by shared backend state so the demo loop feels operational rather than slideware.</p></div><div class="spx-card-grid">
+@foreach (var item in new[]{("Control Room","Congestion, berth, gate, disruption, emissions and recommendation context.","/demo-access?next=/dashboard"),("Execution Plan Generator","Truck action cards with reason, call-forward time, idling impact and audit entries.","/demo-access?next=/execution/plans"),("Fleet Owner Console","Queue board, truck detail, notification controls, settings readiness and data-source views.","/demo-access?next=/fleet"),("Driver Queue Companion","Mobile-first job status, allowed actions, Copilot, confirmations and check-ins.","/demo-access?next=/driver"),("WhatsApp LiveTest / Demo Mode","Meta Cloud API readiness with safe blocking, consent checks, webhook commands and audit history.","/demo-access?next=/fleet/notifications"),("Android Driver Companion","Native Kotlin source and APK workflow that call backend mobile APIs without storing provider secrets.","/demo-access?next=/fleet/download-app")}){<a class="spx-product" href="@item.Item3"><span></span><h3>@item.Item1</h3><p>@item.Item2</p></a>}
+</div></div></section>
+<section class="spx-section"><div class="container spx-split"><div class="spx-glow-card"><span class="spx-kicker">Data Sources</span><h2>Connector-ready, honest by design</h2><p>The demo uses synthetic operational data and clearly marks readiness for approved IPMS/TOS, gate appointment, berth/yard, fleet, WhatsApp and telematics feeds. It does not claim live production integration without configured connectors.</p><a href="/demo-access?next=/fleet/data-sources" class="sp-btn sp-btn--outline">Open data-source readiness</a></div><div class="spx-glow-card"><span class="spx-kicker">Impact and audit</span><h2>Operational value that can be inspected</h2><p>Execution actions carry estimated idling minutes avoided, CO₂ impact, delay risk and a timeline of driver, fleet and notification events for review.</p><a href="/demo-access?next=/Reports" class="sp-btn sp-btn--primary">View reports</a></div></div></section>

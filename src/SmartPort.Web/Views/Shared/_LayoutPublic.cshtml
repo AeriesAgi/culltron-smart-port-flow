@@ -19,7 +19,7 @@
             <span class="sp-pub-logo__text">Culltron Smart Port Flow</span>
         </a>
         <ul class="sp-pub-nav__links">
-            <li><a asp-controller="Home" asp-action="Product">Platform</a></li>
+            <li><a href="/platform">Platform</a></li>
             <li><a asp-controller="Home" asp-action="Features">Features</a></li>
             <li><a asp-controller="Home" asp-action="About">About</a></li>
             <li><a asp-controller="Home" asp-action="Pricing">Pricing</a></li>
@@ -33,7 +33,7 @@
             else
             {
                 <a href="/demo-access" class="sp-btn sp-btn--outline">Demo Access</a>
-                <a asp-controller="Home" asp-action="Demo" class="sp-btn sp-btn--primary">Request Demo</a>
+                <a href="/demo-access" class="sp-btn sp-btn--primary">Request Demo</a>
             }
         </div>
         <button class="sp-pub-nav__hamburger" id="mobileMenuToggle" aria-label="Toggle menu">
@@ -56,16 +56,16 @@
                     <span class="sp-pub-logo__mark">⬡</span>
                     <span class="sp-pub-logo__text">Culltron Smart Port Flow</span>
                 </div>
-                <p>Culltron Smart Port Flow is an AI-assisted smart port operations prototype by Culltron.</p>
+                <p>Culltron Smart Port Flow is an enterprise AI operations prototype for port, fleet and driver execution readiness.</p>
                 <p class="sp-pub-footer__copy">© @DateTime.Now.Year Culltron.<br>Enterprise AI operations prototype with demo and pilot-integration readiness.</p>
             </div>
             <div class="sp-pub-footer__links">
                 <h4>Platform</h4>
                 <ul>
-                    <li><a asp-controller="Home" asp-action="Product">Overview</a></li>
+                    <li><a href="/platform">Overview</a></li>
                     <li><a asp-controller="Home" asp-action="Features">Features</a></li>
                     <li><a asp-controller="Home" asp-action="Pricing">Pricing</a></li>
-                    <li><a asp-controller="Home" asp-action="Demo">Request Demo</a></li>
+                    <li><a href="/demo-access">Request Demo</a></li>
                 </ul>
             </div>
             <div class="sp-pub-footer__links">
@@ -80,8 +80,8 @@
             <div class="sp-pub-footer__links">
                 <h4>Contact</h4>
                 <ul>
-                    <li>Culltron</li>
-                    <li>Smart Port Flow</li>
+                    <li>Culltron Smart Port Flow</li>
+                    <li>culltron.app</li>
                     <li>smartport.culltron.app</li>
                     <li>Contact: available on request</li>
                 </ul>

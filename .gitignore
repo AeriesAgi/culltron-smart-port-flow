@@ -1,1 +1,8 @@
 .env
+bin/
+obj/
+**/bin/
+**/obj/
+mobile/SmartPortDriverCompanion/.gradle/
+mobile/SmartPortDriverCompanion/build/
+mobile/SmartPortDriverCompanion/app/build/
