@@ -20,7 +20,9 @@ public class HomeController : Controller
         return View();
     }
 
-    // GET /product
+    // GET /product or /platform
+    [Route("/platform")]
+    [Route("/product")]
     public IActionResult Product() => View();
 
     // GET /features
@@ -41,7 +43,7 @@ public class HomeController : Controller
     {
         if (!ModelState.IsValid) return View(model);
         // TODO: send email via IEmailSender
-        TempData["Success"] = "Thank you – a SmartPort representative will contact you within one business day.";
+        TempData["Success"] = "Thank you — the Smart Port team will review your enquiry for demo or pilot follow-up.";
         return RedirectToAction(nameof(Contact));
     }
 

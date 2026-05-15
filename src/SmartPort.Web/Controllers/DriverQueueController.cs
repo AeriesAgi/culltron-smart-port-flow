@@ -219,8 +219,8 @@ public class WhatsAppWebhookController : ControllerBase
 
     private async Task SendInboundReplyAsync(FleetTruckDto truck, string reply, NotificationEventType eventType)
     {
-        var status = await _whatsApp.SendAsync(truck, reply);
-        await _notifications.RecordAsync(truck.BookingReference, NotificationChannel.WhatsApp, status, eventType, reply, DataProvenanceType.WhatsAppDriverCheckIn, "Smart Port WhatsApp webhook");
+        var sendResult = await _whatsApp.SendAsync(truck, reply);
+        await _notifications.RecordAsync(truck.BookingReference, NotificationChannel.WhatsApp, sendResult.Status, eventType, reply, DataProvenanceType.WhatsAppDriverCheckIn, "Smart Port WhatsApp webhook", sendResult.ExternalMessageId);
     }
     private static string NormalizeInbound(string value) => new(value.Where(char.IsDigit).ToArray());
     private static IEnumerable<InboundWhatsAppMessage> ExtractMessages(JsonElement payload)

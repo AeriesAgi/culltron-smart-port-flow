@@ -242,7 +242,7 @@ static bool RequiresDemoAccess(PathString path)
     string[] protectedPrefixes =
     {
         "/dashboard", "/fleet", "/driver", "/truck", "/execution", "/Copilot",
-        "/Disruptions", "/Recommendations", "/Reports", "/api/mobile"
+        "/Disruptions", "/Recommendations", "/Reports", "/api/mobile", "/mobile/download"
     };
 
     return protectedPrefixes.Any(prefix => value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));

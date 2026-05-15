@@ -31,7 +31,8 @@ public interface IDriverStatusCommandService { Task<DriverCommandResultDto> Hand
 public interface ILocationEtaService { LocationCheckInDto Estimate(string reference, string assignedGate, string stagingArea, decimal? latitude, decimal? longitude, string? label, DataProvenanceType source); }
 public interface INotificationTemplateService { string BuildMessage(FleetTruckDto truck, NotificationEventType eventType, NotificationChannel channel); }
 public interface INotificationService { Task<DriverNotificationDto> SendAsync(string reference, NotificationChannel channel, NotificationEventType eventType); Task<DriverNotificationDto?> RecordAsync(string reference, NotificationChannel channel, NotificationStatus status, NotificationEventType eventType, string message, DataProvenanceType source, string actor = "Smart Port", string externalMessageId = ""); Task<IReadOnlyList<DriverNotificationDto>> GetHistoryAsync(string reference); }
-public interface IWhatsAppNotificationSender { Task<NotificationStatus> SendAsync(FleetTruckDto truck, string message); }
+public sealed record WhatsAppSendResult(NotificationStatus Status, string ExternalMessageId = "");
+public interface IWhatsAppNotificationSender { Task<WhatsAppSendResult> SendAsync(FleetTruckDto truck, string message); }
 public interface IInAppNotificationService { Task<NotificationStatus> SendAsync(FleetTruckDto truck, string message); }
 public interface IPushNotificationSender { Task<NotificationStatus> SendAsync(FleetTruckDto truck, string message); }
 public interface IMobileDeviceRegistrationService { Task RegisterAsync(MobileDeviceRegistrationDto registration); Task UnregisterAsync(string reference, string deviceToken); }

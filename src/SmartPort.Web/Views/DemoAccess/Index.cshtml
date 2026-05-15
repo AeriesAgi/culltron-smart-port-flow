@@ -1,33 +1,31 @@
+@using SmartPort.Web.Controllers
 @{
     Layout = "_LayoutPublic";
-    ViewData["Title"] = "Judge Demo Access";
+    ViewData["Title"] = "Demo Access";
     var next = ViewBag.Next as string ?? "/dashboard";
     var selectedRole = ViewBag.SelectedRole as string ?? "Port Admin Demo";
-    var roles = new[] { "Port Admin Demo", "Fleet Owner Demo", "Driver Demo" };
+    var roles = ViewBag.Roles as IReadOnlyList<DemoAccessController.DemoRoleCredential> ?? Array.Empty<DemoAccessController.DemoRoleCredential>();
+    var showCredentials = ViewBag.ShowDemoCredentials == true;
 }
-<section class="spx-access">
+<section class="spx-access spx-access--enhanced">
   <div class="container spx-access__grid">
     <article class="spx-access__panel">
-      <span class="spx-kicker">Secure demo boundary</span>
-      <h1>Judge Demo Access</h1>
-      <p>Culltron Smart Port Flow keeps the public product site separate from operational demo screens. Enter the access code shared by the team to continue.</p>
+      <span class="spx-kicker">Secure operational demo boundary</span>
+      <h1>Choose a role and enter demo access</h1>
+      <p class="spx-lead">Public product site is separate from operational demo screens. Demo access opens the dashboard, fleet console, driver companion, execution plans, Copilot, settings, and mobile API preview without exposing integration secrets.</p>
       @if (ViewBag.Warning is string warning)
       {
         <div class="spx-access__warning">@warning</div>
       }
-      @if (ViewBag.DevDefaultAvailable == true)
-      {
-        <div class="spx-access__note">Development mode is using the safe local default code. Set <code>SMARTPORT_DEMO_ACCESS_CODE</code> for shared deployments.</div>
-      }
-      <form method="post" action="/demo-access" class="spx-access__form">
+      <form method="post" action="/demo-access" class="spx-access__form" id="demoAccessForm">
         <input type="hidden" name="next" value="@next" />
         <label>Demo role</label>
-        <div class="spx-role-grid">
-          @foreach (var role in roles)
+        <div class="spx-role-grid spx-role-grid--cards">
+          @foreach (var role in roles.Where(r => r.Role != "General Demo"))
           {
-            <label class="spx-role-card">
-              <input type="radio" name="role" value="@role" checked="@(role == selectedRole)" />
-              <span>@role</span>
+            <label class="spx-role-card spx-role-card--rich">
+              <input type="radio" name="role" value="@role.Role" checked="@(role.Role == selectedRole)" />
+              <span><strong>@role.Role</strong><small>@role.Description</small></span>
             </label>
           }
         </div>
@@ -36,11 +34,47 @@
         <button class="sp-btn sp-btn--primary sp-btn--lg" type="submit">Continue to Demo</button>
       </form>
     </article>
-    <aside class="spx-access__visual">
+
+    <aside class="spx-access__visual spx-credential-panel">
       <div class="spx-radar"></div>
-      <div class="spx-access-card spx-access-card--one"><strong>Control Room</strong><span>Congestion signal gated</span></div>
-      <div class="spx-access-card spx-access-card--two"><strong>Fleet Console</strong><span>Requires demo access</span></div>
-      <div class="spx-access-card spx-access-card--three"><strong>Webhook</strong><span>Meta callback remains reachable</span></div>
+      <div class="spx-demo-credentials">
+        <span class="spx-kicker">Demo Credentials</span>
+        <h2>Judge-friendly access flow</h2>
+        <p>@ViewBag.DemoCredentialMessage</p>
+        @if (showCredentials)
+        {
+          <div class="spx-credential-list">
+            @foreach (var role in roles)
+            {
+              <div class="spx-credential-row">
+                <div><strong>@role.Role</strong><small>@role.EnvName@(role.IsDevelopmentDefault ? " · development default" : " · configured")</small></div>
+                <code>@role.Code</code>
+                <button type="button" class="sp-btn sp-btn--outline sp-btn--sm" data-demo-code="@role.Code" data-demo-role="@(role.Role == "General Demo" ? selectedRole : role.Role)">Quick fill</button>
+              </div>
+            }
+          </div>
+        }
+        else
+        {
+          <div class="spx-access__note">Demo access code provided by the Smart Port team.</div>
+        }
+      </div>
+      <div class="spx-access-card spx-access-card--one"><strong>Control Room</strong><span>Gated internal route</span></div>
+      <div class="spx-access-card spx-access-card--two"><strong>Meta Webhook</strong><span>/webhooks/whatsapp remains public</span></div>
+      <div class="spx-access-card spx-access-card--three"><strong>Role cookie</strong><span>8-hour demo session</span></div>
     </aside>
   </div>
 </section>
+@section Scripts {
+<script>
+  document.querySelectorAll('[data-demo-code]').forEach((button) => {
+    button.addEventListener('click', () => {
+      document.getElementById('accessCode').value = button.dataset.demoCode || '';
+      const role = button.dataset.demoRole;
+      const radio = role ? document.querySelector(`input[name="role"][value="${role}"]`) : null;
+      if (radio) radio.checked = true;
+      document.getElementById('accessCode').focus();
+    });
+  });
+</script>
+}

@@ -4,10 +4,10 @@ Culltron Smart Port Flow is an enterprise AI operations prototype for smart-port
 
 The current application uses synthetic operational data by default. It does **not** claim live IPMS, terminal operating system, gate, fleet, WhatsApp, GPS, or telematics integration unless those connectors are configured in a controlled pilot.
 
-## Product surfaces
+## Smart Port Product Modules
 
 - Public product website with access-gated demo CTAs.
-- Demo Access flow using `SMARTPORT_DEMO_ACCESS_CODE`.
+- Role-based Demo Access flow using `SMARTPORT_DEMO_ACCESS_CODE`, role-specific codes, and optional credential display.
 - Control-room dashboard and operational reports.
 - Fleet Owner Console with live queue, truck detail, notifications, settings, data sources, and Android companion page.
 - Execution Plan Generator with truck-level actions and audit context.
@@ -33,13 +33,17 @@ Public pages remain open. Internal operational pages are protected by a lightwei
 
 `/webhooks/whatsapp` remains externally reachable for Meta verification and inbound webhook delivery. It validates the configured verify token for GET verification and safely audits unapproved inbound senders.
 
-Set the shared demo access code with:
+Set demo access codes with environment variables:
 
 ```bash
-export SMARTPORT_DEMO_ACCESS_CODE="use-a-private-demo-code"
+export SMARTPORT_DEMO_ACCESS_CODE="use-a-private-general-demo-code"
+export SMARTPORT_ADMIN_DEMO_CODE="use-a-private-admin-demo-code"
+export SMARTPORT_FLEET_DEMO_CODE="use-a-private-fleet-demo-code"
+export SMARTPORT_DRIVER_DEMO_CODE="use-a-private-driver-demo-code"
+export SMARTPORT_SHOW_DEMO_CREDENTIALS=false
 ```
 
-If this variable is missing in Development, the local-only default is `SMARTPORT-DEMO`. Shared deployments should always set `SMARTPORT_DEMO_ACCESS_CODE`.
+If codes are missing in Development, safe local defaults are available: `culltron-admin-2026`, `culltron-fleet-2026`, `culltron-driver-2026`, and `culltron-demo-2026`. Production only displays credentials when `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`.
 
 ## Run locally
 
@@ -70,7 +74,11 @@ Then open the public landing page and use `/demo-access` to enter the internal d
 
 | Variable | Purpose |
 | --- | --- |
-| `SMARTPORT_DEMO_ACCESS_CODE` | Shared access code for protected demo routes. |
+| `SMARTPORT_DEMO_ACCESS_CODE` | General access code for protected demo routes. |
+| `SMARTPORT_ADMIN_DEMO_CODE` | Port Admin Demo role code. |
+| `SMARTPORT_FLEET_DEMO_CODE` | Fleet Owner Demo role code. |
+| `SMARTPORT_DRIVER_DEMO_CODE` | Driver Demo role code. |
+| `SMARTPORT_SHOW_DEMO_CREDENTIALS` | `true` to intentionally display configured/public demo credentials. |
 
 ### Gemini Copilot
 
@@ -136,7 +144,7 @@ dotnet publish src/SmartPort.Web/SmartPort.Web.csproj -c Release
 
 Deployment checklist:
 
-- Set `SMARTPORT_DEMO_ACCESS_CODE`.
+- Set `SMARTPORT_DEMO_ACCESS_CODE` and role-specific demo codes.
 - Set database connection string for PostgreSQL.
 - Set `SMARTPORT_PUBLIC_BASE_URL` to the deployed HTTPS origin.
 - Configure Gemini variables only if Gemini should be enabled.
@@ -146,8 +154,8 @@ Deployment checklist:
 
 ## Android companion
 
-The Android source project is at `mobile/SmartPortDriverCompanion`. It calls backend APIs, stores no provider secrets, and uses the backend for AI and WhatsApp coordination. Build the APK from Android Studio or Gradle in an environment with the Android SDK installed.
+The Android source project is at `mobile/SmartPortDriverCompanion`. It calls backend APIs, stores no provider secrets, and uses the backend for AI and WhatsApp coordination. Build the APK from Android Studio, from Gradle in an Android SDK environment, or via `.github/workflows/build-android-apk.yml`. Copy `app/build/outputs/apk/debug/app-debug.apk` to `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk` before deployment to expose the web download button.
 
 ## Integration roadmap
 
-See `docs/integration-roadmap.md` for the pilot integration plan. The demo is synthetic by design; production integration requires partner-approved access, security review, validation, and operational governance.
+See `docs/integration-roadmap.md`, `docs/GEMINI_ENV_SETUP.md`, and `docs/WHATSAPP_LIVETEST_GUIDE.md` for the pilot integration plan. The demo is synthetic by design; production integration requires partner-approved access, security review, validation, and operational governance.

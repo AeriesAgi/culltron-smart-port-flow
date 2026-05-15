@@ -1,24 +1,39 @@
 # Smart Port Driver Companion Android App
 
-Native Kotlin companion client for **Culltron Smart Port Flow**. The Android app is real source code and delegates queue intelligence, Copilot, WhatsApp and state transitions to the ASP.NET backend.
+Native Kotlin companion client for **Culltron Smart Port Flow**. The Android app delegates queue intelligence, Copilot, WhatsApp coordination and state transitions to the ASP.NET backend.
 
-## Open and build
-1. Open `mobile/SmartPortDriverCompanion` in Android Studio.
+## Build options
+
+### Automated GitHub Actions build
+
+Run `.github/workflows/build-android-apk.yml`. The workflow sets up JDK and Android SDK, builds the debug APK, and uploads the APK artifact.
+
+To publish the APK through the Smart Port web app, copy the artifact or local build output to:
+
+```text
+src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk
+```
+
+### Android Studio or local Gradle
+
+1. Open `mobile/SmartPortDriverCompanion` in Android Studio or an Android SDK-enabled shell.
 2. Let Gradle sync the Kotlin/Android project.
 3. Keep the default backend URL or set a local/dev URL on the first screen.
-4. Run on an emulator/device or choose **Build > Build APK(s)**.
-5. If you produce a demo APK, copy it to `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk` so `/fleet/download-app` can expose it.
+4. Build the debug APK.
+5. Copy `app/build/outputs/apk/debug/app-debug.apk` to the web downloads path above before deployment if a direct web download is required.
 
-The Codespaces/container environment may not include Android SDK/build tools; APK generation should be run in Android Studio or an Android-enabled CI runner. The web build must not depend on Android tooling.
+The container used for the web app may not include Android SDK/build tools; the web build does not depend on Android tooling.
 
 ## Backend URL
+
 Default backend: `https://smartport.culltron.app`.
 
 Local development examples:
 - Android emulator to local ASP.NET HTTPS: `https://10.0.2.2:5001`
-- Physical device: use a reachable LAN HTTPS URL or deployed/Codespaces forwarded URL.
+- Physical device: use a reachable LAN HTTPS URL or deployed/forwarded HTTPS URL.
 
 ## Demo references
+
 - `SPQ-2026-0042`
 - `SPQ-2026-0043`
 - `SPQ-2026-0044`
@@ -27,6 +42,7 @@ Local development examples:
 - `SPQ-2026-0047`
 
 ## API usage
+
 The app calls the Smart Port backend only:
 - `GET /api/mobile/truck/status/{reference}`
 - `GET /api/mobile/notifications/{reference}` via status/notification history
@@ -34,12 +50,10 @@ The app calls the Smart Port backend only:
 - `POST /api/mobile/driver/confirm-status`
 - `POST /api/mobile/driver/location-checkin`
 - `POST /api/mobile/copilot/driver`
-- `POST /api/mobile/device/register` placeholder
+- `POST /api/mobile/device/register`
 
 The app can fetch queue number, ETA, gate/staging/current status, latest instruction, notification history and allowed actions; post driver confirmations and demo location check-ins; and call backend Copilot.
 
 ## Secrets and AI rules
-The Android app stores no Gemini key, WhatsApp token, phone-number ID, verify token, API key or backend AI logic. Gemini and WhatsApp integrations run server-side only. Demo location is a driver-triggered check-in, not continuous GPS tracking.
 
-## Play Store path
-Add signed release config, production privacy copy, future authentication, Firebase token registration if push is enabled, and CI-based APK/AAB signing before Play Store release.
+The Android app stores no Gemini key, WhatsApp token, phone-number ID, verify token, API key or backend AI logic. Gemini and WhatsApp integrations run server-side only. Demo location is a driver-triggered check-in, not continuous GPS tracking.

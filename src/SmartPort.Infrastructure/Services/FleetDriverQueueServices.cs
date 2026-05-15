@@ -249,9 +249,10 @@ public class DriverNotificationService : INotificationService
     {
         var truck = await _queue.GetTruckAsync(reference) ?? throw new InvalidOperationException("Truck/reference not found.");
         var message = _templates.BuildMessage(truck, eventType, channel);
-        var status = channel switch { NotificationChannel.InApp => await _inApp.SendAsync(truck, message), NotificationChannel.WhatsApp when !truck.DriverContact.IsLiveWhatsAppSafe && _queue.GetWhatsAppConnectorStatus().Mode == WhatsAppMode.LiveTest => NotificationStatus.BlockedSafety, NotificationChannel.WhatsApp => await _whatsApp.SendAsync(truck, message), NotificationChannel.AndroidPush => await _push.SendAsync(truck, message), _ => NotificationStatus.Failed };
+        var whatsAppResult = new WhatsAppSendResult(NotificationStatus.Failed);
+        var status = channel switch { NotificationChannel.InApp => await _inApp.SendAsync(truck, message), NotificationChannel.WhatsApp when !truck.DriverContact.IsLiveWhatsAppSafe && _queue.GetWhatsAppConnectorStatus().Mode == WhatsAppMode.LiveTest => NotificationStatus.BlockedSafety, NotificationChannel.WhatsApp => (whatsAppResult = await _whatsApp.SendAsync(truck, message)).Status, NotificationChannel.AndroidPush => await _push.SendAsync(truck, message), _ => NotificationStatus.Failed };
         var source = channel == NotificationChannel.WhatsApp && status == NotificationStatus.LiveTestSent ? DataProvenanceType.FutureLiveConnector : DataProvenanceType.ManualOperatorInput;
-        return await RecordAsync(truck.BookingReference, channel, status, eventType, status == NotificationStatus.BlockedSafety ? $"Blocked for WhatsApp safety: {message}" : message, source, "Fleet owner");
+        return await RecordAsync(truck.BookingReference, channel, status, eventType, status == NotificationStatus.BlockedSafety ? $"Blocked for WhatsApp safety: {message}" : message, source, "Fleet owner", whatsAppResult.ExternalMessageId);
     }
     public async Task<DriverNotificationDto?> RecordAsync(string reference, NotificationChannel channel, NotificationStatus status, NotificationEventType eventType, string message, DataProvenanceType source, string actor = "Smart Port", string externalMessageId = "")
     {
@@ -266,19 +267,30 @@ public class DriverNotificationService : INotificationService
 }
 
 public class InAppNotificationService : IInAppNotificationService { public Task<NotificationStatus> SendAsync(FleetTruckDto truck, string message) => Task.FromResult(NotificationStatus.SimulatedSent); }
-public class SimulatedWhatsAppNotificationSender : IWhatsAppNotificationSender { public Task<NotificationStatus> SendAsync(FleetTruckDto truck, string message) => Task.FromResult(NotificationStatus.SimulatedSent); }
+public class SimulatedWhatsAppNotificationSender : IWhatsAppNotificationSender { public Task<WhatsAppSendResult> SendAsync(FleetTruckDto truck, string message) => Task.FromResult(new WhatsAppSendResult(NotificationStatus.SimulatedSent)); }
 public class WhatsAppCloudApiNotificationSender : IWhatsAppNotificationSender
 {
     private readonly HttpClient _http; private readonly IConfiguration _config; public WhatsAppCloudApiNotificationSender(HttpClient http, IConfiguration config) { _http = http; _config = config; }
-    public async Task<NotificationStatus> SendAsync(FleetTruckDto truck, string message)
+    public async Task<WhatsAppSendResult> SendAsync(FleetTruckDto truck, string message)
     {
         var mode = Enum.TryParse<WhatsAppMode>(_config["SMARTPORT_WHATSAPP_MODE"], true, out var parsed) ? parsed : WhatsAppMode.Demo; var enabled = string.Equals(_config["SMARTPORT_WHATSAPP_ENABLED"], "true", StringComparison.OrdinalIgnoreCase); var token = _config["SMARTPORT_WHATSAPP_ACCESS_TOKEN"]; var phoneNumberId = _config["SMARTPORT_WHATSAPP_PHONE_NUMBER_ID"]; var graph = string.IsNullOrWhiteSpace(_config["SMARTPORT_WHATSAPP_GRAPH_VERSION"]) ? "v20.0" : _config["SMARTPORT_WHATSAPP_GRAPH_VERSION"];
-        if (mode != WhatsAppMode.LiveTest || !enabled) return NotificationStatus.ConnectorNotConfigured;
-        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(phoneNumberId)) return NotificationStatus.ConnectorNotConfigured;
-        if (!truck.DriverContact.IsLiveWhatsAppSafe) return NotificationStatus.BlockedSafety;
+        if (mode != WhatsAppMode.LiveTest || !enabled) return new WhatsAppSendResult(NotificationStatus.ConnectorNotConfigured);
+        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(phoneNumberId)) return new WhatsAppSendResult(NotificationStatus.ConnectorNotConfigured);
+        if (!truck.DriverContact.IsLiveWhatsAppSafe) return new WhatsAppSendResult(NotificationStatus.BlockedSafety);
         var to = truck.DriverContact.NormalizedWhatsAppNumber.Replace("+", string.Empty);
-        if (to.Length < 8 || !to.All(char.IsDigit)) return NotificationStatus.BlockedSafety;
-        try { using var request = new HttpRequestMessage(HttpMethod.Post, $"https://graph.facebook.com/{graph}/{phoneNumberId}/messages"); request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token); request.Content = new StringContent(JsonSerializer.Serialize(new { messaging_product = "whatsapp", to, type = "text", text = new { body = message } }), Encoding.UTF8, "application/json"); using var response = await _http.SendAsync(request); return response.IsSuccessStatusCode ? NotificationStatus.LiveTestSent : NotificationStatus.Failed; } catch { return NotificationStatus.Failed; }
+        if (to.Length < 8 || !to.All(char.IsDigit)) return new WhatsAppSendResult(NotificationStatus.BlockedSafety);
+        try { using var request = new HttpRequestMessage(HttpMethod.Post, $"https://graph.facebook.com/{graph}/{phoneNumberId}/messages"); request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token); request.Content = new StringContent(JsonSerializer.Serialize(new { messaging_product = "whatsapp", to, type = "text", text = new { body = message } }), Encoding.UTF8, "application/json"); using var response = await _http.SendAsync(request); var body = await response.Content.ReadAsStringAsync(); var externalId = ExtractMetaMessageId(body); return response.IsSuccessStatusCode ? new WhatsAppSendResult(NotificationStatus.LiveTestSent, externalId) : new WhatsAppSendResult(NotificationStatus.Failed); } catch { return new WhatsAppSendResult(NotificationStatus.Failed); }
+    }
+    private static string ExtractMetaMessageId(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return string.Empty;
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("messages", out var messages) && messages.ValueKind == JsonValueKind.Array && messages.GetArrayLength() > 0 && messages[0].TryGetProperty("id", out var id)) return id.GetString() ?? string.Empty;
+        }
+        catch { }
+        return string.Empty;
     }
 }
 public class SimulatedPushNotificationSender : IPushNotificationSender { public Task<NotificationStatus> SendAsync(FleetTruckDto truck, string message) => Task.FromResult(NotificationStatus.SimulatedSent); }

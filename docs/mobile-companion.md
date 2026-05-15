@@ -16,7 +16,7 @@ For local Android emulator testing, use a reachable ASP.NET backend URL such as:
 https://10.0.2.2:5001
 ```
 
-For a physical device, use a LAN, tunnel, Codespaces, or deployed HTTPS URL that the device can reach.
+For a physical device, use a LAN, tunnel, or deployed HTTPS URL that the device can reach.
 
 ## Security model
 

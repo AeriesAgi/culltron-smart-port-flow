@@ -44,7 +44,7 @@
 
 <section class="spx-section" id="loop">
   <div class="container">
-    <div class="spx-section__head"><span class="spx-kicker">Operational loop</span><h2>One closed workflow from detection to audit</h2><p>Each action is designed to update shared backend state for the dashboard, fleet console, driver pages, mobile APIs and notification history.</p></div>
+    <div class="spx-section__head"><span class="spx-kicker">Operational Execution Loop</span><h2>One closed workflow from detection to audit</h2><p>Each action is designed to update shared backend state for the dashboard, fleet console, driver pages, mobile APIs and notification history.</p></div>
     <div class="spx-loop">
       @foreach (var step in new[]{("01","Detect congestion","Control-room signal and synthetic operational context."),("02","Generate execution plan","Truck-level plan with call-forward timing."),("03","Coordinate fleet owner","Console actions for staging, gate release and exceptions."),("04","Send driver instruction","Web, Android, in-app and WhatsApp-ready messaging."),("05","Driver confirms/checks in","STATUS, READY, ARRIVED_GATE and location check-ins."),("06","ETA/status updates","Queue state and driver screen refresh from the same service."),("07","Measure impact","Idling minutes and CO₂ estimates remain transparent."),("08","Record audit trail","Timeline and notification history preserve the decision path.")})
       {
@@ -56,7 +56,7 @@
 
 <section class="spx-section spx-section--deep" id="modules">
   <div class="container">
-    <div class="spx-section__head"><span class="spx-kicker">Smart Port product modules</span><h2>Operational Modules</h2><p>Polished demo surfaces for the control room, fleet owner, driver and integration-readiness story.</p></div>
+    <div class="spx-section__head"><span class="spx-kicker">Smart Port product modules</span><h2>Smart Port Product Modules</h2><p>Premium operational modules for the control room, fleet owner, driver and pilot-integration readiness story.</p></div>
     <div class="spx-card-grid">
       @foreach (var card in new[]{("Control Room Dashboard","Congestion, berth, gate and emissions context.","/demo-access?next=/dashboard"),("Execution Plan Generator","Truck-level movement plan with reasons and audit.","/demo-access?next=/execution/plans"),("Fleet Owner Console","Queue, staging, LiveTest readiness and dispatch actions.","/demo-access?next=/fleet"),("Driver Queue Companion","Mobile-first instructions, confirmations and Copilot.","/demo-access?next=/driver"),("WhatsApp LiveTest / Demo Notifications","Simulated mode plus Meta Cloud API readiness.","/demo-access?next=/fleet/notifications"),("Android Driver Companion","Native Kotlin source ready for backend APIs.","/demo-access?next=/fleet/download-app"),("Data Sources & Integration Readiness","Honest IPMS/TOS/gate/fleet integration plan.","/demo-access?next=/fleet/data-sources"),("Gemini/Fallback Copilot","Scoped operational AI with deterministic fallback.","/demo-access?next=/Copilot")})
       {
@@ -87,7 +87,7 @@
 
 <section class="spx-section">
   <div class="container spx-split">
-    <div><span class="spx-kicker">Integration readiness</span><h2>Honest pilot path</h2><p>The current demo uses synthetic operational data. A pilot can connect to IPMS, terminal systems, gate appointment systems, berth/yard feeds, fleet systems, WhatsApp Cloud API and GPS/telematics later where approved.</p><p>These are planned integration paths, not claims of live production port connectivity.</p></div>
+    <div><span class="spx-kicker">Pilot-Ready Integration Architecture</span><h2>Honest pilot path</h2><p>The current demo uses synthetic operational data. A pilot can connect to IPMS, terminal systems, gate appointment systems, berth/yard feeds, fleet systems, WhatsApp Cloud API and GPS/telematics later where approved.</p><p>These are planned integration paths, not claims of live production port connectivity.</p></div>
     <div class="spx-metric-stack"><div><strong>Synthetic data</strong><span>Transparent demo baseline</span></div><div><strong>Connector-ready</strong><span>Environment-driven Gemini and WhatsApp setup</span></div><div><strong>Pilot governance</strong><span>Human-approved operational actions</span></div></div>
   </div>
 </section>
