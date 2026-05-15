@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -37,7 +38,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
     options.SlidingExpiration = true;
     options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
     options.Cookie.Name = "SmartPort.Session";
 });
 
@@ -49,7 +51,13 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(Policies.CanAcknowledgeAlerts, p => p.RequireRole(Roles.Admin, Roles.PortOperationsManager, Roles.TerminalStaff));
     options.AddPolicy(Policies.CanManageIncidents,   p => p.RequireRole(Roles.Admin, Roles.PortOperationsManager, Roles.TerminalStaff));
     options.AddPolicy(Policies.CanApproveDocuments,  p => p.RequireRole(Roles.Admin, Roles.PortOperationsManager));
-    options.AddPolicy(Policies.CanViewAnalytics,     p => p.RequireRole(Roles.Admin, Roles.PortOperationsManager, Roles.Viewer));
+    options.AddPolicy(Policies.CanViewAnalytics,     p => p.RequireRole(Roles.Admin, Roles.PortOperationsManager, Roles.Viewer, Roles.JudgeDemo));
+    options.AddPolicy(Policies.CanAccessControlRoom, p => p.RequireRole(Roles.Admin, Roles.PortOperationsManager, Roles.JudgeDemo));
+    options.AddPolicy(Policies.CanAccessFleet,       p => p.RequireRole(Roles.Admin, Roles.PortOperationsManager, Roles.FleetOwner, Roles.LogisticsPartner, Roles.JudgeDemo));
+    options.AddPolicy(Policies.CanAccessDriver,      p => p.RequireRole(Roles.Driver, Roles.FleetOwner, Roles.Admin, Roles.JudgeDemo));
+    options.AddPolicy(Policies.CanAccessGeminiAgent, p => p.RequireRole(Roles.Admin, Roles.PortOperationsManager, Roles.FleetOwner, Roles.JudgeDemo));
+    options.AddPolicy(Policies.CanAccessReports,     p => p.RequireRole(Roles.Admin, Roles.PortOperationsManager, Roles.Viewer, Roles.JudgeDemo));
+    options.AddPolicy(Policies.CanManageSettings,    p => p.RequireRole(Roles.Admin, Roles.PortOperationsManager));
 });
 
 // ─── Configuration bindings ───────────────────────────────────────────────────
@@ -153,6 +161,13 @@ builder.Services.AddControllersWithViews(options =>
 
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
 
 // ─── Middleware Pipeline ──────────────────────────────────────────────────────
@@ -166,6 +181,7 @@ else
     app.UseDeveloperExceptionPage();
 }
 
+app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
@@ -241,8 +257,8 @@ static bool RequiresDemoAccess(PathString path)
 
     string[] protectedPrefixes =
     {
-        "/dashboard", "/fleet", "/driver", "/truck", "/execution", "/Copilot",
-        "/Disruptions", "/Recommendations", "/Reports", "/api/mobile", "/mobile/download"
+        "/dashboard", "/fleet", "/driver", "/truck", "/execution", "/Copilot", "/gemini-agent", "/agent/gemini",
+        "/demo-tour", "/enterprise-readiness", "/Disruptions", "/Recommendations", "/Reports", "/mobile/download"
     };
 
     return protectedPrefixes.Any(prefix => value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));

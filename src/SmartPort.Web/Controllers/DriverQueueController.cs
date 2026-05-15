@@ -1,11 +1,15 @@
+using Microsoft.AspNetCore.Authorization;
+using System.Collections.Concurrent;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using SmartPort.Application.DTOs;
 using SmartPort.Application.Interfaces;
 using SmartPort.Infrastructure.Services;
+using SmartPort.Shared.Constants;
 
 namespace SmartPort.Web.Controllers;
 
+[Authorize(Policy = Policies.CanAccessDriver)]
 public class DriverController : Controller
 {
     private readonly IFleetDriverQueueService _queue;
@@ -64,6 +68,7 @@ public class DriverController : Controller
     }
 }
 
+[Authorize(Policy = Policies.CanAccessDriver)]
 public class TruckController : Controller
 {
     private readonly IFleetDriverQueueService _queue;
@@ -91,17 +96,57 @@ public class TruckController : Controller
 [IgnoreAntiforgeryToken]
 public class MobileApiController : ControllerBase
 {
+    private static readonly ConcurrentDictionary<string, DateTimeOffset> DemoTokens = new(StringComparer.Ordinal);
+    private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _environment;
     private readonly IFleetDriverQueueService _queue;
     private readonly INotificationService _notifications;
     private readonly IMobileDeviceRegistrationService _devices;
     private readonly IDriverStatusCommandService _commands;
     private readonly ISmartPortCopilotChatService _copilot;
-    public MobileApiController(IFleetDriverQueueService queue, INotificationService notifications, IMobileDeviceRegistrationService devices, IDriverStatusCommandService commands, ISmartPortCopilotChatService copilot)
-    { _queue = queue; _notifications = notifications; _devices = devices; _commands = commands; _copilot = copilot; }
+    public MobileApiController(IConfiguration configuration, IWebHostEnvironment environment, IFleetDriverQueueService queue, INotificationService notifications, IMobileDeviceRegistrationService devices, IDriverStatusCommandService commands, ISmartPortCopilotChatService copilot)
+    { _configuration = configuration; _environment = environment; _queue = queue; _notifications = notifications; _devices = devices; _commands = commands; _copilot = copilot; }
+
+    [HttpPost("/api/mobile/auth/demo-login")]
+    public async Task<IActionResult> DemoLogin([FromBody] MobileDemoLoginRequest request)
+    {
+        if (!IsMobileDemoCodeValid(request.AccessCode, request.Role)) return Unauthorized(new { message = "Demo access required" });
+        var expires = DateTimeOffset.UtcNow.AddHours(8);
+        var token = $"spm_{Guid.NewGuid():N}";
+        DemoTokens[token] = expires;
+        var reference = (await _queue.GetDemoReferencesAsync()).FirstOrDefault() ?? "SPQ-2026-0042";
+        return Ok(new { token, expiresAt = expires, role = "Driver", demoReference = reference });
+    }
+
+    private bool EnsureMobileToken()
+    {
+        if (!Request.Headers.TryGetValue("X-SmartPort-Mobile-Token", out var value)) return false;
+        var token = value.ToString();
+        if (!DemoTokens.TryGetValue(token, out var expires) || expires <= DateTimeOffset.UtcNow) return false;
+        return true;
+    }
+
+    private bool IsMobileDemoCodeValid(string? accessCode, string? role)
+    {
+        if (string.IsNullOrWhiteSpace(accessCode)) return false;
+        var candidates = new[]
+        {
+            _configuration["SMARTPORT_DRIVER_DEMO_CODE"],
+            _configuration["SMARTPORT_DEMO_ACCESS_CODE"],
+            _configuration["SMARTPORT_JUDGE_DEMO_CODE"],
+            _environment.IsDevelopment() ? "culltron-driver-2026" : null,
+            _environment.IsDevelopment() ? "culltron-demo-2026" : null,
+            _environment.IsDevelopment() ? "culltron-judge-2026" : null
+        }.Where(c => !string.IsNullOrWhiteSpace(c));
+        return candidates.Any(c => string.Equals(c, accessCode.Trim(), StringComparison.Ordinal));
+    }
+
+    private IActionResult MobileUnauthorized() => Unauthorized(new { message = "Demo access required", signIn = "/api/mobile/auth/demo-login" });
 
     [HttpGet("/api/mobile/truck/status/{reference}")]
     public async Task<IActionResult> TruckStatus(string reference)
     {
+        if (!EnsureMobileToken()) return MobileUnauthorized();
         var truck = await _queue.GetTruckAsync(reference);
         if (truck == null) return NotFound(new { message = "Truck/reference not found" });
         truck.NotificationHistory = (await _notifications.GetHistoryAsync(reference)).ToList();
@@ -109,14 +154,15 @@ public class MobileApiController : ControllerBase
     }
 
     [HttpPost("/api/mobile/truck/check")]
-    public async Task<IActionResult> TruckCheck([FromBody] DriverCheckRequestDto request) => await TruckStatus(request.Reference);
+    public async Task<IActionResult> TruckCheck([FromBody] DriverCheckRequestDto request) { if (!EnsureMobileToken()) return MobileUnauthorized(); return await TruckStatus(request.Reference); }
 
     [HttpGet("/api/mobile/notifications/{reference}")]
-    public async Task<IActionResult> Notifications(string reference) => Ok(await _notifications.GetHistoryAsync(reference));
+    public async Task<IActionResult> Notifications(string reference) { if (!EnsureMobileToken()) return MobileUnauthorized(); return Ok(await _notifications.GetHistoryAsync(reference)); }
 
     [HttpPost("/api/mobile/driver/acknowledge")]
     public async Task<IActionResult> Acknowledge([FromBody] DriverAcknowledgementRequestDto request)
     {
+        if (!EnsureMobileToken()) return MobileUnauthorized();
         var truck = await _queue.AcknowledgeAsync(request.Reference, request.Acknowledgement);
         return truck == null ? NotFound(new { message = "Truck/reference not found" }) : Ok(truck);
     }
@@ -124,6 +170,7 @@ public class MobileApiController : ControllerBase
     [HttpPost("/api/mobile/driver/confirm-status")]
     public async Task<IActionResult> ConfirmStatus([FromBody] DriverEventRequestDto request)
     {
+        if (!EnsureMobileToken()) return MobileUnauthorized();
         var source = string.Equals(request.SourceLabel, "WhatsApp", StringComparison.OrdinalIgnoreCase) ? DataProvenanceType.WhatsAppDriverCheckIn : DataProvenanceType.AndroidDriverApp;
         var truck = await _queue.RecordDriverEventAsync(request.Reference, request.EventType, source);
         return truck == null ? NotFound(new { message = "Truck/reference not found" }) : Ok(truck);
@@ -132,16 +179,18 @@ public class MobileApiController : ControllerBase
     [HttpPost("/api/mobile/driver/location-checkin")]
     public async Task<IActionResult> LocationCheckIn([FromBody] DriverEventRequestDto request)
     {
+        if (!EnsureMobileToken()) return MobileUnauthorized();
         var truck = await _queue.RecordLocationCheckInAsync(request.Reference, request.Latitude, request.Longitude, request.LocationLabel, DataProvenanceType.WhatsAppDriverCheckIn);
         return truck == null ? NotFound(new { message = "Truck/reference not found" }) : Ok(truck);
     }
 
     [HttpPost("/api/mobile/driver/command")]
-    public async Task<IActionResult> DriverCommand([FromBody] DriverCommandRequestDto request) => Ok(await _commands.HandleCommandAsync(request));
+    public async Task<IActionResult> DriverCommand([FromBody] DriverCommandRequestDto request) { if (!EnsureMobileToken()) return MobileUnauthorized(); return Ok(await _commands.HandleCommandAsync(request)); }
 
     [HttpPost("/api/mobile/copilot/driver")]
     public async Task<IActionResult> DriverCopilot([FromBody] CopilotQuestionRequestDto request)
     {
+        if (!EnsureMobileToken()) return MobileUnauthorized();
         var truck = await _queue.GetTruckAsync(request.Reference);
         var prompt = $"Driver asks about Smart Port queue job {request.Reference}: {request.Question}. Keep answer scoped to status, ETA, gate, staging and instruction.";
         var response = await _copilot.GenerateResponseAsync(prompt);
@@ -151,19 +200,22 @@ public class MobileApiController : ControllerBase
     [HttpPost("/api/mobile/copilot/fleet")]
     public async Task<IActionResult> FleetCopilot([FromBody] CopilotQuestionRequestDto request)
     {
+        if (!EnsureMobileToken()) return MobileUnauthorized();
         var response = await _copilot.GenerateResponseAsync($"Fleet owner asks: {request.Question}. Summarize fleet queue plan and driver actions only.");
         return Ok(new CopilotResponseDto { Answer = response.ShortAnswer, SuggestedAction = response.RecommendedAction, Source = response.GeneratedBy });
     }
 
     [HttpGet("/api/mobile/driver/demo")]
-    public async Task<IActionResult> Demo() => Ok(new { references = await _queue.GetDemoReferencesAsync(), backend = "Smart Port Fleet & Driver Queue Companion" });
+    public async Task<IActionResult> Demo() { if (!EnsureMobileToken()) return MobileUnauthorized(); return Ok(new { references = await _queue.GetDemoReferencesAsync(), backend = "Smart Port Fleet & Driver Queue Companion" }); }
 
     [HttpPost("/api/mobile/device/register")]
-    public async Task<IActionResult> Register([FromBody] MobileDeviceRegistrationDto request) { await _devices.RegisterAsync(request); return Ok(new { status = "registered", mode = "placeholder" }); }
+    public async Task<IActionResult> Register([FromBody] MobileDeviceRegistrationDto request) { if (!EnsureMobileToken()) return MobileUnauthorized(); await _devices.RegisterAsync(request); return Ok(new { status = "registered", mode = "placeholder" }); }
 
     [HttpPost("/api/mobile/device/unregister")]
-    public async Task<IActionResult> Unregister([FromBody] MobileDeviceRegistrationDto request) { await _devices.UnregisterAsync(request.Reference, request.DeviceToken); return Ok(new { status = "unregistered" }); }
+    public async Task<IActionResult> Unregister([FromBody] MobileDeviceRegistrationDto request) { if (!EnsureMobileToken()) return MobileUnauthorized(); await _devices.UnregisterAsync(request.Reference, request.DeviceToken); return Ok(new { status = "unregistered" }); }
 }
+
+public sealed class MobileDemoLoginRequest { public string Role { get; set; } = "Driver Demo"; public string AccessCode { get; set; } = string.Empty; }
 
 [ApiController]
 [IgnoreAntiforgeryToken]

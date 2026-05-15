@@ -1,0 +1,29 @@
+@model SmartPort.Application.DTOs.FleetQueueSummaryDto
+@using SmartPort.Infrastructure.Services
+@{
+    ViewData["Title"] = "Gemini Operations Agent";
+    var status = ViewBag.Status as AgentModeStatus ?? new AgentModeStatus();
+    var history = ViewBag.History as IReadOnlyList<SmartPort.Web.Controllers.GeminiAgentHistoryItem> ?? Array.Empty<SmartPort.Web.Controllers.GeminiAgentHistoryItem>();
+}
+<section class="sp-page-hero">
+  <div>
+    <span class="sp-badge">Enterprise AI operations · synthetic demo data</span>
+    <h1>Gemini Operations Agent</h1>
+    <p>Decision-support agent for structured port, fleet, driver, WhatsApp, emissions and execution-plan context. Recommendations are human-approved and audit-visible.</p>
+  </div>
+  <form method="post" action="/gemini-agent/generate"><button class="sp-btn sp-btn--primary">Generate Gemini Operations Brief</button></form>
+</section>
+
+<div class="sp-grid sp-grid--3">
+  <article class="sp-card"><h3>Gemini readiness</h3><p><strong>GEMINI_API_KEY:</strong> @(ViewBag.GeminiApiKeyConfigured ? "Configured" : "Not configured")</p><p><strong>Gemini__Enabled:</strong> @ViewBag.GeminiEnabled</p><p><strong>Gemini__Mode:</strong> @ViewBag.GeminiMode</p><p><strong>Gemini__Model:</strong> @ViewBag.GeminiModel</p><p><strong>Last Gemini generation:</strong> @(status.LastGeneratedBriefUtc?.ToString("u") ?? "Not yet this session")</p><p><strong>Fallback:</strong> @status.GeminiStatus</p></article>
+  <article class="sp-card"><h3>Agent inputs</h3><p>Truck queue: <strong>@Model.TotalTrucks</strong></p><p>Gate pressure: <strong>@Model.TrucksWaiting waiting / @Model.TrucksHolding holding</strong></p><p>Berth readiness: <strong>@Model.BerthReadiness.Count zones</strong></p><p>Yard occupancy: <strong>synthetic high-pressure demo snapshot</strong></p><p>WhatsApp/driver state: <strong>@Model.LatestNotifications.Count notifications</strong></p><p>Emissions estimate: <strong>@Model.TotalCo2KgAvoided kg CO₂ avoided</strong></p></article>
+  <article class="sp-card"><h3>Gemini vs fallback</h3><p><strong>Deterministic recommendation:</strong> @Model.LatestAiQueueRecommendation</p><p><strong>Gemini explanation:</strong> @(status.GeminiConfigured ? "Available when configured" : "Local Fallback Active")</p><p><strong>Safety:</strong> Human approval required before fleet/driver notifications.</p></article>
+</div>
+
+<section class="sp-card sp-mt"><h2>Agent workflow trace</h2><ol class="sp-timeline"><li>Read operational state</li><li>Detect bottleneck</li><li>Compare deterministic fallback plan</li><li>Ask Gemini for reasoning/explanation when configured</li><li>Generate human-approved action plan</li><li>Save audit entry</li><li>Push to fleet/driver channels only if approved</li></ol></section>
+
+<section class="sp-card sp-mt"><h2>Action plan generator</h2><div class="sp-action-row">@foreach (var label in new[] { "Gemini Operations Brief", "Fleet Owner Action Plan", "Driver Instructions", "Judge Demo Summary", "Risk & Governance Review" }) { <form method="post" action="/gemini-agent/generate"><input type="hidden" name="briefType" value="@label" /><button class="sp-btn sp-btn--outline">@label</button></form> }</div></section>
+
+<section class="sp-card sp-mt"><h2>Audit/history for this demo session</h2>@if (!history.Any()) { <p>No generated briefs yet. Generate one to create a session audit record.</p> } else { <div class="sp-table-wrap"><table class="sp-table"><thead><tr><th>Time</th><th>Type</th><th>Source</th><th>Plan</th><th>Summary</th></tr></thead><tbody>@foreach (var item in history) { <tr><td>@item.GeneratedAtUtc.ToString("HH:mm:ss") UTC</td><td>@item.BriefType</td><td>@item.GeneratedBy</td><td><a href="/execution/plans/@item.PlanId">@item.PlanId[..8]</a></td><td>@item.Summary</td></tr> }</tbody></table></div> }</section>
+
+<section class="sp-card sp-mt"><h2>Why this matters</h2><ul><li>Reduces truck idling by coordinating hold, staging and gate-release actions.</li><li>Improves port/fleet/driver coordination with a shared operational state.</li><li>Works with synthetic data today and is connector-ready for a controlled pilot.</li><li>Keeps humans in control: no automatic live-system changes are claimed or performed.</li></ul></section>

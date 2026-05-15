@@ -37,6 +37,9 @@ public static class SeedData
         "PortOperationsManager",
         "TerminalStaff",
         "LogisticsPartner",
+        "FleetOwner",
+        "Driver",
+        "JudgeDemo",
         "Viewer"
     };
 
@@ -54,36 +57,50 @@ public static class SeedData
     {
         var users = new[]
         {
-            new { Email = "admin@smartport.co.za",         First = "Sipho",    Last = "Nkosi",      Role = "Admin",                  JobTitle = "System Administrator",      Terminal = "DCT" },
-            new { Email = "ops.manager@smartport.co.za",   First = "Nomvula",  Last = "Dlamini",    Role = "PortOperationsManager",  JobTitle = "Port Operations Manager",   Terminal = "DCT" },
-            new { Email = "terminal1@smartport.co.za",     First = "Thabo",    Last = "Molefe",     Role = "TerminalStaff",          JobTitle = "Terminal Supervisor",       Terminal = "DCT" },
-            new { Email = "logistics@freightco.co.za",     First = "Priya",    Last = "Naidoo",     Role = "LogisticsPartner",       JobTitle = "Logistics Coordinator",     Terminal = "N/A" },
-            new { Email = "executive@transnet.co.za",      First = "Johan",    Last = "van der Berg", Role = "Viewer",               JobTitle = "Executive Director",        Terminal = "HQ"  },
+            new SeedUser("admin@smartport.co.za", "Sipho", "Nkosi", new[] { "Admin" }, "System Administrator", "Transnet Port Terminals", "DCT"),
+            new SeedUser("ops.manager@smartport.co.za", "Nomvula", "Dlamini", new[] { "PortOperationsManager" }, "Port Operations Manager", "Transnet Port Terminals", "DCT"),
+            new SeedUser("terminal1@smartport.co.za", "Thabo", "Molefe", new[] { "TerminalStaff" }, "Terminal Supervisor", "Transnet Port Terminals", "DCT"),
+            new SeedUser("logistics@freightco.co.za", "Priya", "Naidoo", new[] { "LogisticsPartner" }, "Logistics Coordinator", "FreightCo Demo", "N/A"),
+            new SeedUser("executive@smartport.culltron.app", "Johan", "van der Berg", new[] { "Viewer" }, "Executive Viewer", "Pilot Sponsor Demo", "HQ"),
+
+            new SeedUser("admin@smartport.culltron.app", "Port", "Admin", new[] { "Admin" }, "Port Admin / Control Room", "Culltron Smart Port Demo", "Command Centre"),
+            new SeedUser("fleet.owner@smartport.culltron.app", "Fleet", "Owner", new[] { "FleetOwner", "LogisticsPartner" }, "Fleet Owner / Durban Freight Demo", "Durban Freight Demo", "Fleet Console"),
+            new SeedUser("driver@smartport.culltron.app", "Driver", "Companion", new[] { "Driver" }, "Driver Companion Demo", "Durban Freight Demo", "Android Companion"),
+            new SeedUser("judge@smartport.culltron.app", "Hackathon", "Judge", new[] { "JudgeDemo", "Viewer" }, "Hackathon Judge Demo", "Culltron Smart Port Demo", "Guided Tour")
         };
 
         foreach (var u in users)
         {
-            if (await userManager.FindByEmailAsync(u.Email) == null)
+            var user = await userManager.FindByEmailAsync(u.Email);
+            if (user == null)
             {
-                var user = new ApplicationUser
+                user = new ApplicationUser
                 {
                     UserName = u.Email,
                     Email = u.Email,
                     FirstName = u.First,
                     LastName = u.Last,
                     JobTitle = u.JobTitle,
-                    Organisation = "Transnet Port Terminals",
+                    Organisation = u.Organisation,
                     Terminal = u.Terminal,
                     EmailConfirmed = true,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 };
-                var result = await userManager.CreateAsync(user, "SmartPort@2025!");
-                if (result.Succeeded)
-                    await userManager.AddToRoleAsync(user, u.Role);
+                var password = u.Email.EndsWith("@smartport.culltron.app", StringComparison.OrdinalIgnoreCase) ? "SmartPort@2026!" : "SmartPort@2025!";
+                var result = await userManager.CreateAsync(user, password);
+                if (!result.Succeeded) continue;
+            }
+
+            foreach (var role in u.Roles)
+            {
+                if (!await userManager.IsInRoleAsync(user, role))
+                    await userManager.AddToRoleAsync(user, role);
             }
         }
     }
+
+    private sealed record SeedUser(string Email, string First, string Last, string[] Roles, string JobTitle, string Organisation, string Terminal);
 
     // ─── Berths ───────────────────────────────────────────────────────────────
     private static async Task SeedBerthsAsync(SmartPortDbContext context)

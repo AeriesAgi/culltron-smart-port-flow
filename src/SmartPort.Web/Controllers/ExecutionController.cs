@@ -1,8 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartPort.Application.Interfaces;
+using SmartPort.Shared.Constants;
 
 namespace SmartPort.Web.Controllers;
 
+[Authorize(Policy = Policies.CanAccessFleet)]
 public class ExecutionController : Controller
 {
     private readonly IExecutionPlanService _plans;

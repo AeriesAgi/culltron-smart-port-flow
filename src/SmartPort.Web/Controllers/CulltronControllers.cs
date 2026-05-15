@@ -5,12 +5,13 @@ using SmartPort.Application.Interfaces;
 using SmartPort.Application.DTOs;
 using SmartPort.Domain.Enums;
 using SmartPort.Infrastructure.Services;
+using SmartPort.Shared.Constants;
 
 namespace SmartPort.Web.Controllers;
 
 // ─── AI Agent Controller ──────────────────────────────────────────────────────
 
-[Authorize]
+[Authorize(Policy = Policies.CanAccessGeminiAgent)]
 public class AgentController : Controller
 {
     private readonly IAiAgentService _agent;
@@ -151,7 +152,7 @@ public class OrganisationsController : Controller
 
 // ─── Fleet Controller ─────────────────────────────────────────────────────────
 
-[Authorize]
+[Authorize(Policy = Policies.CanAccessFleet)]
 public class FleetController : Controller
 {
     private readonly IFleetVehicleService _fleet;
@@ -165,7 +166,6 @@ public class FleetController : Controller
         _fleet = fleet; _orgs = orgs; _queue = queue; _notifications = notifications; _commands = commands; _copilot = copilot;
     }
 
-    [AllowAnonymous]
     [HttpGet("/fleet")]
     public async Task<IActionResult> Index(string? fleetOperatorId)
     {
@@ -173,7 +173,6 @@ public class FleetController : Controller
         return View(summary);
     }
 
-    [AllowAnonymous]
     [HttpGet("/fleet/trucks")]
     public async Task<IActionResult> Trucks(string? fleetOperatorId)
     {
@@ -181,7 +180,6 @@ public class FleetController : Controller
         return View(trucks);
     }
 
-    [AllowAnonymous]
     [HttpGet("/fleet/trucks/{id}")]
     public async Task<IActionResult> TruckDetail(string id)
     {
@@ -192,11 +190,9 @@ public class FleetController : Controller
         return View(truck);
     }
 
-    [AllowAnonymous]
     [HttpGet("/fleet/owner-demo")]
     public async Task<IActionResult> OwnerDemo() => View("Index", await _queue.GetFleetSummaryAsync("durban-freight"));
 
-    [AllowAnonymous]
     [HttpGet("/fleet/drivers")]
     public async Task<IActionResult> Drivers()
     {
@@ -206,7 +202,7 @@ public class FleetController : Controller
         return View(await _queue.GetDriverContactsAsync());
     }
 
-    [AllowAnonymous]
+    [Authorize(Policy = Policies.CanManageSettings)]
     [HttpGet("/fleet/drivers/create")]
     public async Task<IActionResult> CreateDriver()
     {
@@ -216,7 +212,7 @@ public class FleetController : Controller
         return View("DriverForm", new SaveDriverContactRequestDto());
     }
 
-    [AllowAnonymous]
+    [Authorize(Policy = Policies.CanManageSettings)]
     [HttpPost("/fleet/drivers")]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> SaveDriver(SaveDriverContactRequestDto request)
@@ -226,7 +222,6 @@ public class FleetController : Controller
         return RedirectToAction(nameof(Drivers));
     }
 
-    [AllowAnonymous]
     [HttpGet("/fleet/trucks/create")]
     public async Task<IActionResult> CreateQueueTruck()
     {
@@ -235,7 +230,6 @@ public class FleetController : Controller
         return View("TruckForm", new SaveFleetQueueTruckRequestDto());
     }
 
-    [AllowAnonymous]
     [HttpPost("/fleet/trucks/save")]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> SaveQueueTruck(SaveFleetQueueTruckRequestDto request)
@@ -245,11 +239,11 @@ public class FleetController : Controller
         return Redirect($"/fleet/trucks/{truck.BookingReference}");
     }
 
-    [AllowAnonymous]
+    [Authorize(Policy = Policies.CanManageSettings)]
     [HttpGet("/fleet/settings")]
     public async Task<IActionResult> Settings() { ViewBag.WhatsAppStatus = _queue.GetWhatsAppConnectorStatus(); ViewBag.GeminiStatus = (await _copilot.BuildPageAsync()).AgentModeStatus; return View(); }
 
-    [AllowAnonymous]
+    [Authorize(Policy = Policies.CanManageSettings)]
     [HttpPost("/fleet/settings/test-gemini")]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> TestGemini()
@@ -259,16 +253,13 @@ public class FleetController : Controller
         return Redirect("/fleet/settings");
     }
 
-    [AllowAnonymous]
     [HttpGet("/fleet/download-app")]
     [HttpGet("/mobile/download")]
     public async Task<IActionResult> DownloadApp() { ViewBag.DemoReferences = await _queue.GetDemoReferencesAsync(); ViewBag.ApkExists = System.IO.File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "downloads", "SmartPortDriverCompanion.apk")); return View(); }
 
-    [AllowAnonymous]
     [HttpGet("/fleet/data-sources")]
     public async Task<IActionResult> DataSources() { ViewBag.WhatsAppStatus = _queue.GetWhatsAppConnectorStatus(); return View(await _queue.GetDataSourcesAsync()); }
 
-    [AllowAnonymous]
     [HttpGet("/fleet/notifications")]
     public async Task<IActionResult> Notifications(string? reference)
     {
@@ -279,7 +270,6 @@ public class FleetController : Controller
         return View(await _notifications.GetHistoryAsync(selected));
     }
 
-    [AllowAnonymous]
     [HttpPost("/fleet/notify/{reference}/{channel}")]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> SendNotification(string reference, NotificationChannel channel)
@@ -295,10 +285,10 @@ public class FleetController : Controller
         {
             await _notifications.SendAsync(reference, channel, eventType);
         }
+        TempData["Success"] = $"{channel} notification recorded for {reference}.";
         return Redirect(Request.Headers.Referer.ToString() ?? "/fleet/notifications");
     }
 
-    [AllowAnonymous]
     [HttpPost("/fleet/trucks/{reference}/action")]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> TruckAction(string reference, string commandText)
@@ -308,16 +298,15 @@ public class FleetController : Controller
         return Redirect($"/fleet/trucks/{reference}");
     }
 
-    [AllowAnonymous]
     [HttpPost("/fleet/trucks/{reference}/request-location")]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> RequestLocation(string reference)
     {
         await _notifications.SendAsync(reference, NotificationChannel.WhatsApp, NotificationEventType.WhatsAppLocationCheckIn);
+        TempData["Success"] = "Location request recorded and notification history updated.";
         return Redirect($"/fleet/trucks/{reference}");
     }
 
-    [AllowAnonymous]
     [HttpPost("/fleet/trucks/{reference}/copilot")]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> TruckCopilot(string reference, string question)

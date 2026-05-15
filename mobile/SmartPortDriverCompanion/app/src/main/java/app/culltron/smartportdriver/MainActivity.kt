@@ -14,6 +14,8 @@ class MainActivity : Activity() {
     private var backend = "https://smartport.culltron.app"
     private lateinit var root: LinearLayout
     private var currentReference = "SPQ-2026-0042"
+    private var demoCode = ""
+    private var mobileToken = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,16 +35,28 @@ class MainActivity : Activity() {
         label("Driver Queue Companion", 18)
         val backendInput = input(backend, "Backend URL")
         val refInput = input(currentReference, "Booking, truck, or job reference")
+        val codeInput = input(demoCode, "Demo code")
+        button("Demo login") { backend = backendInput.text.toString().trimEnd('/'); demoCode = codeInput.text.toString(); demoLogin(refInput) }
         button("Check queue status") { backend = backendInput.text.toString().trimEnd('/'); currentReference = refInput.text.toString(); fetchStatus(currentReference) }
-        button("Use demo reference SPQ-2026-0042") { refInput.setText("SPQ-2026-0042"); fetchStatus("SPQ-2026-0042") }
-        label("Free demo mode pulls queue status and notification history from Smart Port APIs. No Firebase, Gemini key, or WhatsApp credential is stored in the app.", 14)
+        button("Use Demo Driver") { refInput.setText("SPQ-2026-0042"); if (codeInput.text.isBlank()) codeInput.setText("culltron-driver-2026"); demoCode = codeInput.text.toString(); backend = backendInput.text.toString().trimEnd('/'); demoLogin(refInput) }
+        label("Demo token auth pulls queue status and notification history from Smart Port APIs. No Firebase, Gemini key, or WhatsApp credential is stored in the app.", 14)
+    }
+
+    private fun demoLogin(refInput: EditText) = thread {
+        try {
+            val body = "{\"role\":\"Driver Demo\",\"accessCode\":\"$demoCode\"}"
+            val json = JSONObject(postJsonForText("$backend/api/mobile/auth/demo-login", body, false))
+            mobileToken = json.getString("token")
+            currentReference = json.optString("demoReference", refInput.text.toString())
+            runOnUiThread { refInput.setText(currentReference); toast("Demo access granted"); fetchStatus(currentReference) }
+        } catch (ex: Exception) { runOnUiThread { toast("Demo access required: ${ex.message}") } }
     }
 
     private fun fetchStatus(reference: String) = thread {
         try {
             val json = getJson("$backend/api/mobile/truck/status/$reference")
             runOnUiThread { showStatus(json) }
-        } catch (ex: Exception) { runOnUiThread { toast("Unable to load status: ${ex.message}") } }
+        } catch (ex: Exception) { runOnUiThread { toast(if (ex.message?.contains("401") == true) "Demo access required" else "Unable to load status: ${ex.message}") } }
     }
 
     private fun showStatus(json: JSONObject) {
@@ -96,9 +110,14 @@ class MainActivity : Activity() {
     }
 
     private fun registerDevicePlaceholder() = thread { try { postJson("$backend/api/mobile/device/register", "{\"reference\":\"$currentReference\",\"deviceToken\":\"demo-local-device\",\"platform\":\"Android\",\"appVersion\":\"1.0\"}") } catch (_: Exception) {} }
-    private fun getJson(url: String) = JSONObject(URL(url).readText())
+    private fun getJson(url: String): JSONObject {
+        val conn = (URL(url).openConnection() as HttpURLConnection)
+        if (mobileToken.isNotBlank()) conn.setRequestProperty("X-SmartPort-Mobile-Token", mobileToken)
+        if (conn.responseCode == 401) throw Exception("401 Demo access required")
+        return JSONObject(conn.inputStream.bufferedReader().readText())
+    }
     private fun postJson(url: String, body: String) { postJsonForText(url, body) }
-    private fun postJsonForText(url: String, body: String): String { return (URL(url).openConnection() as HttpURLConnection).run { requestMethod="POST"; setRequestProperty("Content-Type","application/json"); doOutput=true; outputStream.use{it.write(body.toByteArray())}; inputStream.bufferedReader().readText() } }
+    private fun postJsonForText(url: String, body: String, includeToken: Boolean = true): String { return (URL(url).openConnection() as HttpURLConnection).run { requestMethod="POST"; setRequestProperty("Content-Type","application/json"); if (includeToken && mobileToken.isNotBlank()) setRequestProperty("X-SmartPort-Mobile-Token", mobileToken); doOutput=true; outputStream.use{it.write(body.toByteArray())}; if (responseCode == 401) throw Exception("401 Demo access required"); inputStream.bufferedReader().readText() } }
     private fun titleText(text: String) = label(text, 28)
     private fun label(text: String, size: Int) { root.addView(TextView(this).apply { setText(text); textSize=size.toFloat(); setTextColor(Color.WHITE); setPadding(0,10,0,10) }) }
     private fun input(text: String, hint: String) = EditText(this).apply { setText(text); setHint(hint); setTextColor(Color.WHITE); setHintTextColor(Color.GRAY); root.addView(this) }

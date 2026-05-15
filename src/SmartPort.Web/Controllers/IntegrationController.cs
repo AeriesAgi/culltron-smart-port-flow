@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartPort.Application.Interfaces;
+using SmartPort.Shared.Constants;
 
 namespace SmartPort.Web.Controllers;
 
-[Authorize]
+[Authorize(Policy = Policies.CanAccessControlRoom)]
 public class IntegrationController : Controller
 {
     private readonly ISyntheticSmartPortConnector _syntheticConnector;

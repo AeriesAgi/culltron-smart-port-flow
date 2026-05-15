@@ -13,12 +13,7 @@ public class HomeController : Controller
     public HomeController(ILogger<HomeController> logger) => _logger = logger;
 
     // GET /
-    public IActionResult Index()
-    {
-        if (User.Identity?.IsAuthenticated == true)
-            return RedirectToAction("Index", "Dashboard");
-        return View();
-    }
+    public IActionResult Index() => View();
 
     // GET /product or /platform
     [Route("/platform")]

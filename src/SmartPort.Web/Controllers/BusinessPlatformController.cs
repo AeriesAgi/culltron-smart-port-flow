@@ -2,10 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartPort.Application.Interfaces;
 using SmartPort.Infrastructure.Services;
+using SmartPort.Shared.Constants;
 
 namespace SmartPort.Web.Controllers;
 
-[Authorize]
+[Authorize(Policy = Policies.CanAccessReports)]
 public class ImpactController : Controller
 {
     private readonly ISmartPortIntelligenceService _intelligence;
@@ -59,7 +60,7 @@ public class CleanLogisticsController : Controller
     public IActionResult Index() => View();
 }
 
-[Authorize]
+[Authorize(Policy = Policies.CanAccessReports)]
 public class PilotReadinessController : Controller
 {
     private readonly IExternalIntegrationHealthService _integrationHealth;

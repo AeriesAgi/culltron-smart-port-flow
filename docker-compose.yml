@@ -34,6 +34,12 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=smartport;Username=smartport;Password=SmartPort2025!;Pooling=true;Minimum Pool Size=2;Maximum Pool Size=20;"
+      SMARTPORT_ADMIN_DEMO_CODE: "culltron-admin-2026"
+      SMARTPORT_FLEET_DEMO_CODE: "culltron-fleet-2026"
+      SMARTPORT_DRIVER_DEMO_CODE: "culltron-driver-2026"
+      SMARTPORT_JUDGE_DEMO_CODE: "culltron-judge-2026"
+      SMARTPORT_DEMO_ACCESS_CODE: "culltron-demo-2026"
+      SMARTPORT_WHATSAPP_VERIFY_TOKEN: "demo-verify-token"
     ports:
       - "8080:8080"
 
