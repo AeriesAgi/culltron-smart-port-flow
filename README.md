@@ -1,70 +1,104 @@
-# Culltron Smart Port Flow — Gemini Agent Enterprise Demo
+# Culltron Smart Port Flow
 
-**Live demo URL:** `https://<your-smart-port-demo-url>`
+Culltron Smart Port Flow is an enterprise AI operations agent for smart ports and freight logistics. It turns synthetic/demo port signals into execution plans, fleet instructions, driver updates, simulated WhatsApp/mobile actions, audit trails and emissions/idling impact insights.
 
-Smart Port is an ASP.NET Core 8 MVC + PostgreSQL/Docker prototype for an enterprise AI logistics operations platform. It demonstrates a complete, human-approved loop: public website → role-based demo login → Port Admin command centre → Gemini Operations Agent → execution plan → fleet owner action → driver Android/mobile status → WhatsApp/demo notification → driver confirmation/location/check-in → updated queue state → audit trail → emissions/idling impact report.
+**Live demo URL:** replace with deployed URL when available. Local default is `http://localhost:8080` when Docker is available.
 
-## Demo access
+## Judge path
 
-Use `/demo-access` for role-based Identity sign-in. Seeded users are created automatically when the database is initialised:
+1. Open the live URL or local URL.
+2. Click **Demo Access**.
+3. Choose **Judge Demo**.
+4. Use the provided access code or seeded Identity account if enabled.
+5. Open **Demo Tour**.
+6. Open **Gemini Operations Agent** and generate a brief.
+7. Generate an execution plan, open truck `SPQ-2026-0042`, send a simulated WhatsApp/driver action, then review audit/notification history.
+8. Open **Agent Governance** and **Enterprise Readiness**.
 
-- Port Admin Demo: `admin@smartport.culltron.app`
-- Fleet Owner Demo: `fleet.owner@smartport.culltron.app`
-- Driver Demo: `driver@smartport.culltron.app`
-- Judge Demo: `judge@smartport.culltron.app`
+## Demo credentials
 
-Password for seeded demo users: `SmartPort@2026!`. Do not expose credentials in production unless `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`.
+Seeded users use password `SmartPort@2026!`:
 
-## Exact judge path
+| Role | Email | Landing |
+| --- | --- | --- |
+| Port Admin | `admin@smartport.culltron.app` | `/dashboard` |
+| Fleet Owner | `fleet.owner@smartport.culltron.app` | `/fleet` |
+| Driver | `driver@smartport.culltron.app` | `/driver/demo` |
+| Judge Demo | `judge@smartport.culltron.app` | `/demo-tour` |
 
-1. `/` public story
-2. `/demo-access` → Judge Demo
-3. `/demo-tour`
-4. `/dashboard`
-5. `/gemini-agent` → generate operations brief
-6. `/execution/plans` → generate/open plan
-7. `/fleet/trucks/SPQ-2026-0042` → request location/send demo WhatsApp/move to staging
-8. `/driver/demo` → confirm driver action
-9. `/fleet/notifications`
-10. `/reports` or `/enterprise-readiness`
+Production deployments should not expose role cards/access codes unless `SMARTPORT_SHOW_DEMO_CREDENTIALS=true` is intentionally set.
 
 ## Gemini setup
 
-Set Gemini configuration through environment variables or configuration:
+Gemini is optional. Without configuration, the demo runs deterministic fallback safely.
 
 ```bash
-GEMINI_API_KEY=<key>
-Gemini__Enabled=true
-Gemini__Mode=Hybrid
-Gemini__Model=gemini-2.5-flash
+export GEMINI_API_KEY="..."
+export Gemini__Enabled=true
+export Gemini__Model=gemini-2.5-flash
 ```
 
-If Gemini is unavailable, the platform remains demo-ready using local deterministic fallback and clearly labels fallback mode.
+The Gemini console shows key configured yes/no, enabled yes/no, model, mode, fallback status, latest generation and latency. All AI actions remain human-approved.
 
 ## WhatsApp setup
 
-Webhook verification uses `SMARTPORT_WHATSAPP_VERIFY_TOKEN`. Live test outbound messaging requires `SMARTPORT_WHATSAPP_MODE=LiveTest`, approved sender numbers, `SMARTPORT_WHATSAPP_ACCESS_TOKEN`, and `SMARTPORT_WHATSAPP_PHONE_NUMBER_ID`. Demo mode uses simulated notifications only.
+WhatsApp is simulated by default. Live test mode requires approved Meta credentials, approved test recipients and verify token configuration. Do not claim production WhatsApp integration unless credentials and approval exist.
 
-## Android APK workflow
+Relevant endpoints:
 
-The driver companion lives in `mobile/SmartPortDriverCompanion`. GitHub Actions builds a debug APK with Java/Kotlin target 17 and uploads `app/build/outputs/apk/debug/*.apk`.
+- `GET /webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=...&hub.challenge=...`
+- `POST /webhooks/whatsapp`
+- Fleet simulated sends from `/fleet/trucks/SPQ-2026-0042`
+
+## Mobile and Android
+
+Mobile API demo flow:
+
+- `POST /api/mobile/auth/demo-login`
+- Header: `X-SmartPort-Mobile-Token`
+- `GET /api/mobile/truck/status/SPQ-2026-0042`
+- `GET /api/mobile/notifications/SPQ-2026-0042`
+- `POST /api/mobile/driver/confirm-status`
+- `POST /api/mobile/driver/location-checkin`
+- `POST /api/mobile/copilot/driver`
+- `POST /api/mobile/copilot/fleet`
+
+The Android workflow is `.github/workflows/build-android-apk.yml`; it uses JDK 17, Android SDK setup, Gradle 8.14.4 and uploads `mobile/SmartPortDriverCompanion/app/build/outputs/apk/debug/*.apk`.
+
+## Docker setup
 
 ```bash
-cd mobile/SmartPortDriverCompanion
-gradle assembleDebug
-ls -lah app/build/outputs/apk/debug/
+docker compose up -d --build
+docker compose ps
+docker compose logs --tail=150 web
 ```
 
-## Architecture summary
+## Local .NET commands
 
-- ASP.NET Core 8 MVC with Identity roles and policies
-- PostgreSQL via Docker Compose
-- Gemini/hybrid/local fallback agent narrative services
-- In-memory demo fleet/driver queue state and notification history
-- Mobile API protected by `X-SmartPort-Mobile-Token`
-- WhatsApp webhook verification and simulated/live-test-safe notification sender
-- Public website plus protected command/fleet/driver/report surfaces
+```bash
+dotnet restore SmartPort.sln
+dotnet build SmartPort.sln
+dotnet publish src/SmartPort.Web/SmartPort.Web.csproj -c Release
+```
 
-## Honest integration boundary
+## Architecture
 
-No live Transnet, IPMS, terminal, customer, WhatsApp production, or GPS production integration is claimed. Current data is synthetic demo data. Integration surfaces are connector-ready for approved pilot credentials and human-approved action workflows.
+- ASP.NET Core MVC web app with Identity role login.
+- PostgreSQL via Entity Framework Core.
+- Fleet/driver queue services using synthetic demo operational data.
+- Gemini-enhanced agent service with deterministic fallback.
+- Mobile API with memory-only demo tokens.
+- WhatsApp webhook and simulated notification history.
+- Governance, health and enterprise readiness pages.
+
+## Market/pilot readiness
+
+Smart Port is pilot-ready and connector-ready for approved integrations with IPMS/TOS/gate/fleet/GPS/WhatsApp systems. A real pilot requires NDA/data sharing, field mapping, sandbox connector, supervised operations, KPI validation and production hardening.
+
+## Limitations and honest claims
+
+- No live Transnet, IPMS, TOS, customer, GPS or production WhatsApp integration is claimed.
+- Demo data is synthetic.
+- Gemini is only used when configured; deterministic fallback always works.
+- External sends and operational changes require human approval.
+- Integration requires approved pilot credentials.

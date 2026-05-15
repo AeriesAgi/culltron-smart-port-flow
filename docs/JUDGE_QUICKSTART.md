@@ -1,0 +1,12 @@
+# Judge Quickstart
+
+1. Open the live URL or `http://localhost:8080`.
+2. Click **Demo Access**.
+3. Choose **Judge Demo**.
+4. Open **Demo Tour**.
+5. Open **Gemini Operations Agent** and click **Generate Gemini Operations Brief**.
+6. Open **Execution Plans** and generate a plan.
+7. Open truck `SPQ-2026-0042`, send a simulated WhatsApp or driver action, then review notification/timeline history.
+8. Open **Agent Governance** and **Enterprise Readiness**.
+
+Best path: `/demo-access` → Judge Demo → `/demo-tour` → `/gemini-agent` → `/execution/plans` → `/fleet/trucks/SPQ-2026-0042` → `/enterprise-readiness`.

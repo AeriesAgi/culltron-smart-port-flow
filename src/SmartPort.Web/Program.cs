@@ -182,13 +182,23 @@ else
 }
 
 app.UseForwardedHeaders();
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.TryAdd("X-Frame-Options", "DENY");
+    context.Response.Headers.TryAdd("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.TryAdd("Permissions-Policy", "camera=(), microphone=(), geolocation=(self)");
+    await next();
+});
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseAuthentication();
 
 app.Use(async (context, next) =>
 {
-    if (RequiresDemoAccess(context.Request.Path) && !context.Request.Cookies.ContainsKey("SmartPort.DemoAccess"))
+    var hasIdentitySession = context.User?.Identity?.IsAuthenticated == true;
+    if (RequiresDemoAccess(context.Request.Path) && !hasIdentitySession && !context.Request.Cookies.ContainsKey("SmartPort.DemoAccess"))
     {
         if (context.Request.Path.Value?.StartsWith("/api", StringComparison.OrdinalIgnoreCase) == true)
         {
@@ -206,7 +216,6 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
 
@@ -258,7 +267,7 @@ static bool RequiresDemoAccess(PathString path)
     string[] protectedPrefixes =
     {
         "/dashboard", "/fleet", "/driver", "/truck", "/execution", "/Copilot", "/gemini-agent", "/agent/gemini",
-        "/demo-tour", "/enterprise-readiness", "/Disruptions", "/Recommendations", "/Reports", "/mobile/download"
+        "/agent-governance", "/ops-ingest", "/agent/ingest", "/demo-tour", "/enterprise-readiness", "/Disruptions", "/Recommendations", "/Reports", "/mobile/download"
     };
 
     return protectedPrefixes.Any(prefix => value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));

@@ -25,7 +25,7 @@
           {
             <label class="spx-role-card spx-role-card--rich">
               <input type="radio" name="role" value="@role.Role" checked="@(role.Role == selectedRole)" />
-              <span><strong>@role.Role</strong><small>@role.Description</small></span>
+              <span><strong>@role.Role.Replace(" Demo", string.Empty)</strong><small>@role.Description</small></span>
             </label>
           }
         </div>
@@ -47,7 +47,7 @@
             @foreach (var role in roles)
             {
               <div class="spx-credential-row">
-                <div><strong>@role.Role</strong><small>@role.EnvName@(role.IsDevelopmentDefault ? " · development default" : " · configured")</small></div>
+                <div><strong>@role.Role.Replace(" Demo", string.Empty)</strong><small>@role.EnvName@(role.IsDevelopmentDefault ? " · development default" : " · configured")</small></div>
                 <code>@role.Code</code>
                 <button type="button" class="sp-btn sp-btn--outline sp-btn--sm" data-demo-code="@role.Code" data-demo-role="@(role.Role == "General Demo" ? selectedRole : role.Role)">Quick fill</button>
               </div>
