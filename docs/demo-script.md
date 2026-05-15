@@ -112,3 +112,23 @@ Emphasize that Gemini-enhanced responses are available when configured, user-tri
 3. Open `http://localhost:8080`.
 4. Use prompt chips or short prompts rather than typing long prompts during recording.
 5. If a scenario result takes too long, continue to Truck Tracking and Emissions; the synthetic/demo data keeps the story coherent.
+
+## Fleet & Driver Queue Companion Demo Flow
+
+1. Control room detects gate congestion and berth/yard pressure.
+2. Gemini Agent Mode or deterministic fallback creates a queue recommendation.
+3. Fleet owner opens `/fleet` and sees all trucks, high-risk vehicles, AI instructions, and idling/CO₂ avoided.
+4. Operator opens a truck detail and sends an in-app alert, simulated WhatsApp notification, or simulated Android app notification.
+5. Driver opens `/driver/demo`, `/driver/status/SPQ-2026-0042`, or the Android companion app.
+6. Driver sees queue number, appointment, call-forward ETA, assigned gate, staging instruction, reason, delay risk, emissions impact, and notification history.
+7. Driver acknowledges `Seen`, `Holding`, or `Proceeding`.
+8. Fleet dashboard and APIs show the acknowledgement path and reduced idling/emissions impact.
+
+
+## Enterprise Execution Platform Update
+
+Smart Port now models an execution loop: Control Room/AI Simulator → Execution Plan Generator → Fleet Owner Operations Console → Driver Web Portal/Android Companion → WhatsApp Demo or LiveTest notifications → Driver Status Assistant → audit-ready ETA, queue, status, timeline and emissions impact updates. The deterministic state machine and queue optimizer work without Gemini; Gemini/Copilot remains an optional explanation layer. Demo Mode is free and safe, no SMS is used, no paid provider is required, and LiveTest WhatsApp is gated by environment variables plus manually approved/consented tester numbers. WhatsApp location check-ins are event-based driver shares, not continuous GPS tracking.
+
+Supported driver commands include STATUS, ETA, HOW LONG, WHAT NOW, WHERE MUST I GO, HELP, READY, BREAK 15, LUNCH 30, DELAYED 20, HOLDING, ARRIVED_STAGING, PROCEEDING_GATE, ARRIVED_GATE, COMPLETED, ISSUE and LOCATION_SHARED. Fleet and mobile APIs expose current status, allowed next actions, timeline, last location check-in and impact values.
+
+90-second demo: control room detects congestion; execution plan recommends truck actions; fleet owner sees affected trucks; driver receives simulated or LiveTest WhatsApp instruction; driver asks HOW LONG or WHAT NOW; driver checks in or confirms staging/gate; Smart Port updates ETA/status/timeline/dashboard; Android shows the same state and Copilot answer; idling/CO2 impact updates; audit trail records the decision.

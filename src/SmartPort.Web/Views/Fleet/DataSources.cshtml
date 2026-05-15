@@ -1,0 +1,4 @@
+@using SmartPort.Application.DTOs
+@model IReadOnlyList<DataSourceReadinessDto>
+@{ ViewData["Title"] = "Data Sources & Integration Readiness"; }
+<section class="sp-page-hero fleet-hero"><div><h1>Data Sources & Integration Readiness</h1><p>Demo data simulates future live feeds from IPMS, PCS, TOS, terminal, gate, berth, yard, fleet and telematics systems.</p></div></section><div class="sp-card"><table class="sp-table"><thead><tr><th>Badge</th><th>Current demo source</th><th>Real-world source</th><th>Readiness</th></tr></thead><tbody>@foreach(var s in Model){<tr><td>@s.Badge</td><td>@s.CurrentDemoSource</td><td>@s.RealWorldSource</td><td>@s.PilotReadinessLevel</td></tr>}</tbody></table></div>

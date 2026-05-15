@@ -1,51 +1,23 @@
-@using SmartPort.Application.Interfaces
-@model SmartPort.Application.Interfaces.PagedResult<FleetVehicleListDto>
-@{ ViewData["Title"] = "Fleet Management"; var filter = ViewBag.Filter as FleetVehicleFilterDto ?? new(); var orgs = ViewBag.Organisations as IEnumerable<OrganisationListDto> ?? []; }
-<div class="sp-toolbar">
-  <form method="get" class="sp-filter-bar">
-    <input name="SearchTerm" value="@filter.SearchTerm" class="sp-form__input sp-form__input--sm" placeholder="Registration or fleet #…"/>
-    <select name="OrganisationId" class="sp-form__select sp-form__select--sm">
-      <option value="">All Organisations</option>
-      @foreach(var o in orgs){<option value="@o.Id" selected="@(filter.OrganisationId==o.Id)">@o.Name</option>}
-    </select>
-    <select name="Status" class="sp-form__select sp-form__select--sm">
-      <option value="">All Status</option>
-      @foreach(var s in Enum.GetValues<SmartPort.Domain.Enums.FleetVehicleStatus>()){<option value="@s" selected="@(filter.Status==s)">@s</option>}
-    </select>
-    <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Filter</button>
-    <a asp-action="Index" class="sp-btn sp-btn--sm sp-btn--outline">Reset</a>
-  </form>
-  <div class="sp-toolbar__actions">
-    @if(User.IsInRole("Admin")||User.IsInRole("PortOperationsManager")){<a asp-action="Create" class="sp-btn sp-btn--sm sp-btn--primary">+ Register Vehicle</a>}
+@using SmartPort.Application.DTOs
+@model FleetQueueSummaryDto
+@{ ViewData["Title"] = "Fleet & Driver Queue Companion"; }
+<section class="sp-page-hero fleet-hero">
+  <div>
+    <span class="sp-badge sp-badge--ai">Fleet & Driver Queue Companion</span>
+    <h1>Close the loop from AI decision to driver action</h1>
+    <p>Port Control Room recommendations now flow to fleet owners, drivers, in-app alerts, simulated WhatsApp, and the Android companion app.</p>
   </div>
+  <div class="sp-toolbar__actions"><a href="/driver/demo" class="sp-btn sp-btn--primary">Open Driver Demo</a><a href="/fleet/notifications" class="sp-btn sp-btn--outline">WhatsApp Notifications</a></div>
+</section>
+<form method="get" class="sp-card sp-mb"><label class="sp-form__label">Selected fleet/operator</label><select class="sp-form__select" name="fleetOperatorId" onchange="this.form.submit()">@foreach (var op in Model.FleetOperators){<option value="@op.Id" selected="@(op.Id==Model.SelectedFleet.Id)">@op.Name</option>}</select></form>
+<div class="sp-kpi-grid">
+  <div class="sp-kpi"><span>Total Trucks</span><strong>@Model.TotalTrucks</strong></div><div class="sp-kpi"><span>Waiting</span><strong>@Model.TrucksWaiting</strong></div><div class="sp-kpi"><span>Holding</span><strong>@Model.TrucksHolding</strong></div><div class="sp-kpi"><span>Proceeding</span><strong>@Model.TrucksProceeding</strong></div><div class="sp-kpi"><span>Delayed/Rescheduled</span><strong>@Model.DelayedOrRescheduledTrucks</strong></div><div class="sp-kpi"><span>CO₂ avoided</span><strong>@Model.TotalCo2KgAvoided.ToString("N1") kg</strong></div>
 </div>
-<div class="sp-kpi-grid sp-kpi-grid--sm" style="margin-bottom:1.25rem">
-  <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.TotalCount</div><div class="sp-kpi-card__label">Total Vehicles</div></div></div>
-  <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.Items.Count(v=>v.Status==SmartPort.Domain.Enums.FleetVehicleStatus.Dispatched)</div><div class="sp-kpi-card__label">Dispatched</div></div></div>
-  <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.Items.Count(v=>v.Status==SmartPort.Domain.Enums.FleetVehicleStatus.Waiting)</div><div class="sp-kpi-card__label">Waiting</div></div></div>
-  <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.Items.Count(v=>v.Status==SmartPort.Domain.Enums.FleetVehicleStatus.Available)</div><div class="sp-kpi-card__label">Available</div></div></div>
+<div class="sp-grid sp-grid--2">
+  <article class="sp-card"><h2>Latest AI queue recommendation</h2><p class="sp-muted">@Model.LatestAiQueueRecommendation</p><p><strong>@Model.TotalIdlingMinutesAvoided</strong> idling minutes avoided across the selected queue.</p></article>
+  <article class="sp-card"><h2>High-risk trucks needing attention</h2>@foreach(var t in Model.HighRiskTrucks){<div class="fleet-row"><a href="/fleet/trucks/@t.BookingReference"><strong>@t.TruckRegistration</strong></a><span>@t.DriverName</span><span class="sp-badge sp-badge--high">@t.DelayRisk</span></div>}</article>
 </div>
-<div class="sp-card">
-  <table class="sp-table">
-    <thead><tr><th>Registration</th><th>Fleet #</th><th>Organisation</th><th>Type</th><th>Cargo Type</th><th>Capacity</th><th>Status</th><th>Location</th><th></th></tr></thead>
-    <tbody>
-      @foreach(var v in Model.Items)
-      {
-        var sc = v.Status switch{SmartPort.Domain.Enums.FleetVehicleStatus.Dispatched=>"info",SmartPort.Domain.Enums.FleetVehicleStatus.Waiting=>"warning",SmartPort.Domain.Enums.FleetVehicleStatus.AtGate=>"success",SmartPort.Domain.Enums.FleetVehicleStatus.Delayed=>"danger",SmartPort.Domain.Enums.FleetVehicleStatus.Available=>"success",SmartPort.Domain.Enums.FleetVehicleStatus.OutOfService=>"muted",_=>"muted"};
-        <tr>
-          <td><div class="sp-table__primary sp-table__mono"><a asp-action="Detail" asp-route-id="@v.Id">@v.RegistrationNumber</a></div></td>
-          <td class="sp-table__mono">@(v.FleetNumber??"—")</td>
-          <td>@v.OrganisationName</td>
-          <td><span class="sp-badge sp-badge--type">@v.VehicleType</span></td>
-          <td><span class="sp-badge sp-badge--type">@v.CargoType</span></td>
-          <td>@(v.CapacityTons.HasValue?$"{v.CapacityTons:F0}t":"—")</td>
-          <td><span class="sp-badge sp-badge--@sc">@v.Status</span></td>
-          <td style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">@(v.CurrentLocation??"—")</td>
-          <td><a asp-action="Detail" asp-route-id="@v.Id" class="sp-btn sp-btn--xs sp-btn--outline">View</a></td>
-        </tr>
-      }
-      @if(!Model.Items.Any()){<tr><td colspan="9" class="sp-table__empty">No vehicles found.</td></tr>}
-    </tbody>
-  </table>
-  @await Html.PartialAsync("_Pagination", Model)
-</div>
+<h2 class="sp-section-title">Live truck queue</h2>
+<div class="fleet-cards">@foreach(var t in Model.Trucks){<article class="sp-card truck-card"><div class="truck-card__head"><h3>@t.TruckRegistration</h3><span class="sp-badge sp-badge--ai">Q @t.QueueNumber</span></div><p>@t.DriverName · @t.FleetOperatorName</p><p><strong>@t.CurrentInstruction.Instruction</strong></p><div class="truck-meta"><span>@t.CurrentStatus</span><span>@t.AssignedGate</span><span>ETA @t.EtaCallForwardTime.ToLocalTime().ToString("HH:mm")</span></div><div class="truck-meta"><span>WhatsApp: @t.WhatsAppNotificationStatus</span><span>In-app: @t.InAppNotificationStatus</span></div><a class="sp-btn sp-btn--sm sp-btn--primary" href="/fleet/trucks/@t.BookingReference">Truck detail</a></article>}</div>
+
+@if (Model.LatestExecutionPlan != null){<section class="sp-card sp-mt"><h2>Execution Plan Generator</h2><p>@Model.LatestExecutionPlan.Explanation</p><p><strong>@Model.LatestExecutionPlan.ExpectedIdlingMinutesAvoided</strong> min idling avoided · <strong>@Model.LatestExecutionPlan.ExpectedCo2KgAvoided.ToString("N1")</strong> kg CO₂ avoided · confidence @Model.LatestExecutionPlan.ConfidenceScore</p><a class="sp-btn sp-btn--primary" href="/execution">Open execution plans</a></section>}
