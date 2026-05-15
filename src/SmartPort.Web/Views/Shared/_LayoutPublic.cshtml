@@ -26,13 +26,13 @@
             <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
         </ul>
         <div class="sp-pub-nav__actions">
-            @if (User.Identity?.IsAuthenticated == true)
+            @if (Context.Request.Cookies.ContainsKey("SmartPort.DemoAccess"))
             {
-                <a asp-controller="Dashboard" asp-action="Index" class="sp-btn sp-btn--primary">Go to Dashboard</a>
+                <a href="/dashboard" class="sp-btn sp-btn--primary">Go to Dashboard</a>
             }
             else
             {
-                <a asp-controller="Auth" asp-action="Login" class="sp-btn sp-btn--outline">Sign In</a>
+                <a href="/demo-access" class="sp-btn sp-btn--outline">Demo Access</a>
                 <a asp-controller="Home" asp-action="Demo" class="sp-btn sp-btn--primary">Request Demo</a>
             }
         </div>
@@ -56,8 +56,8 @@
                     <span class="sp-pub-logo__mark">⬡</span>
                     <span class="sp-pub-logo__text">Culltron Smart Port Flow</span>
                 </div>
-                <p>Culltron Smart Port Flow is an AI-assisted smart port operations demonstrator by Culltron.</p>
-                <p class="sp-pub-footer__copy">© @DateTime.Now.Year Culltron.<br>Built as a hackathon-ready enterprise AI operations prototype.</p>
+                <p>Culltron Smart Port Flow is an AI-assisted smart port operations prototype by Culltron.</p>
+                <p class="sp-pub-footer__copy">© @DateTime.Now.Year Culltron.<br>Enterprise AI operations prototype with demo and pilot-integration readiness.</p>
             </div>
             <div class="sp-pub-footer__links">
                 <h4>Platform</h4>
@@ -73,8 +73,8 @@
                 <ul>
                     <li><a asp-controller="Home" asp-action="About">About Us</a></li>
                     <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
-                    <li><a href="#">Terms of Service</a></li>
+                    <li>Privacy: available on request</li>
+                    <li>Terms: available on request</li>
                 </ul>
             </div>
             <div class="sp-pub-footer__links">

@@ -1,0 +1,46 @@
+@{
+    Layout = "_LayoutPublic";
+    ViewData["Title"] = "Judge Demo Access";
+    var next = ViewBag.Next as string ?? "/dashboard";
+    var selectedRole = ViewBag.SelectedRole as string ?? "Port Admin Demo";
+    var roles = new[] { "Port Admin Demo", "Fleet Owner Demo", "Driver Demo" };
+}
+<section class="spx-access">
+  <div class="container spx-access__grid">
+    <article class="spx-access__panel">
+      <span class="spx-kicker">Secure demo boundary</span>
+      <h1>Judge Demo Access</h1>
+      <p>Culltron Smart Port Flow keeps the public product site separate from operational demo screens. Enter the access code shared by the team to continue.</p>
+      @if (ViewBag.Warning is string warning)
+      {
+        <div class="spx-access__warning">@warning</div>
+      }
+      @if (ViewBag.DevDefaultAvailable == true)
+      {
+        <div class="spx-access__note">Development mode is using the safe local default code. Set <code>SMARTPORT_DEMO_ACCESS_CODE</code> for shared deployments.</div>
+      }
+      <form method="post" action="/demo-access" class="spx-access__form">
+        <input type="hidden" name="next" value="@next" />
+        <label>Demo role</label>
+        <div class="spx-role-grid">
+          @foreach (var role in roles)
+          {
+            <label class="spx-role-card">
+              <input type="radio" name="role" value="@role" checked="@(role == selectedRole)" />
+              <span>@role</span>
+            </label>
+          }
+        </div>
+        <label for="accessCode">Access code</label>
+        <input id="accessCode" name="accessCode" type="password" autocomplete="one-time-code" placeholder="Enter demo access code" required />
+        <button class="sp-btn sp-btn--primary sp-btn--lg" type="submit">Continue to Demo</button>
+      </form>
+    </article>
+    <aside class="spx-access__visual">
+      <div class="spx-radar"></div>
+      <div class="spx-access-card spx-access-card--one"><strong>Control Room</strong><span>Congestion signal gated</span></div>
+      <div class="spx-access-card spx-access-card--two"><strong>Fleet Console</strong><span>Requires demo access</span></div>
+      <div class="spx-access-card spx-access-card--three"><strong>Webhook</strong><span>Meta callback remains reachable</span></div>
+    </aside>
+  </div>
+</section>

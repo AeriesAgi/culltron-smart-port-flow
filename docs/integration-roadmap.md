@@ -1,38 +1,29 @@
 # Integration Roadmap
 
-## Current demo state
-The hackathon demo uses synthetic operational data for trucks, gates, berth readiness, staging, notifications and impact. It does not claim live IPMS/TOS/port integration.
+Culltron Smart Port Flow currently runs on synthetic operational data. The demo is intentionally honest: it does not claim live IPMS, terminal operating system, gate, berth, yard, fleet, WhatsApp, GPS, or telematics integration unless those systems are configured in an approved pilot.
 
-## Gemini setup
-Configure on the server only:
-```bash
-GEMINI_API_KEY=...
-Gemini__Enabled=true
-Gemini__Mode=Hybrid
-Gemini__Model=gemini-2.5-flash
-```
-Gemini is optional. The deterministic fallback remains available when Gemini is missing, disabled, rate-limited or unavailable.
+## Current demo mode
 
-## WhatsApp LiveTest setup
-```bash
-SMARTPORT_WHATSAPP_MODE=LiveTest
-SMARTPORT_WHATSAPP_ENABLED=true
-SMARTPORT_WHATSAPP_ACCESS_TOKEN=...
-SMARTPORT_WHATSAPP_PHONE_NUMBER_ID=...
-SMARTPORT_WHATSAPP_BUSINESS_ACCOUNT_ID=...
-SMARTPORT_WHATSAPP_VERIFY_TOKEN=...
-SMARTPORT_WHATSAPP_GRAPH_VERSION=v20.0
-SMARTPORT_PUBLIC_BASE_URL=https://smartport.culltron.app
-```
-Set Meta callback URL to `{SMARTPORT_PUBLIC_BASE_URL}/webhooks/whatsapp` and the verify token to `SMARTPORT_WHATSAPP_VERIFY_TOKEN`.
+- Synthetic truck queue and appointment data.
+- Synthetic berth, yard, gate and congestion context.
+- Simulated in-app and WhatsApp notifications in Demo Mode.
+- Gemini-enhanced explanations only when server-side credentials are configured.
+- Deterministic fallback remains available without external AI credentials.
 
-## Safety rules
-- Demo mode is safe and uses no external WhatsApp calls.
-- LiveTest sends only to active manually added drivers with Test Approved and WhatsApp Consent Confirmed.
-- Seed demo contacts and invalid numbers are blocked.
-- No SMS integration is included.
-- No hardcoded secrets or exposed tokens.
-- Android stores no Gemini or WhatsApp secrets.
+## Pilot integration candidates
 
-## Pilot connector path
-Future pilot connectors can map approved feeds from IPMS/PCS/TOS, gate appointment/OCR/RFID systems, berth and yard systems, fleet TMS/ERP, WhatsApp Cloud API and later telematics/GPS if contractually approved.
+1. IPMS or port management signals for berth, vessel, and operational events.
+2. Terminal operating systems for container, yard, and gate context.
+3. Gate appointment systems for time slots and release windows.
+4. Fleet owner systems for driver/job assignment and vehicle references.
+5. Meta WhatsApp Cloud API for approved LiveTest messaging.
+6. GPS/telematics feeds where consent, governance, and data-sharing agreements exist.
+7. Emissions and energy data sources for validated sustainability reporting.
+
+## Governance requirements
+
+- Partner-approved access and security review.
+- Data-processing agreement and credential management.
+- Human approval for operational actions.
+- Audit trail for recommendations, notifications, and driver acknowledgements.
+- Pilot validation before production use.

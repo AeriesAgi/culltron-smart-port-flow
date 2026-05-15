@@ -1,26 +1,17 @@
 @{ Layout = "_LayoutPublic"; ViewData["Title"] = "Request a Demo"; }
-<section class="sp-section sp-section--white" style="padding-top:6rem">
-    <div class="container" style="max-width:740px;margin:0 auto;text-align:center">
-        <h1 style="font-size:2.25rem;font-weight:800;margin-bottom:.75rem">Request a Pilot Demo</h1>
-        <p style="color:#64748b;font-size:1.125rem;margin-bottom:2.5rem">See SmartPort in action with your team. We configure a demo environment with data patterns relevant to your terminal.</p>
+<section class="sp-section sp-section--white" style="padding-top:7rem">
+    <div class="container" style="max-width:820px;margin:0 auto;text-align:center">
+        <div class="spx-kicker">Culltron Smart Port Flow</div>
+        <h1 style="font-size:clamp(2.4rem,5vw,4rem);font-weight:900;margin:1rem 0 .75rem;color:#fff">Request a Smart Port Demo</h1>
+        <p style="color:#b7c7d8;font-size:1.125rem;margin-bottom:2.5rem">Review the public product story, then use the protected demo access flow to explore operational screens. The team shares access codes directly with judges, investors and pilot stakeholders.</p>
         <div class="sp-card" style="text-align:left;padding:2rem;margin-bottom:1.5rem">
-            <h3 style="margin-bottom:.75rem">Live Demo — Available Now</h3>
-            <p style="color:#64748b;margin-bottom:1.25rem">The full SmartPort demo system is live and accessible immediately. Use any credential below to explore the platform.</p>
-            <table class="sp-table" style="margin-bottom:1.5rem">
-                <thead><tr><th>Role</th><th>Email</th><th>Password</th></tr></thead>
-                <tbody>
-                    <tr><td><strong>Admin</strong></td><td class="sp-table__mono">admin@smartport.co.za</td><td class="sp-table__mono">SmartPort@2025!</td></tr>
-                    <tr><td><strong>Ops Manager</strong></td><td class="sp-table__mono">ops.manager@smartport.co.za</td><td class="sp-table__mono">SmartPort@2025!</td></tr>
-                    <tr><td><strong>Terminal Staff</strong></td><td class="sp-table__mono">terminal1@smartport.co.za</td><td class="sp-table__mono">SmartPort@2025!</td></tr>
-                    <tr><td><strong>Logistics Partner</strong></td><td class="sp-table__mono">logistics@freightco.co.za</td><td class="sp-table__mono">SmartPort@2025!</td></tr>
-                    <tr><td><strong>Executive Viewer</strong></td><td class="sp-table__mono">executive@transnet.co.za</td><td class="sp-table__mono">SmartPort@2025!</td></tr>
-                </tbody>
-            </table>
-            <a asp-controller="Auth" asp-action="Login" class="sp-btn sp-btn--primary">Access Live Demo →</a>
+            <h3 style="margin-bottom:.75rem">Demo Access</h3>
+            <p style="color:#94a3b8;margin-bottom:1.25rem">Internal dashboards are separated from the public website. Enter the configured demo access code to continue into Fleet, Driver, Execution Plan, Copilot and Settings workflows.</p>
+            <a href="/demo-access" class="sp-btn sp-btn--primary">Access Demo →</a>
         </div>
         <div class="sp-card" style="text-align:left;padding:2rem">
             <h3 style="margin-bottom:.75rem">Arrange a Guided Walkthrough</h3>
-            <p style="color:#64748b;margin-bottom:1.25rem">For a full presentation with your operations or executive team, contact us to arrange a scheduled session tailored to your terminal environment.</p>
+            <p style="color:#94a3b8;margin-bottom:1.25rem">For a full presentation with your operations or executive team, contact us to arrange a scheduled session tailored to your terminal environment.</p>
             <a asp-controller="Home" asp-action="Contact" class="sp-btn sp-btn--outline">Contact Our Team</a>
         </div>
     </div>

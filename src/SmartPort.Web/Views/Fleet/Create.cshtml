@@ -15,8 +15,8 @@
             @foreach(var o in orgs){<option value="@o.Id">@o.Name</option>}
           </select>
         </div>
-        <div class="sp-form__group"><label class="sp-form__label">Registration Number *</label><input asp-for="RegistrationNumber" class="sp-form__input" placeholder="e.g. ND 114 427" style="text-transform:uppercase"/><span asp-validation-for="RegistrationNumber" class="sp-form__error"></span></div>
-        <div class="sp-form__group"><label class="sp-form__label">Fleet Number</label><input asp-for="FleetNumber" class="sp-form__input" placeholder="e.g. BFC-001"/></div>
+        <div class="sp-form__group"><label class="sp-form__label">Registration Number *</label><input asp-for="RegistrationNumber" class="sp-form__input" style="text-transform:uppercase"/><span asp-validation-for="RegistrationNumber" class="sp-form__error"></span></div>
+        <div class="sp-form__group"><label class="sp-form__label">Fleet Number</label><input asp-for="FleetNumber" class="sp-form__input"/></div>
         <div class="sp-form__group">
           <label class="sp-form__label">Vehicle Type *</label>
           <select asp-for="VehicleType" class="sp-form__select">
@@ -36,7 +36,7 @@
             @foreach(var s in Enum.GetValues<SmartPort.Domain.Enums.FleetVehicleStatus>()){<option value="@s">@s</option>}
           </select>
         </div>
-        <div class="sp-form__group"><label class="sp-form__label">Current Location</label><input asp-for="CurrentLocation" class="sp-form__input" placeholder="e.g. Bayhead Depot"/></div>
+        <div class="sp-form__group"><label class="sp-form__label">Current Location</label><input asp-for="CurrentLocation" class="sp-form__input"/></div>
       </div>
       <div class="sp-form__footer">
         <a asp-action="Index" asp-controller="Fleet" class="sp-btn sp-btn--outline">Cancel</a>
