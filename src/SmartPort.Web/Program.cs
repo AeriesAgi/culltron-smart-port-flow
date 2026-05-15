@@ -86,7 +86,7 @@ builder.Services.AddScoped<IDisruptionService,             DisruptionService>();
 builder.Services.AddScoped<IFlowIntelligenceService,       FlowIntelligenceService>();
 builder.Services.AddScoped<IEmissionsSummaryService,       EmissionsSummaryService>();
 
-// ─── Hackathon features ───────────────────────────────────────────────────────
+// ─── Enterprise demo features ────────────────────────────────────────────────
 builder.Services.AddScoped<IAiAgentService,         AiAgentService>();
 builder.Services.AddScoped<ISmartPortIntelligenceService, SmartPortIntelligenceService>();
 builder.Services.AddScoped<ISmartPortCopilotChatService, SmartPortCopilotChatService>();
@@ -169,6 +169,27 @@ else
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
+app.Use(async (context, next) =>
+{
+    if (RequiresDemoAccess(context.Request.Path) && !context.Request.Cookies.ContainsKey("SmartPort.DemoAccess"))
+    {
+        if (context.Request.Path.Value?.StartsWith("/api", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(new { message = "Demo access required", signIn = "/demo-access" });
+            return;
+        }
+
+        var nextPath = context.Request.PathBase + context.Request.Path + context.Request.QueryString;
+        context.Response.Redirect($"/demo-access?next={Uri.EscapeDataString(nextPath)}");
+        return;
+    }
+
+    await next();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
@@ -210,6 +231,22 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+static bool RequiresDemoAccess(PathString path)
+{
+    if (!path.HasValue) return false;
+    var value = path.Value!;
+    if (value.Equals("/webhooks/whatsapp", StringComparison.OrdinalIgnoreCase)) return false;
+    if (value.StartsWith("/demo-access", StringComparison.OrdinalIgnoreCase) || value.StartsWith("/signin", StringComparison.OrdinalIgnoreCase)) return false;
+
+    string[] protectedPrefixes =
+    {
+        "/dashboard", "/fleet", "/driver", "/truck", "/execution", "/Copilot",
+        "/Disruptions", "/Recommendations", "/Reports", "/api/mobile"
+    };
+
+    return protectedPrefixes.Any(prefix => value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+}
 
 static SmartPortIntegrationSettings BuildSmartPortIntegrationSettings(IConfiguration configuration)
 {
