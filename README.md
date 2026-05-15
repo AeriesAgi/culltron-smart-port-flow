@@ -304,3 +304,41 @@ Smart Port now models an execution loop: Control Room/AI Simulator → Execution
 Supported driver commands include STATUS, ETA, HOW LONG, WHAT NOW, WHERE MUST I GO, HELP, READY, BREAK 15, LUNCH 30, DELAYED 20, HOLDING, ARRIVED_STAGING, PROCEEDING_GATE, ARRIVED_GATE, COMPLETED, ISSUE and LOCATION_SHARED. Fleet and mobile APIs expose current status, allowed next actions, timeline, last location check-in and impact values.
 
 90-second demo: control room detects congestion; execution plan recommends truck actions; fleet owner sees affected trucks; driver receives simulated or LiveTest WhatsApp instruction; driver asks HOW LONG or WHAT NOW; driver checks in or confirms staging/gate; Smart Port updates ETA/status/timeline/dashboard; Android shows the same state and Copilot answer; idling/CO2 impact updates; audit trail records the decision.
+
+## Hackathon final pass: Smart Port execution loop
+
+### Run locally
+```bash
+docker compose up -d db
+dotnet run --project src/SmartPort.Web/SmartPort.Web.csproj
+```
+
+### Gemini setup
+```bash
+GEMINI_API_KEY=...
+Gemini__Enabled=true
+Gemini__Mode=Hybrid
+Gemini__Model=gemini-2.5-flash
+```
+Gemini is optional and server-side. If missing or unavailable, deterministic fallback remains active for Copilot and operational explanations.
+
+### WhatsApp LiveTest setup
+```bash
+SMARTPORT_WHATSAPP_MODE=LiveTest
+SMARTPORT_WHATSAPP_ENABLED=true
+SMARTPORT_WHATSAPP_ACCESS_TOKEN=...
+SMARTPORT_WHATSAPP_PHONE_NUMBER_ID=...
+SMARTPORT_WHATSAPP_BUSINESS_ACCOUNT_ID=...
+SMARTPORT_WHATSAPP_VERIFY_TOKEN=...
+SMARTPORT_WHATSAPP_GRAPH_VERSION=v20.0
+SMARTPORT_PUBLIC_BASE_URL=https://smartport.culltron.app
+```
+Meta callback URL: `{SMARTPORT_PUBLIC_BASE_URL}/webhooks/whatsapp`.
+
+Safety rules: Demo mode is safe; LiveTest is only for approved/consented manually added test numbers; seeded demo contacts are blocked; no SMS; no hardcoded secrets; no tokens are exposed in the UI.
+
+### Android app build
+Open `/mobile/SmartPortDriverCompanion` in Android Studio, set the backend URL if needed, and build a debug APK. Optional web download path: `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk`. The Android app stores no Gemini or WhatsApp secrets.
+
+### Sunday demo flow
+Open `/`, then `/dashboard`, `/fleet`, a truck detail page, `/driver/demo`, `/fleet/notifications`, `/fleet/download-app`, `/fleet/data-sources`, `/fleet/settings`, and Copilot. Show simulated WhatsApp first; use LiveTest only when Meta credentials and an approved test driver are configured. Demonstrate STATUS/HOW LONG/BREAK 15/ARRIVED_GATE/location check-in updating fleet, driver, notification history, mobile API and impact state.

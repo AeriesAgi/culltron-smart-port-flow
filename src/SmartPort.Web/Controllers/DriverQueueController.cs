@@ -10,7 +10,9 @@ public class DriverController : Controller
 {
     private readonly IFleetDriverQueueService _queue;
     private readonly INotificationService _notifications;
-    public DriverController(IFleetDriverQueueService queue, INotificationService notifications) { _queue = queue; _notifications = notifications; }
+    private readonly IDriverStatusCommandService _commands;
+    private readonly ISmartPortCopilotChatService _copilot;
+    public DriverController(IFleetDriverQueueService queue, INotificationService notifications, IDriverStatusCommandService commands, ISmartPortCopilotChatService copilot) { _queue = queue; _notifications = notifications; _commands = commands; _copilot = copilot; }
 
     [HttpGet("/driver")]
     public async Task<IActionResult> Index()
@@ -33,6 +35,24 @@ public class DriverController : Controller
         if (truck == null) return NotFound();
         truck.NotificationHistory = (await _notifications.GetHistoryAsync(reference)).ToList();
         return View(truck);
+    }
+
+    [HttpPost("/driver/action")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> DriverAction(string reference, string commandText)
+    {
+        var result = await _commands.HandleCommandAsync(new DriverCommandRequestDto { Reference = reference, CommandText = commandText, Actor = "Driver web portal", Source = DataProvenanceType.AndroidDriverApp });
+        TempData[result.Success ? "Success" : "Warning"] = result.ReplyMessage;
+        return Redirect($"/driver/status/{reference}");
+    }
+
+    [HttpPost("/driver/copilot")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> DriverCopilot(string reference, string question)
+    {
+        var response = await _copilot.GenerateResponseAsync($"Driver asks about Smart Port queue job {reference}: {question}. Keep answer scoped to status, ETA, gate, staging and instruction.");
+        TempData["CopilotAnswer"] = response.ShortAnswer;
+        return Redirect($"/driver/status/{reference}");
     }
 
     [HttpPost("/driver/acknowledge")]
@@ -152,7 +172,9 @@ public class WhatsAppWebhookController : ControllerBase
     private readonly IConfiguration _config;
     private readonly IFleetDriverQueueService _queue;
     private readonly IDriverStatusCommandService _commands;
-    public WhatsAppWebhookController(IConfiguration config, IFleetDriverQueueService queue, IDriverStatusCommandService commands) { _config = config; _queue = queue; _commands = commands; }
+    private readonly INotificationService _notifications;
+    private readonly IWhatsAppNotificationSender _whatsApp;
+    public WhatsAppWebhookController(IConfiguration config, IFleetDriverQueueService queue, IDriverStatusCommandService commands, INotificationService notifications, IWhatsAppNotificationSender whatsApp) { _config = config; _queue = queue; _commands = commands; _notifications = notifications; _whatsApp = whatsApp; }
 
     [HttpGet("/webhooks/whatsapp")]
     public IActionResult Verify([FromQuery(Name = "hub.mode")] string? mode, [FromQuery(Name = "hub.verify_token")] string? token, [FromQuery(Name = "hub.challenge")] string? challenge)
@@ -169,22 +191,37 @@ public class WhatsAppWebhookController : ControllerBase
             var contacts = await _queue.GetDriverContactsAsync();
             var sender = NormalizeInbound(msg.From);
             var driver = contacts.FirstOrDefault(c => c.NormalizedWhatsAppNumber.Replace("+", string.Empty) == sender && c.IsLiveWhatsAppSafe);
-            if (driver == null) continue;
+            if (driver == null)
+            {
+                var fallbackRef = (await _queue.GetDemoReferencesAsync()).FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(fallbackRef)) await _notifications.RecordAsync(fallbackRef, NotificationChannel.WhatsApp, NotificationStatus.IgnoredUnapprovedSender, NotificationEventType.InboundWhatsAppCommand, "Ignored unapproved WhatsApp sender. No truck state was changed.", DataProvenanceType.WhatsAppDriverCheckIn, "WhatsApp webhook");
+                handled++;
+                continue;
+            }
             var truck = (await _queue.GetTrucksAsync()).FirstOrDefault(t => t.TruckRegistration == driver.AssignedTruckRegistration);
             if (truck == null) continue;
+            DriverCommandResultDto result;
             if (msg.Latitude.HasValue || msg.Longitude.HasValue)
             {
-                await _queue.RecordLocationCheckInAsync(truck.BookingReference, msg.Latitude, msg.Longitude, msg.Text, DataProvenanceType.WhatsAppDriverCheckIn, "WhatsApp LiveTest");
+                var updated = await _queue.RecordLocationCheckInAsync(truck.BookingReference, msg.Latitude, msg.Longitude, msg.Text, DataProvenanceType.WhatsAppDriverCheckIn, "WhatsApp LiveTest");
+                var reply = updated == null ? "Location received, but Smart Port could not match the active truck job." : $"Location received. Updated ETA to {updated.AssignedGate}: {Math.Max(1, (int)Math.Round((updated.EtaCallForwardTime - DateTime.UtcNow).TotalMinutes))} minutes. Current instruction: {updated.CurrentInstruction.Instruction}";
+                await SendInboundReplyAsync(updated ?? truck, reply, NotificationEventType.WhatsAppLocationCheckIn);
             }
             else
             {
-                await _commands.HandleCommandAsync(new DriverCommandRequestDto { Reference = truck.BookingReference, SenderWhatsAppNumber = sender, CommandText = msg.Text, Actor = driver.DriverName, Source = DataProvenanceType.WhatsAppDriverCheckIn });
+                result = await _commands.HandleCommandAsync(new DriverCommandRequestDto { Reference = truck.BookingReference, SenderWhatsAppNumber = sender, CommandText = msg.Text, Actor = driver.DriverName, Source = DataProvenanceType.WhatsAppDriverCheckIn });
+                await SendInboundReplyAsync(result.Truck ?? truck, result.ReplyMessage, NotificationEventType.InboundWhatsAppCommand);
             }
             handled++;
         }
         return Ok(new { status = "received", handled });
     }
 
+    private async Task SendInboundReplyAsync(FleetTruckDto truck, string reply, NotificationEventType eventType)
+    {
+        var status = await _whatsApp.SendAsync(truck, reply);
+        await _notifications.RecordAsync(truck.BookingReference, NotificationChannel.WhatsApp, status, eventType, reply, DataProvenanceType.WhatsAppDriverCheckIn, "Smart Port WhatsApp webhook");
+    }
     private static string NormalizeInbound(string value) => new(value.Where(char.IsDigit).ToArray());
     private static IEnumerable<InboundWhatsAppMessage> ExtractMessages(JsonElement payload)
     {
@@ -206,7 +243,11 @@ public class WhatsAppWebhookController : ControllerBase
                         var lng = loc.TryGetProperty("longitude", out var lo) ? lo.GetDecimal() : (decimal?)null;
                         yield return new(from, label, lat, lng);
                     }
-                    else if (message.TryGetProperty("interactive", out var interactive)) yield return new(from, interactive.ToString(), null, null);
+                    else if (message.TryGetProperty("interactive", out var interactive))
+                    {
+                        var valueText = interactive.TryGetProperty("button_reply", out var br) && br.TryGetProperty("title", out var bt) ? bt.GetString() : interactive.TryGetProperty("list_reply", out var lr) && lr.TryGetProperty("title", out var lt) ? lt.GetString() : interactive.ToString();
+                        yield return new(from, valueText ?? string.Empty, null, null);
+                    }
                 }
             }
         }

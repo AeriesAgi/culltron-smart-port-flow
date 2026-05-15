@@ -1,97 +1,27 @@
-# Culltron Smart Port Flow — Judge Demo Script
+# Sunday Hackathon Demo Script — Culltron Smart Port Flow
 
-Use this script for a concise competition recording. Keep claims precise: the system is a working deployed demo/prototype using synthetic/demo data, Gemini Agent Mode, local fallback, and human-approved recommendations.
+## Local run
+```bash
+docker compose up -d db
+dotnet run --project src/SmartPort.Web/SmartPort.Web.csproj
+```
 
-## Judge demo path
+## Demo flow
+1. Open `/` and explain the high-tech landing page: Smart Port closes the loop from AI recommendations to driver execution, ETA updates, WhatsApp location check-ins, audit and CO2/idling impact.
+2. Open `/dashboard` for the control-room overview.
+3. Open `/fleet` and show the live truck queue, high-risk trucks, execution plan generator and impact metrics.
+4. Open `/execution` and `/execution/plans`; show truck-level actions, reasons, ETA/call-forward, idling avoided, CO2 avoided and confidence.
+5. Open a truck detail page such as `/fleet/trucks/SPQ-2026-0042` and explain it is the fleet-owner operations console.
+6. Show driver contact/WhatsApp safety: seeded demo contacts are blocked for LiveTest; only active, manually added, Test Approved and WhatsApp Consent Confirmed numbers can receive LiveTest.
+7. Click **Send Simulated WhatsApp** to prove demo mode works without paid providers.
+8. If Meta credentials and an approved tester exist, click **Send LiveTest WhatsApp** and then **Request LiveTest Location**.
+9. Open `/driver` then `/driver/demo`; use buttons for HOW LONG, HOLDING, ARRIVED_STAGING, ARRIVED_GATE or LOCATION_SHARED. The timeline, ETA, audit and notification history update.
+10. If WhatsApp LiveTest is configured, have the driver reply `STATUS`, `HOW LONG`, `BREAK 15`, `READY`, `ARRIVED_GATE`, or share a WhatsApp location check-in. The webhook updates backend state and sends a reply.
+11. Open `/fleet/notifications` and show notification/audit history.
+12. Open `/fleet/download-app` and show the Android companion source/build/APK status.
+13. Open `/fleet/data-sources` and explain integration readiness honestly: current demo uses synthetic data; pilot connectors can integrate IPMS/TOS/gate/berth/yard/fleet feeds later.
+14. Open `/fleet/settings`; show Gemini and WhatsApp readiness without exposing secrets. Run **Test Gemini Copilot** if `GEMINI_API_KEY` is configured; otherwise show fallback.
+15. Ask Copilot a driver or fleet question, for example “How long until I am called forward?” or “Which trucks should move first?”
 
-Landing → Dashboard → AI Command Centre → SmartPort Copilot Chat → Truck Tracking → Scenario Simulator → Emissions → Recommendations / Reports
-
-## 2–3 minute video script
-
-### 0:00–0:20 — Problem
-
-“Ports face congestion, idling, emissions, vessel delays, yard pressure, truck queues, and disruption events. When these signals sit in disconnected tools, teams struggle to identify the biggest risk and choose the next safest action.”
-
-### 0:20–0:45 — Landing and Dashboard
-
-Open https://smartport.culltron.app/ and move from the landing page to the dashboard. Explain that Culltron Smart Port Flow is an enterprise-style AI command centre for cleaner, smarter port logistics. Highlight that all operational data shown in the demo is synthetic/demo data.
-
-### 0:45–1:15 — AI Command Centre
-
-Open **AI Command Centre**. Say: “This page answers what is happening across the port right now. It brings together berth, gate, yard, truck, incident, recommendation, and emissions pressure into one command-centre view.”
-
-Show monitoring lanes, top risk, confidence, recommendation cards, and action guidance.
-
-### 1:15–1:50 — SmartPort Copilot Chat and Gemini Agent Mode
-
-Open **SmartPort Copilot Chat** and use these exact prompts:
-
-1. `what is the biggest operational risk right now?`
-2. `generate an operator action plan`
-3. `what happens if load-shedding starts at 16:00`
-4. `prepare a 2-minute demo summary`
-
-Say: “When configured, Gemini Agent Mode uses Gemini 2.5 Flash to enhance the operator-facing answer. Calls are user-triggered only, there are no automatic Gemini calls on page load, and the local offline-safe fallback still works if Gemini is unavailable.”
-
-### 1:50–2:20 — Truck Tracking and Scenario Simulator
-
-Open **Truck Tracking & ETA Intelligence**. Show active trucks, delayed trucks, ETA risk, checkpoint/geofence labels, hold-outside-port candidates, priority releases, idling minutes, and CO₂ exposure.
-
-Then open **Scenario Simulator** and run a congestion, vessel delay, or load-shedding-style scenario. Explain that simulation supports what-if planning before human approval.
-
-### 2:20–2:45 — Emissions and Recommendations / Reports
-
-Open **Emissions** to show indicative clean-logistics impact through idling, fuel, and CO₂ estimates. Open **Recommendations / Reports** or **Agent Intelligence Desk** to show human-reviewable decision support and report generation.
-
-### 2:45–3:00 — Close
-
-“Culltron Smart Port Flow demonstrates a pilot-ready architecture: observe, analyze, recommend, simulate, human approves, and audit trail. It is not connected to live port systems in this demo; production use would require live data integration, security review, stakeholder workflow mapping, and operational validation.”
-
-## Exact prompt list
-
-- `hello`
-- `what can you do`
-- `what is the biggest operational risk right now?`
-- `which trucks should be held outside the port`
-- `track delayed trucks`
-- `truck ETA`
-- `gate bottleneck`
-- `berth pressure`
-- `yard congestion`
-- `vessel delay`
-- `how much CO2 can we save`
-- `reduce idling`
-- `load shedding`
-- `what happens if load-shedding starts at 16:00`
-- `run scenario`
-- `generate an operator action plan`
-- `prepare shift brief`
-- `prepare a 2-minute demo summary`
-
-## Fallback if live deployment or Gemini is unavailable
-
-1. If the live deployment is slow, run locally:
-
-   ```bash
-   docker compose up --build
-   ```
-
-2. Open `http://localhost:8080`.
-3. If Gemini is not configured in a self-hosted/local environment, use the local offline-safe fallback and explain that fallback behavior is intentional.
-4. Use prompt chips rather than typing long prompts during recording.
-5. If a scenario result takes too long, continue to Truck Tracking and Emissions; all data is synthetic/demo data so the story remains coherent.
-
-## Required truth statement
-
-“All operational data in this demo is synthetic/demo data. Culltron Smart Port Flow is a working deployed demo/prototype and pilot-ready architecture, not a live production deployment inside an actual port. It does not claim live Transnet, IPMS, Navayuga, TOS, gate, GPS/telematics, customer, energy, or emissions-factor integration. Gemini Agent Mode receives only sanitized operational summaries and is triggered by user action. Recommendations require human review and are not automatically executed. Savings and impact estimates are demo outputs until validated in a controlled pilot.”
-
-## Fleet & Driver Queue Companion Demo Flow
-
-1. Control room detects congestion.
-2. Gemini/fallback AI creates queue recommendation.
-3. Fleet owner sees trucks and instructions at `/fleet`.
-4. Driver receives simulated WhatsApp/in-app update.
-5. Driver opens mobile web page or Android companion.
-6. Driver sees queue number, ETA, gate, and instruction.
-7. Driver acknowledges.
-8. Dashboard shows reduced idling/emissions impact.
+## Key proof statement
+Smart Port does not only recommend actions. It executes them across fleet owners, drivers, WhatsApp LiveTest, Android/mobile APIs and auditable operational workflows.
