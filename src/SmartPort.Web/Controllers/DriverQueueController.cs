@@ -225,8 +225,9 @@ public class WhatsAppWebhookController : ControllerBase
     private readonly IFleetDriverQueueService _queue;
     private readonly IDriverStatusCommandService _commands;
     private readonly INotificationService _notifications;
-    private readonly IWhatsAppNotificationSender _whatsApp;
-    public WhatsAppWebhookController(IConfiguration config, IFleetDriverQueueService queue, IDriverStatusCommandService commands, INotificationService notifications, IWhatsAppNotificationSender whatsApp) { _config = config; _queue = queue; _commands = commands; _notifications = notifications; _whatsApp = whatsApp; }
+    private readonly IWhatsAppConnectorService _whatsApp;
+    private readonly IWhatsAppWebhookParser _parser;
+    public WhatsAppWebhookController(IConfiguration config, IFleetDriverQueueService queue, IDriverStatusCommandService commands, INotificationService notifications, IWhatsAppConnectorService whatsApp, IWhatsAppWebhookParser parser) { _config = config; _queue = queue; _commands = commands; _notifications = notifications; _whatsApp = whatsApp; _parser = parser; }
 
     [HttpGet("/webhooks/whatsapp")]
     public IActionResult Verify([FromQuery(Name = "hub.mode")] string? mode, [FromQuery(Name = "hub.verify_token")] string? token, [FromQuery(Name = "hub.challenge")] string? challenge)
@@ -238,10 +239,10 @@ public class WhatsAppWebhookController : ControllerBase
     public async Task<IActionResult> Inbound([FromBody] JsonElement payload)
     {
         var handled = 0;
-        foreach (var msg in ExtractMessages(payload))
+        foreach (var msg in _parser.Parse(payload))
         {
             var contacts = await _queue.GetDriverContactsAsync();
-            var sender = NormalizeInbound(msg.From);
+            var sender = NormalizeInbound(msg.FromWaId);
             var driver = contacts.FirstOrDefault(c => c.NormalizedWhatsAppNumber.Replace("+", string.Empty) == sender && c.IsLiveWhatsAppSafe);
             if (driver == null)
             {
@@ -255,13 +256,13 @@ public class WhatsAppWebhookController : ControllerBase
             DriverCommandResultDto result;
             if (msg.Latitude.HasValue || msg.Longitude.HasValue)
             {
-                var updated = await _queue.RecordLocationCheckInAsync(truck.BookingReference, msg.Latitude, msg.Longitude, msg.Text, DataProvenanceType.WhatsAppDriverCheckIn, "WhatsApp LiveTest");
+                var updated = await _queue.RecordLocationCheckInAsync(truck.BookingReference, msg.Latitude, msg.Longitude, msg.TextBody, DataProvenanceType.WhatsAppDriverCheckIn, "WhatsApp LiveTest");
                 var reply = updated == null ? "Location received, but Smart Port could not match the active truck job." : $"Location received. Updated ETA to {updated.AssignedGate}: {Math.Max(1, (int)Math.Round((updated.EtaCallForwardTime - DateTime.UtcNow).TotalMinutes))} minutes. Current instruction: {updated.CurrentInstruction.Instruction}";
                 await SendInboundReplyAsync(updated ?? truck, reply, NotificationEventType.WhatsAppLocationCheckIn);
             }
             else
             {
-                result = await _commands.HandleCommandAsync(new DriverCommandRequestDto { Reference = truck.BookingReference, SenderWhatsAppNumber = sender, CommandText = msg.Text, Actor = driver.DriverName, Source = DataProvenanceType.WhatsAppDriverCheckIn });
+                result = await _commands.HandleCommandAsync(new DriverCommandRequestDto { Reference = truck.BookingReference, SenderWhatsAppNumber = sender, CommandText = msg.TextBody, Actor = driver.DriverName, Source = DataProvenanceType.WhatsAppDriverCheckIn });
                 await SendInboundReplyAsync(result.Truck ?? truck, result.ReplyMessage, NotificationEventType.InboundWhatsAppCommand);
             }
             handled++;
@@ -275,34 +276,4 @@ public class WhatsAppWebhookController : ControllerBase
         await _notifications.RecordAsync(truck.BookingReference, NotificationChannel.WhatsApp, sendResult.Status, eventType, reply, DataProvenanceType.WhatsAppDriverCheckIn, "Smart Port WhatsApp webhook", sendResult.ExternalMessageId);
     }
     private static string NormalizeInbound(string value) => new(value.Where(char.IsDigit).ToArray());
-    private static IEnumerable<InboundWhatsAppMessage> ExtractMessages(JsonElement payload)
-    {
-        if (!payload.TryGetProperty("entry", out var entries)) yield break;
-        foreach (var entry in entries.EnumerateArray())
-        {
-            if (!entry.TryGetProperty("changes", out var changes)) continue;
-            foreach (var change in changes.EnumerateArray())
-            {
-                if (!change.TryGetProperty("value", out var value) || !value.TryGetProperty("messages", out var messages)) continue;
-                foreach (var message in messages.EnumerateArray())
-                {
-                    var from = message.TryGetProperty("from", out var f) ? f.GetString() ?? string.Empty : string.Empty;
-                    if (message.TryGetProperty("text", out var text) && text.TryGetProperty("body", out var body)) yield return new(from, body.GetString() ?? string.Empty, null, null);
-                    else if (message.TryGetProperty("location", out var loc))
-                    {
-                        var label = loc.TryGetProperty("name", out var n) ? n.GetString() ?? "WhatsApp shared location" : "WhatsApp shared location";
-                        var lat = loc.TryGetProperty("latitude", out var la) ? la.GetDecimal() : (decimal?)null;
-                        var lng = loc.TryGetProperty("longitude", out var lo) ? lo.GetDecimal() : (decimal?)null;
-                        yield return new(from, label, lat, lng);
-                    }
-                    else if (message.TryGetProperty("interactive", out var interactive))
-                    {
-                        var valueText = interactive.TryGetProperty("button_reply", out var br) && br.TryGetProperty("title", out var bt) ? bt.GetString() : interactive.TryGetProperty("list_reply", out var lr) && lr.TryGetProperty("title", out var lt) ? lt.GetString() : interactive.ToString();
-                        yield return new(from, valueText ?? string.Empty, null, null);
-                    }
-                }
-            }
-        }
-    }
-    private sealed record InboundWhatsAppMessage(string From, string Text, decimal? Latitude, decimal? Longitude);
 }
