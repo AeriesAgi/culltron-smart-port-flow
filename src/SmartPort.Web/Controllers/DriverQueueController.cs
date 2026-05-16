@@ -59,6 +59,16 @@ public class DriverController : Controller
         return Redirect($"/driver/status/{reference}");
     }
 
+    [HttpPost("/driver/location-checkin")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> LocationCheckIn(string reference, string? locationLabel, decimal? latitude, decimal? longitude, decimal? accuracy)
+    {
+        var label = string.IsNullOrWhiteSpace(locationLabel) ? "Manual/demo web companion check-in" : locationLabel;
+        var truck = await _queue.RecordLocationCheckInAsync(reference, latitude, longitude, label, DataProvenanceType.WebDriverCompanion, "Web Driver Companion");
+        TempData[truck == null ? "Warning" : "Success"] = truck == null ? "Truck/reference not found." : $"Check-in shared from Web Driver Companion: {truck.LastKnownLocationLabel}.";
+        return Redirect($"/driver/status/{reference}");
+    }
+
     [HttpPost("/driver/acknowledge")]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Acknowledge(string reference, DriverAcknowledgement acknowledgement)
@@ -143,6 +153,22 @@ public class MobileApiController : ControllerBase
 
     private IActionResult MobileUnauthorized() => Unauthorized(new { message = "Demo access required", signIn = "/api/mobile/auth/demo-login" });
 
+    private static DataProvenanceType ResolveDriverSource(string? sourceLabel) => (sourceLabel ?? string.Empty).ToLowerInvariant() switch
+    {
+        var s when s.Contains("web") => DataProvenanceType.WebDriverCompanion,
+        var s when s.Contains("mobile api") || s == "api" => DataProvenanceType.MobileApi,
+        var s when s.Contains("whatsapp") => DataProvenanceType.WhatsAppDriverCheckIn,
+        _ => DataProvenanceType.AndroidDriverApp
+    };
+
+    private static string SourceActor(DataProvenanceType source) => source switch
+    {
+        DataProvenanceType.WebDriverCompanion => "Web Driver Companion",
+        DataProvenanceType.MobileApi => "Mobile API",
+        DataProvenanceType.WhatsAppDriverCheckIn => "Optional WhatsApp connector",
+        _ => "Android Driver Companion"
+    };
+
     [HttpGet("/api/mobile/truck/status/{reference}")]
     public async Task<IActionResult> TruckStatus(string reference)
     {
@@ -171,8 +197,8 @@ public class MobileApiController : ControllerBase
     public async Task<IActionResult> ConfirmStatus([FromBody] DriverEventRequestDto request)
     {
         if (!EnsureMobileToken()) return MobileUnauthorized();
-        var source = string.Equals(request.SourceLabel, "WhatsApp", StringComparison.OrdinalIgnoreCase) ? DataProvenanceType.WhatsAppDriverCheckIn : DataProvenanceType.AndroidDriverApp;
-        var truck = await _queue.RecordDriverEventAsync(request.Reference, request.EventType, source);
+        var source = ResolveDriverSource(request.SourceLabel);
+        var truck = await _queue.RecordDriverEventAsync(request.Reference, request.EventType, source, request.Action, SourceActor(source));
         return truck == null ? NotFound(new { message = "Truck/reference not found" }) : Ok(truck);
     }
 
@@ -180,8 +206,8 @@ public class MobileApiController : ControllerBase
     public async Task<IActionResult> LocationCheckIn([FromBody] DriverEventRequestDto request)
     {
         if (!EnsureMobileToken()) return MobileUnauthorized();
-        var source = string.Equals(request.SourceLabel, "WhatsApp", StringComparison.OrdinalIgnoreCase) ? DataProvenanceType.WhatsAppDriverCheckIn : DataProvenanceType.AndroidDriverApp;
-        var truck = await _queue.RecordLocationCheckInAsync(request.Reference, request.Latitude, request.Longitude, request.LocationLabel, source);
+        var source = ResolveDriverSource(request.SourceLabel);
+        var truck = await _queue.RecordLocationCheckInAsync(request.Reference, request.Latitude, request.Longitude, request.LocationLabel, source, SourceActor(source));
         return truck == null ? NotFound(new { message = "Truck/reference not found" }) : Ok(truck);
     }
 

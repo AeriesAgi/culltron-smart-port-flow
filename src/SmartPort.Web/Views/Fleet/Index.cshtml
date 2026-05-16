@@ -5,9 +5,9 @@
   <div>
     <span class="sp-badge sp-badge--ai">Fleet & Driver Queue Companion</span>
     <h1>Close the loop from AI decision to driver action</h1>
-    <p>Port Control Room recommendations now flow to fleet owners, drivers, in-app alerts, simulated WhatsApp, and the Android companion app.</p>
+    <p>Port Control Room recommendations now flow to fleet owners, the Driver Companion App/web companion/mobile API, in-app alerts, driver check-ins, ETA/idling/CO₂ recalculation and audit history.</p>
   </div>
-  <div class="sp-toolbar__actions"><a href="/driver/demo" class="sp-btn sp-btn--primary">Open Driver Demo</a><a href="/fleet/notifications" class="sp-btn sp-btn--outline">WhatsApp Notifications</a></div>
+  <div class="sp-toolbar__actions"><a href="/fleet/tracker" class="sp-btn sp-btn--primary">Open Fleet Tracker</a><a href="/fleet/download-app" class="sp-btn sp-btn--outline">Driver Companion App</a></div>
 </section>
 <form method="get" class="sp-card sp-mb"><label class="sp-form__label">Selected fleet/operator</label><select class="sp-form__select" name="fleetOperatorId" onchange="this.form.submit()">@foreach (var op in Model.FleetOperators){<option value="@op.Id" selected="@(op.Id==Model.SelectedFleet.Id)">@op.Name</option>}</select></form>
 <div class="sp-kpi-grid">
@@ -18,6 +18,6 @@
   <article class="sp-card"><h2>High-risk trucks needing attention</h2>@foreach(var t in Model.HighRiskTrucks){<div class="fleet-row"><a href="/fleet/trucks/@t.BookingReference"><strong>@t.TruckRegistration</strong></a><span>@t.DriverName</span><span class="sp-badge sp-badge--high">@t.DelayRisk</span></div>}</article>
 </div>
 <h2 class="sp-section-title">Live truck queue</h2>
-<div class="fleet-cards">@foreach(var t in Model.Trucks){<article class="sp-card truck-card"><div class="truck-card__head"><h3>@t.TruckRegistration</h3><span class="sp-badge sp-badge--ai">Q @t.QueueNumber</span></div><p>@t.DriverName · @t.FleetOperatorName</p><p><strong>@t.CurrentInstruction.Instruction</strong></p><div class="truck-meta"><span>@t.CurrentStatus</span><span>@t.AssignedGate</span><span>ETA @t.EtaCallForwardTime.ToLocalTime().ToString("HH:mm")</span></div><div class="truck-meta"><span>WhatsApp: @t.WhatsAppNotificationStatus</span><span>In-app: @t.InAppNotificationStatus</span></div><a class="sp-btn sp-btn--sm sp-btn--primary" href="/fleet/trucks/@t.BookingReference">Truck detail</a></article>}</div>
+<div class="fleet-cards">@foreach(var t in Model.Trucks){<article class="sp-card truck-card"><div class="truck-card__head"><h3>@t.TruckRegistration</h3><span class="sp-badge sp-badge--ai">Q @t.QueueNumber</span></div><p>@t.DriverName · @t.FleetOperatorName</p><p><strong>@t.CurrentInstruction.Instruction</strong></p><div class="truck-meta"><span>@t.CurrentStatus</span><span>@t.AssignedGate</span><span>ETA @t.EtaCallForwardTime.ToLocalTime().ToString("HH:mm")</span></div><div class="truck-meta"><span>Last check-in: @t.LastKnownLocationLabel</span><span>In-app: @t.InAppNotificationStatus</span></div><a class="sp-btn sp-btn--sm sp-btn--primary" href="/fleet/trucks/@t.BookingReference">Truck detail</a></article>}</div>
 
 @if (Model.LatestExecutionPlan != null){<section class="sp-card sp-mt"><h2>Execution Plan Generator</h2><p>@Model.LatestExecutionPlan.Explanation</p><p><strong>@Model.LatestExecutionPlan.ExpectedIdlingMinutesAvoided</strong> min idling avoided · <strong>@Model.LatestExecutionPlan.ExpectedCo2KgAvoided.ToString("N1")</strong> kg CO₂ avoided · confidence @Model.LatestExecutionPlan.ConfidenceScore</p><a class="sp-btn sp-btn--primary" href="/execution">Open execution plans</a></section>}

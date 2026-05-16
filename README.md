@@ -1,6 +1,6 @@
 # Culltron Smart Port Flow
 
-Culltron Smart Port Flow is an enterprise AI operations agent for smart ports and freight logistics. It turns synthetic/demo port signals into execution plans, fleet instructions, driver updates, simulated WhatsApp/mobile actions, audit trails and emissions/idling impact insights.
+Culltron Smart Port Flow is an enterprise AI operations agent for smart ports and freight logistics. It turns synthetic/demo port signals into Gemini-assisted execution plans, fleet instructions, Driver Companion App/web/mobile API check-ins, fleet/control-room tracking, audit trails and emissions/idling impact insights.
 
 **Live demo URL:** replace with deployed URL when available. Local default is `http://localhost:8080` when Docker is available.
 
@@ -12,7 +12,7 @@ Culltron Smart Port Flow is an enterprise AI operations agent for smart ports an
 4. Use the provided access code or seeded Identity account if enabled.
 5. Open **Demo Tour**.
 6. Open **Gemini Operations Agent** and generate a brief.
-7. Generate an execution plan, open truck `SPQ-2026-0042`, send a simulated WhatsApp/driver action, then review audit/notification history.
+7. Generate an execution plan, open truck `SPQ-2026-0042`, use the Driver Companion App/web companion to send a status/check-in/location update, then review fleet tracker, truck timeline, audit trail, queue/ETA/idling/CO₂ impact.
 8. Open **Agent Governance** and **Enterprise Readiness**.
 
 ## Demo credentials
@@ -43,7 +43,7 @@ The Gemini console shows key configured yes/no, enabled yes/no, model, mode, fal
 
 ## WhatsApp setup
 
-WhatsApp is simulated by default. LiveTest/Live mode can call Meta WhatsApp Cloud API when server-side credentials are configured. LiveTest sends only to an approved test recipient or consented test driver. Do not claim production WhatsApp integration unless credentials, approval and live operations are configured.
+WhatsApp is optional connector-ready only. LiveTest/Live mode can call Meta WhatsApp Cloud API when server-side credentials are configured, but the system does not depend on WhatsApp production approval. LiveTest sends only to an approved test recipient or consented test driver. Do not claim production WhatsApp integration unless credentials, approval and live operations are configured.
 
 Required WhatsApp environment variables are documented in `docs/LIVE_API_SETUP.md`. Relevant endpoints:
 
@@ -116,7 +116,7 @@ When running locally or with `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`, `/demo-acce
 
 ## Driver/mobile companion story
 
-Primary driver channels are WhatsApp sandbox/live-test, the web driver companion at `/driver/demo`, and the mobile API. The optional Android source lives at `mobile/SmartPortDriverCompanion`; APKs are built through GitHub Actions or Android Studio and should contain no Gemini or WhatsApp secrets.
+The Driver Companion App is the primary driver communication and tracking channel. The Android app, web companion at `/driver/demo`, and mobile API send driver status, explicit check-ins and optional one-shot location labels/coordinates to Smart Port. Fleet owners and Port Admins track drivers through app-based updates in `/fleet/tracker` and dashboard tracker summaries. No secrets live on the device; all Gemini and connector calls remain backend-side. Location/check-in is user-triggered only, not background tracking. WhatsApp remains optional connector-ready proof for future pilots/live-test messaging.
 
 ## Final enterprise hackathon pass — Gemini, mobile driver loop, and connector readiness
 
@@ -177,3 +177,14 @@ WhatsApp Cloud API is implemented as a connector-ready sandbox/live-test integra
 
 ### Pilot/live data path
 Future live pilots can connect approved IPMS/TOS, gate/OCR/RFID, weighbridge, fleet GPS/telematics, berth/yard, ERP, weather/disruption, emissions, driver app, and WhatsApp Cloud API feeds after NDA/data-sharing, field mapping, credential provisioning, security review, and supervised KPI validation.
+
+
+## Final app-first tracking storyline
+
+Control room / Port Admin → Gemini Operations Agent → execution plan → fleet owner → Driver Companion App → driver status + location/check-in updates → fleet tracker + port admin tracker → queue/ETA/idling/CO₂ recalculation → audit/governance trail.
+
+- Driver Companion App is the primary driver communication and tracking channel.
+- Fleet owners and Port Admins can track drivers through app-based updates.
+- Gemini is embedded as an on-demand enterprise operations agent and can summarize tracked driver risk, stale check-ins and action recommendations.
+- WhatsApp is optional connector-ready only; Smart Port does not depend on WhatsApp production approval.
+- Synthetic data is used for judging; live connectors can replace it in a supervised pilot.

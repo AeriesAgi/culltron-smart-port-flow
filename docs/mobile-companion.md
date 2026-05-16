@@ -1,46 +1,29 @@
-# Smart Port Driver Companion — Android Source
+# Driver Companion App and Mobile API
 
-The Android Driver Companion source is included under `mobile/SmartPortDriverCompanion`. It is a native Kotlin project intended for queue status, driver confirmations, demo location check-ins, notification history, and backend Copilot calls.
+Smart Port’s primary driver communication and tracking channel is the Driver Companion App / web companion / mobile API. The Android source is in `mobile/SmartPortDriverCompanion` and the central download/setup page is `/fleet/download-app`.
 
-## Backend URL
+## Tracking behavior
 
-Default deployment URL:
+- The app sends driver status, instructions acknowledgements, explicit check-ins and optional one-shot current location to Smart Port.
+- Location is requested only when the driver taps **Share current location / Check in**.
+- If GPS/browser geolocation is unavailable or denied, a manual/demo location label still records a successful check-in.
+- No background tracking and no silent location collection are implemented.
+- No Gemini API key, WhatsApp token, bearer token, phone number or provider secret is stored on device; all AI and connector calls remain backend-side.
 
-```text
-https://smartport.culltron.app
-```
+## Mobile API proof path
 
-For local Android emulator testing, use a reachable ASP.NET backend URL such as:
+- `POST /api/mobile/auth/demo-login`
+- `GET /api/mobile/truck/status/{reference}`
+- `GET /api/mobile/notifications/{reference}`
+- `POST /api/mobile/driver/confirm-status`
+- `POST /api/mobile/driver/location-checkin`
+- `POST /api/mobile/copilot/driver`
 
-```text
-https://10.0.2.2:5001
-```
+Demo code: `culltron-driver-2026`
+Demo reference: `SPQ-2026-0042`
 
-For a physical device, use a LAN, tunnel, or deployed HTTPS URL that the device can reach.
+## Fleet and control-room tracking
 
-## Security model
+Fleet owners use `/fleet/tracker` and truck detail pages to see current status, gate/staging zone, queue position, ETA/call-forward time, delay risk, last driver action, latest app check-in, location label/coordinates when available, notification state and audit history. Port Admin sees a higher-level tracker summary on the Dashboard.
 
-- The Android app stores no Gemini API key.
-- The Android app stores no WhatsApp token.
-- AI and WhatsApp logic remain on the backend.
-- The app calls Smart Port backend APIs and renders the returned state.
-
-## Expected capabilities
-
-- Fetch truck status from `/api/mobile/truck/status/{reference}`.
-- Show queue number, ETA, assigned gate, staging zone, current status, and latest instruction.
-- Show notification history from `/api/mobile/notifications/{reference}`.
-- Post confirmations and commands through backend endpoints.
-- Post demo location check-ins.
-- Call `/api/mobile/copilot/driver` for scoped driver assistance.
-- Handle connectivity and validation errors without exposing secrets.
-
-## Build APK
-
-Open `mobile/SmartPortDriverCompanion` in Android Studio and run a debug build. If building from a CLI environment with the Android SDK installed, use the project Gradle wrapper or Gradle installation to assemble a debug APK, then place the resulting file at:
-
-```text
-src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk
-```
-
-The web app does not require the Android SDK to build or deploy.
+WhatsApp remains an optional connector-ready integration only: “Optional connector-ready WhatsApp Cloud API integration for future pilots/live-test messaging.” The judge flow does not depend on WhatsApp production approval.

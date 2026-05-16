@@ -15,16 +15,19 @@ public class DashboardController : Controller
 {
     private readonly IDashboardService _dashboard;
     private readonly IAlertService _alerts;
+    private readonly IFleetDriverQueueService _queue;
 
-    public DashboardController(IDashboardService dashboard, IAlertService alerts)
+    public DashboardController(IDashboardService dashboard, IAlertService alerts, IFleetDriverQueueService queue)
     {
         _dashboard = dashboard;
         _alerts = alerts;
+        _queue = queue;
     }
 
     public async Task<IActionResult> Index()
     {
         var summary = await _dashboard.GetDashboardSummaryAsync();
+        ViewBag.TrackedTrucks = await _queue.GetTrucksAsync();
         return View(summary);
     }
 }

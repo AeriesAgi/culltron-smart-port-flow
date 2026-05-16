@@ -118,12 +118,14 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         new() { Icon = "🌿", Label = "Emissions brief", Prompt = "Generate an emissions reduction brief." },
         new() { Icon = "🚪", Label = "Gate bottleneck", Prompt = "Where is the gate bottleneck?" },
         new() { Icon = "🎬", Label = "2-minute demo", Prompt = "Prepare a 2-minute demo summary." },
+        new() { Icon = "📍", Label = "Tracked drivers", Prompt = "Which tracked drivers need attention?" },
+        new() { Icon = "⏱️", Label = "Stale check-ins", Prompt = "Which drivers have stale check-ins?" },
         new() { Icon = "🗺️", Label = "Real pilot", Prompt = "What would a real pilot need?" }
     };
 
     private static List<string> SupportedTopics() => new()
     {
-        "Truck queues", "Truck tracking / ETA", "Gate bottlenecks", "Berth pressure", "Yard congestion",
+        "Truck queues", "Driver Companion App tracking", "Tracked driver attention", "Truck tracking / ETA", "Gate bottlenecks", "Berth pressure", "Yard congestion",
         "Emissions / CO₂", "Load-shedding disruption", "Scenario simulation", "Recommendations", "Audit / decision history",
         "Executive impact", "Clean logistics / NCIC alignment", "Pilot readiness", "Integration readiness", "Stakeholder value",
         "Executive brief", "Grant / investor summary", "Business case", "Implementation roadmap", "Success metrics"
@@ -155,6 +157,7 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
             "safety" => BuildSafetyRefusal(prompt),
             "greeting" => BuildGreeting(prompt, ctx),
             "help" => BuildHelp(prompt, ctx),
+            "risk" => BuildRisk(prompt, ctx),
             "truck-tracking" => await BuildTruckTracking(prompt, ctx),
             "truck-queue" => await BuildGate(prompt, ctx),
             "gate" => await BuildGate(prompt, ctx),
@@ -316,7 +319,7 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         if (Has(q, "demo", "2-minute", "summary", "video", "pitch", "walkthrough", "summarize demo", "make a 2-minute pitch")) return "demo";
         if (Has(q, "biggest risk", "port risk", "operational risk", "current risk", "what is urgent", "urgent", "do first", "should we do first", "manager do first", "berth focus", "reduce idling", "disruptions", "yard pressure")) return "risk";
         if (Has(q, "action plan", "operator action", "recommended actions", "what should operators do", "generate action", "prepare shift brief", "shift brief", "prioritise first", "prioritize first")) return "action-plan";
-        if (Has(q, "track", "tracking", "eta", "truck eta", "where are the trucks", "where are trucks", "delayed truck", "delayed trucks", "which trucks are delayed", "hold outside", "held outside", "outside port", "wait outside", "trucks to hold", "hold trucks", "which trucks should wait", "priority release", "priority release trucks", "approaching", "checkpoint")) return "truck-tracking";
+        if (Has(q, "track", "tracked drivers", "stale check", "stale check-in", "stale checkins", "driver attention", "drivers need attention", "tracking", "eta", "truck eta", "where are the trucks", "where are trucks", "delayed truck", "delayed trucks", "which trucks are delayed", "hold outside", "held outside", "outside port", "wait outside", "trucks to hold", "hold trucks", "which trucks should wait", "priority release", "priority release trucks", "approaching", "checkpoint")) return "truck-tracking";
         if (Has(q, "truck queue", "trucks on queue", "queued truck", "queued trucks", "trucks in queue", "gate queue trucks")) return "truck-tracking";
         if (Has(q, "gate", "bottleneck", "queue")) return "gate";
         if (Has(q, "load", "energy", "shedding", "power")) return "energy";
@@ -438,14 +441,15 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
     private async Task<CopilotChatResponse> BuildTruckTracking(string prompt, OperationalContext ctx)
     {
         var tracking = await _tracking.GetDashboardAsync();
+        var staleOrAttentionPrompt = prompt.Contains("tracked driver", StringComparison.OrdinalIgnoreCase) || prompt.Contains("stale check", StringComparison.OrdinalIgnoreCase) || prompt.Contains("need attention", StringComparison.OrdinalIgnoreCase);
         var delayed = tracking.Trucks.Where(t => t.Status is "Delayed" or "Hold Outside Port").Take(3).ToList();
         var focus = delayed.Count > 0 ? delayed : tracking.Trucks.Take(3).ToList();
         var truckSummary = string.Join("; ", focus.Select(t => $"{t.FleetIdentifier} on {t.RouteCorridor} at {t.CurrentCheckpoint}, ETA {t.EtaMinutesToGate} min, risk {t.DelayRiskScore}/100, {t.Status.ToLowerInvariant()}, {t.EstimatedCo2Kg:F1} kg CO₂"));
 
         return Base(prompt, "truck tracking / ETA", tracking.GatePressureScore >= 80 ? "High" : "Medium", tracking.AiConfidenceScore, "Truck Tracking / ETA Intelligence",
-            $"Tracking {tracking.ActiveTrucks} active approaching trucks; {tracking.HoldOutsidePortCount} should be held outside the port and {tracking.PriorityReleaseCount} should receive priority release.",
+            staleOrAttentionPrompt ? $"Tracked driver attention: {tracking.HoldOutsidePortCount} hold/stale-risk trucks and {tracking.PriorityReleaseCount} priority release candidates need review. Source model/fallback: local deterministic tracker unless Gemini is configured." : $"Tracking {tracking.ActiveTrucks} active approaching trucks; {tracking.HoldOutsidePortCount} should be held outside the port and {tracking.PriorityReleaseCount} should receive priority release.",
             $"ETA and checkpoint risk are derived from local dispatch, fleet and gate queue demo data. Focus trucks: {truckSummary}.",
-            "Hold high-risk trucks at outer staging, release priority cargo through pre-cleared lanes, and meter remaining arrivals against live gate pressure.",
+            staleOrAttentionPrompt ? "Contact drivers without recent check-ins through the Driver Companion App, request an explicit check-in, and prioritize the highest delay-risk ETA for human-approved action." : "Hold high-risk trucks at outer staging, release priority cargo through pre-cleared lanes, and meter remaining arrivals against live gate pressure.",
             $"Expected impact is lower queue growth, about {tracking.TotalIdlingMinutes:F0} idling minutes under control, and reduced CO₂ exposure of {tracking.EstimatedCo2Kg:F1} kg in the current demo view.",
             $"Truck idling exposure is {tracking.TotalIdlingMinutes:F0} minutes / {tracking.EstimatedCo2Kg:F1} kg CO₂ based on synthetic demo assumptions.",
             ctx.LoadSheddingActive ? "Energy disruption increases ETA uncertainty; hold non-critical trucks outside the port perimeter." : "Energy stable; gate pressure is the main ETA constraint.",

@@ -181,6 +181,13 @@ public class FleetController : Controller
         return View(trucks);
     }
 
+    [HttpGet("/fleet/tracker")]
+    public async Task<IActionResult> Tracker(string? fleetOperatorId)
+    {
+        ViewBag.FleetOperatorId = fleetOperatorId;
+        return View(await _queue.GetTrucksAsync(fleetOperatorId));
+    }
+
     [HttpGet("/fleet/trucks/{id}")]
     public async Task<IActionResult> TruckDetail(string id)
     {
