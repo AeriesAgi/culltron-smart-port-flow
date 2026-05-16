@@ -1,76 +1,31 @@
-# Video Script
+# Video Script — Final Smart Port App-First Tracking Story
 
-**0:00-0:15** Public site: Smart Port is an enterprise AI operations agent for ports and freight logistics.
+**0:00-0:20 — Control room congestion**
+Open the Dashboard. Port Admin sees congestion, active fleet pressure, driver tracking summary, delayed drivers, stale/missing check-ins, gate/staging distribution, and queue/ETA/idling/CO₂ impact from synthetic demo data.
 
-**0:15-0:35** Demo Access: role-based Identity login for Judge Demo.
+**0:20-0:50 — Gemini Operations Agent**
+Open Gemini Operations Agent and generate an operations brief on demand. Explain that Gemini is server-side, user-triggered, quota-safe, and backed by deterministic fallback.
 
-**0:35-1:20** Gemini Agent: readiness, operational inputs, workflow trace, brief generation and fallback safety.
+**0:50-1:25 — Execution plan to fleet owner**
+Open Execution Plans, then Fleet Tracker. Show tracked trucks and highlight SPQ-2026-0042 with registration, driver, status, gate, staging zone, queue position, ETA, delay risk, last driver action, check-in and source.
 
-**1:20-1:50** Governance: block secrets and approval bypass; require human approval for sends/state changes.
+**1:25-2:00 — Driver Companion App / web companion**
+Open `/driver/status/SPQ-2026-0042` or `/driver/demo`. The driver checks current instruction, submits a status action, then clicks “Share demo location / Check in.” Browser geolocation is requested only after the click; manual/demo location label works if GPS is denied.
 
-**1:50-2:30** Execution loop: generate plan, open truck, send simulated WhatsApp, driver confirmation, audit history.
+**2:00-2:30 — Tracker and operational impact update**
+Return to Fleet Tracker and truck detail. Show latest app check-in/location, status/check-in timeline, current ETA/call-forward, delay risk, idling minutes avoided, CO₂ avoided, notifications and audit history.
 
-**2:30-3:00** Enterprise readiness: connector-ready pilot path, limitations and production hardening.
+**2:30-2:55 — Copilot tracking intelligence**
+Ask SmartPort Copilot: “Which tracked drivers need attention?” or “Which drivers have stale check-ins?” Show a tracker answer with status, last check-in, ETA/delay risk, action recommendation, and model/fallback source.
 
+**2:55-3:20 — Governance and human control**
+Open Agent Governance. Emphasize approvals, auditability, deterministic fallback, no automatic Gemini calls on page load, no secrets on device, and user-triggered location only.
 
-**Final CTA:** Show `/demo-access` quick-fill Judge code, then the closed loop: control room → Gemini/fallback agent → execution plan → fleet owner → WhatsApp/web driver companion/mobile API → audit → idling/CO₂ impact.
+**3:20-3:35 — APK/download path**
+Open `/fleet/download-app`. Show APK status, web companion, fleet tracker, driver status page, backend URL instructions, demo code `culltron-driver-2026`, demo reference `SPQ-2026-0042`, and mobile API proof path.
 
-## Final enterprise hackathon pass — Gemini, mobile driver loop, and connector readiness
+**3:35-3:45 — Optional WhatsApp connector**
+Mention WhatsApp only as: “Optional connector-ready WhatsApp Cloud API integration for future pilots/live-test messaging.” The judge demo does not depend on WhatsApp production approval.
 
-Smart Port is designed so the only remaining production step is adding approved live environment variables/API keys. Demo data is synthetic and the product does not claim live Transnet/IPMS/TOS/customer/production WhatsApp operation.
-
-### Judge demo codes and path
-When the app runs in Development or `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`, `/demo-access` shows quick-fill role cards:
-- Port Admin: `culltron-admin-2026` → `/dashboard`
-- Fleet Owner: `culltron-fleet-2026` → `/fleet`
-- Driver: `culltron-driver-2026` → `/driver/demo`
-- Judge: `culltron-judge-2026` → `/demo-tour`
-
-Recommended judging path: `/demo-access` → Judge quick-fill → `/demo-tour` → `/gemini-agent` → `/agent-governance` → `/ops-ingest` → `/execution/plans` → `/fleet/trucks/SPQ-2026-0042` → `/driver/demo` → `/fleet/download-app` → `/fleet/notifications` → `/enterprise-readiness` → `/health/integrations`.
-
-### Gemini award centerpiece and quota-safe model strategy
-Gemini is openly used as the on-demand AI agent layer. It activates only when a user submits an explicit Gemini/AI/Copilot/Ops Ingest/driver command action, not on normal page loads, health checks, dashboards, enterprise readiness, Android app launch, mobile login/status refresh, seed data, smoke tests, or background timers.
-
-Default server-side configuration:
-- `GEMINI_API_KEY`
-- `Gemini__Enabled=false` by default unless explicitly enabled
-- `Gemini__Mode=Hybrid`
-- `Gemini__PremiumModel=gemini-2.5-flash`
-- `Gemini__RoutineModel=gemini-3.1-flash-lite`
-- `Gemini__PrimaryModel=gemini-2.5-flash`
-- `Gemini__FallbackModels=gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.0-flash-lite,gemini-2.0-flash`
-- `Gemini__ExperimentalFallbackModels=` and `Gemini__AllowExperimentalModels=false`
-- `Gemini__MaxCallsPerSession=20`
-- `Gemini__ManualTestCooldownSeconds=60`
-- `Gemini__QuotaCooldownMinutes=30`
-- `Gemini__AutoRunOnAgentPage=false`
-- `Gemini__AutoRunOnDemoTour=false`
-- `Gemini__AutoRunCooldownMinutes=30`
-
-Task categories:
-- Premium judge/high-value reasoning uses `gemini-2.5-flash` first for Executive Judge Summary, Risk & Governance Review, high-impact Disruption Recovery Plan, and final/polished operations briefs. Because observed free-tier availability is low (5 RPM / 20 RPD), calls are kept sparse.
-- Routine operational AI uses `gemini-3.1-flash-lite` first for driver instruction phrasing, routine fleet briefs, mobile Driver Copilot, Ops Ingest summarization, delay explanations, queue-action explanations, and notification suggestions.
-- Secondary Gemini fallback uses `gemini-2.5-flash-lite`, then configured fallback text models.
-- Optional Gemma text fallbacks are disabled unless explicitly configured and proven compatible with the same backend API path.
-- Local deterministic fallback is always available and produces polished driver instructions, fleet plans, executive summaries, governance/risk reviews, disruption recovery, emissions/idling impact, and Copilot responses.
-
-The backend skips unsupported/model-not-found responses, marks quota-limited models for cooldown, avoids retry loops, records safe diagnostics (counts, action type, route/source, model, latency, quota/fallback state), and never logs or displays API keys, bearer tokens, prompts containing secrets, WhatsApp tokens, phone numbers, or provider credentials.
-
-### Driver Companion APK, web companion, and mobile API
-The primary driver channels are the Android Driver Companion, the web companion, and token-secured mobile APIs. The Android app lives in `mobile/SmartPortDriverCompanion`, uses Java/Kotlin 17, and calls:
-- `POST /api/mobile/auth/demo-login`
-- `GET /api/mobile/truck/status/{reference}`
-- `GET /api/mobile/notifications/{reference}`
-- `POST /api/mobile/driver/confirm-status`
-- `POST /api/mobile/driver/location-checkin`
-- `POST /api/mobile/copilot/driver`
-
-The app has editable backend URL setup, quick-fill `culltron-driver-2026`, quick-fill `SPQ-2026-0042`, truck status, driver action buttons, notifications, Driver Copilot, and WhatsApp connector-readiness explanation. All Gemini and WhatsApp calls happen on the backend; the device stores no provider secrets.
-
-GitHub Actions builds and uploads the debug APK artifact. If a local Android SDK is available, build with `cd mobile/SmartPortDriverCompanion && gradle assembleDebug` (or `./gradlew assembleDebug` when a wrapper is present) and optionally copy the debug APK to `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk`.
-
-### WhatsApp connector-ready position
-WhatsApp Cloud API is implemented as a connector-ready sandbox/live-test integration with webhook verification, inbound parser, gated outbound sender, masked contacts, status labels, and safe failure when credentials/approval are missing. Production use requires WhatsApp Business setup, opt-in/templates, and billing. Smart Port does not depend on WhatsApp for the judge demo.
-
-### Pilot/live data path
-Future live pilots can connect approved IPMS/TOS, gate/OCR/RFID, weighbridge, fleet GPS/telematics, berth/yard, ERP, weather/disruption, emissions, driver app, and WhatsApp Cloud API feeds after NDA/data-sharing, field mapping, credential provisioning, security review, and supervised KPI validation.
+**Final CTA**
+Closed loop: control room → Gemini operations agent → execution plan → fleet owner → Driver Companion App/web/mobile API → driver check-in/location → tracker/ETA/idling/CO₂ update → audit/governance.

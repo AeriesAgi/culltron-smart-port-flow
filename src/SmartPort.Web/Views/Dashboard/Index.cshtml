@@ -54,6 +54,19 @@
         </div>
     </div>
 </div>
+
+@{
+    var trackedTrucks = (ViewBag.TrackedTrucks as IReadOnlyList<SmartPort.Application.DTOs.FleetTruckDto>) ?? Array.Empty<SmartPort.Application.DTOs.FleetTruckDto>();
+    var delayedTracked = trackedTrucks.Count(t => t.DelayRisk is SmartPort.Application.DTOs.QueueDelayRisk.High or SmartPort.Application.DTOs.QueueDelayRisk.Critical || t.CurrentStatus is SmartPort.Application.DTOs.QueueTruckStatus.Delayed or SmartPort.Application.DTOs.QueueTruckStatus.Rescheduled);
+    var missingCheckIn = trackedTrucks.Count(t => t.LastLocationCheckIn == null && t.LastUpdated < DateTime.UtcNow.AddMinutes(-20));
+}
+<div class="sp-card sp-mt">
+    <div class="sp-card__header"><div><span class="sp-badge sp-badge--green">Control-room tracker</span><h2>Driver Companion App tracking summary</h2></div><a class="sp-btn sp-btn--primary" href="/fleet/tracker">Open Fleet / Driver Tracker</a></div>
+    <p>Port Admin sees the full demo scenario: active trucks tracked through user-triggered Driver Companion App, web companion and Mobile API check-ins.</p>
+    <div class="sp-grid sp-grid--4"><p><strong>@trackedTrucks.Count</strong><br/>active trucks tracked</p><p><strong>@delayedTracked</strong><br/>delayed/high-risk drivers</p><p><strong>@missingCheckIn</strong><br/>missing recent app check-in</p><p><strong>@trackedTrucks.GroupBy(t=>t.AssignedGate).Count()</strong><br/>gate distribution groups</p></div>
+    <div class="sp-grid sp-grid--2">@foreach(var t in trackedTrucks.OrderByDescending(t=>t.DelayRisk).Take(4)){<div class="notification-row"><strong>@t.BookingReference · @t.DriverName</strong><p>@t.CurrentStatus at @t.AssignedGate/@t.BerthYardStagingZone · ETA @t.EtaCallForwardTime.ToLocalTime().ToString("HH:mm") · @t.DelayRisk risk</p><small>Last check-in: @(t.LastLocationCheckIn?.Timestamp.ToLocalTime().ToString("g") ?? t.LastUpdated.ToLocalTime().ToString("g")) · @t.LastKnownLocationLabel</small></div>}</div>
+</div>
+
 <div class="sp-card sp-judge-card" style="margin:1rem 0">
     <div class="sp-card__header">
         <h3 class="sp-card__title">Judge Demo Path</h3>

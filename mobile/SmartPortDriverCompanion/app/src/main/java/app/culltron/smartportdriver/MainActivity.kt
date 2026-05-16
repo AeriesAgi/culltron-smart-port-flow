@@ -1,6 +1,10 @@
 package app.culltron.smartportdriver
 
+import android.Manifest
 import android.app.Activity
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationManager
 import android.os.Bundle
 import android.graphics.Color
 import android.graphics.Typeface
@@ -18,6 +22,7 @@ class MainActivity : Activity() {
     private var currentReference = "SPQ-2026-0042"
     private var demoCode = "culltron-driver-2026"
     private var mobileToken = ""
+    private var manualLocationLabel = "Driver Companion check-in"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,7 +88,9 @@ class MainActivity : Activity() {
         baseLayout(); currentReference = json.getString("bookingReference"); persist()
         titleText(json.optString("truckRegistration", currentReference))
         label("${json.optString("driverName", "Demo Driver")} · ${json.optString("fleetOperatorName", "Fleet Operator")}", 16)
-        card("Truck Status", "Reference: $currentReference\nStatus: ${json.optString("currentStatus")}\nQueue #: ${json.optInt("queueNumber")}\nGate: ${json.optString("assignedGate")}\nStaging: ${json.optString("stagingZone")}\nCall-forward/ETA: ${json.optString("etaCallForwardTime")}\nLast updated: ${json.optString("lastUpdatedUtc", "backend timestamp")}")
+        val lastCheckIn = json.optJSONObject("lastLocationCheckIn")
+        val checkInText = if (lastCheckIn == null) "No check-in yet" else listOf(lastCheckIn.optString("locationLabel"), lastCheckIn.optString("timestamp"), lastCheckIn.optString("source")).joinToString(" · ")
+        card("Truck Status", "Reference: $currentReference\nStatus: ${json.optString("currentStatus")}\nQueue #: ${json.optInt("queueNumber")}\nGate: ${json.optString("assignedGate")}\nStaging: ${json.optString("berthYardStagingZone")}\nCall-forward/ETA: ${json.optString("etaCallForwardTime")}\nLast check-in: $checkInText\nLast updated: ${json.optString("lastUpdated", "backend timestamp")}")
         val instruction = json.optJSONObject("currentInstruction") ?: JSONObject()
         card("Current Instruction", "${instruction.optString("instruction", "Refresh for latest instruction")}\nReason: ${instruction.optString("reason", "Smart Port operational state")}")
         card("Impact", "Delay risk: ${json.optString("delayRisk")}\nIdling avoided: ${json.optInt("estimatedIdlingMinutesAvoided")} min\nCO₂ avoided: ${json.optDouble("estimatedCo2KgAvoided")} kg\nAI/source: ${json.optString("aiSource", "Backend Gemini/local fallback")}")
@@ -92,7 +99,8 @@ class MainActivity : Activity() {
         button("Delayed 20") { confirmStatus("Delayed20") }
         button("Report Issue") { confirmStatus("ReportIssue") }
         button("Confirm Instruction") { confirmStatus("ConfirmInstruction") }
-        button("Send Location / Check-in") { locationCheckIn() }
+        val locationInput = input(manualLocationLabel, "Manual location label if GPS is unavailable")
+        button("Share current location / Check in") { manualLocationLabel = locationInput.text.toString().ifBlank { "Driver Companion check-in" }; shareCurrentLocationOrManualCheckIn() }
         button("Refresh Status") { fetchStatus() }
         val questionInput = input("What should I do now?", "Driver Copilot question")
         button("Ask Driver Copilot") { askCopilot(questionInput.text.toString()) }
@@ -108,9 +116,29 @@ class MainActivity : Activity() {
         try { postJsonForText("$backend/api/mobile/driver/confirm-status", body); runOnUiThread { toast("Action sent: $action"); fetchStatus() } } catch (ex: Exception) { runOnUiThread { toast("Action failed: ${ex.message}") } }
     }
 
-    private fun locationCheckIn() = thread {
-        val body = JSONObject().put("reference", currentReference).put("eventType", "AndroidLocationCheckIn").put("sourceLabel", "Android").put("locationLabel", "Driver Companion check-in").toString()
-        try { postJsonForText("$backend/api/mobile/driver/location-checkin", body); runOnUiThread { toast("Location check-in shared"); fetchStatus() } } catch (ex: Exception) { runOnUiThread { toast("Location failed: ${ex.message}") } }
+    private fun shareCurrentLocationOrManualCheckIn() {
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 42)
+            toast("Location permission requested. Tap check-in again, or use the manual label.")
+            return
+        }
+        val manager = getSystemService(LOCATION_SERVICE) as LocationManager
+        val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
+        val location = providers.firstNotNullOfOrNull { provider -> try { manager.getLastKnownLocation(provider) } catch (_: Exception) { null } }
+        locationCheckIn(location)
+    }
+
+    private fun locationCheckIn(location: Location?) = thread {
+        val body = JSONObject()
+            .put("reference", currentReference)
+            .put("eventType", "DriverReady")
+            .put("sourceLabel", "Android Driver Companion")
+            .put("status", "CheckIn")
+            .put("action", "Share current location / Check in")
+            .put("locationLabel", manualLocationLabel.ifBlank { if (location == null) "Manual Android check-in" else "Android current-location check-in" })
+            .apply { if (location != null) { put("latitude", location.latitude); put("longitude", location.longitude); put("accuracy", location.accuracy.toDouble()) } }
+            .toString()
+        try { postJsonForText("$backend/api/mobile/driver/location-checkin", body); runOnUiThread { toast("Check-in shared successfully"); fetchStatus() } } catch (ex: Exception) { runOnUiThread { toast("Location failed: ${ex.message}") } }
     }
 
     private fun askCopilot(question: String) = thread {
