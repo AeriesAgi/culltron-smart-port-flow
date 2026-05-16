@@ -13,23 +13,28 @@ public class HomeController : Controller
     public HomeController(ILogger<HomeController> logger) => _logger = logger;
 
     // GET /
+    [HttpGet("/")]
     public IActionResult Index() => View();
 
     // GET /product or /platform
-    [Route("/platform")]
-    [Route("/product")]
+    [HttpGet("/platform")]
+    [HttpGet("/product")]
     public IActionResult Product() => View();
 
     // GET /features
+    [HttpGet("/features")]
     public IActionResult Features() => View();
 
     // GET /about
+    [HttpGet("/about")]
     public IActionResult About() => View();
 
     // GET /pricing
+    [HttpGet("/pricing")]
     public IActionResult Pricing() => View();
 
     // GET /contact
+    [HttpGet("/contact")]
     public IActionResult Contact() => View();
 
     // POST /contact
@@ -43,10 +48,11 @@ public class HomeController : Controller
     }
 
     // GET /demo
+    [HttpGet("/demo")]
     public IActionResult Demo() => View();
 
     // GET /error
-    [Route("/error")]
+    [HttpGet("/error")]
     public IActionResult Error()
     {
         Response.StatusCode = 500;
@@ -54,7 +60,7 @@ public class HomeController : Controller
     }
 
     // GET /error/404
-    [Route("/error/{statusCode}")]
+    [HttpGet("/error/{statusCode}")]
     public IActionResult ErrorCode(int statusCode)
     {
         Response.StatusCode = statusCode;
@@ -63,7 +69,7 @@ public class HomeController : Controller
 
     // AMD page route
     // GET /about-amd
-    [Route("about-amd")]
+    [HttpGet("/about-amd")]
     public IActionResult AboutAmd() => View("~/Views/Home/AboutAmd.cshtml");
 }
 
