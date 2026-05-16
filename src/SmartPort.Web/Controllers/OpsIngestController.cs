@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartPort.Application.Interfaces;
+using SmartPort.Infrastructure.Services;
 using SmartPort.Shared.Constants;
 
 namespace SmartPort.Web.Controllers;
@@ -11,8 +12,9 @@ public class OpsIngestController : Controller
     private static readonly List<OpsIngestAuditItem> IngestHistory = new();
     private static readonly object IngestLock = new();
     private readonly ISmartPortCopilotChatService _copilot;
+    private readonly IAgentNarrativeService _narrative;
 
-    public OpsIngestController(ISmartPortCopilotChatService copilot) => _copilot = copilot;
+    public OpsIngestController(ISmartPortCopilotChatService copilot, IAgentNarrativeService narrative) { _copilot = copilot; _narrative = narrative; }
 
     [HttpGet("/ops-ingest")]
     [HttpGet("/agent/ingest")]
@@ -29,9 +31,19 @@ public class OpsIngestController : Controller
     {
         var note = string.IsNullOrWhiteSpace(operationalNote) ? "Three trucks delayed at staging, gate 4 congestion, vessel berth window moved by 45 minutes, power disruption expected between 14:00 and 15:00." : operationalNote.Trim();
         var signals = ExtractSignals(note);
-        var prompt = $"Classify this Smart Port operational note for a pilot-ready execution plan. Do not claim live integration. Note: {note}";
-        var response = await _copilot.GenerateResponseAsync(prompt);
-        var item = new OpsIngestAuditItem(DateTime.UtcNow, note, signals.DisruptionType, signals.StructuredSignals, signals.PlanPreview, response.ShortAnswer, response.GeneratedBy, "Audit entry created; preview only until operator approves", "CSV/PDF/API connector-ready roadmap");
+        var prompt = $"Classify this Smart Port operational note for a pilot-ready execution plan. Return structured fields when possible. Do not claim live integration. Note: {note}";
+        var narrative = await _narrative.GenerateAsync(new AgentNarrativeRequest
+        {
+            Purpose = "ops ingest structured extraction",
+            ReportType = "Ops Ingest Structured Extraction",
+            UserPrompt = prompt,
+            CurrentPage = "/ops-ingest",
+            RequestedMode = AgentMode.Hybrid,
+            Context = new OperationalContext { TrucksInQueue = signals.StructuredSignals.Contains("truck_delay") ? 3 : 1, GateDelayActive = signals.StructuredSignals.Contains("gate_pressure"), ActiveDisruptions = signals.StructuredSignals.Contains("power") ? 2 : 1, TopRecommendations = new() { signals.PlanPreview } },
+            DeterministicRecommendations = new[] { signals.PlanPreview }
+        });
+        var response = string.IsNullOrWhiteSpace(narrative.Narrative) ? await _copilot.GenerateResponseAsync(prompt) : new CopilotChatResponse { ShortAnswer = narrative.Narrative, GeneratedBy = narrative.UsedGemini ? "Gemini" : narrative.FallbackActive ? "Hybrid" : "Local Fallback" };
+        var item = new OpsIngestAuditItem(DateTime.UtcNow, note, signals.DisruptionType, signals.StructuredSignals, signals.PlanPreview, response.ShortAnswer, response.GeneratedBy, "Audit entry created; preview only until operator approves", "IPMS/TOS, berth schedule, gate OCR, weighbridge, fleet GPS, driver app, WhatsApp, ERP, weather/disruption feeds");
         lock (IngestLock)
         {
             IngestHistory.Add(item);

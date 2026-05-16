@@ -10,3 +10,8 @@
 8. Open **Agent Governance** and **Enterprise Readiness**.
 
 Best path: `/demo-access` → Judge Demo → `/demo-tour` → `/gemini-agent` → `/execution/plans` → `/fleet/trucks/SPQ-2026-0042` → `/enterprise-readiness`.
+
+
+## Live connector setup
+
+See `docs/LIVE_API_SETUP.md` for exact Gemini and WhatsApp Cloud API environment variables, webhook callback setup, curl verify test, and safety rules. Future pilot/live connectors can ingest IPMS/TOS, gate systems, fleet GPS, weighbridge, ERP, WhatsApp Cloud API, driver app, berth schedules, weather/disruption feeds and emissions systems.

@@ -7,7 +7,7 @@
     var intelligence = ViewBag.Intelligence as SmartPort.Web.Controllers.OperationalIntelligenceViewModel ?? new SmartPort.Web.Controllers.OperationalIntelligenceViewModel(80, 72, 84, 76, 79, 82, 3, "Synthetic queue pressure", 48000, 91, 84);
     var history = ViewBag.History as IReadOnlyList<SmartPort.Web.Controllers.GeminiAgentHistoryItem> ?? Array.Empty<SmartPort.Web.Controllers.GeminiAgentHistoryItem>();
     var last = ViewBag.LastHistory as SmartPort.Web.Controllers.GeminiAgentHistoryItem;
-    var actions = new[] { "Gemini Operations Brief", "Fleet Owner Action Plan", "Driver Instruction Brief", "Disruption Recovery Plan", "Emissions/Idling Impact Brief", "Executive Judge Summary", "Risk & Governance Review", "Integration/Pilot Readiness Brief" };
+    var actions = new[] { "Live Gemini Connector Test", "Gemini Operations Brief", "Fleet Owner Action Plan", "Driver Instruction Brief", "Disruption Recovery Plan", "Emissions/Idling Impact Brief", "Executive Judge Summary", "Risk & Governance Review", "Integration/Pilot Readiness Brief" };
 }
 <section class="sp-page-hero">
   <div>
@@ -22,6 +22,10 @@
   <form method="post" action="/gemini-agent/generate">
     <input type="hidden" name="briefType" value="Gemini Operations Brief" />
     <button class="sp-btn sp-btn--primary">Generate Gemini Operations Brief</button>
+  </form>
+  <form method="post" action="/gemini-agent/generate">
+    <input type="hidden" name="briefType" value="Live Gemini Connector Test" />
+    <button class="sp-btn sp-btn--outline">Run Live Gemini Test</button>
   </form>
 </section>
 

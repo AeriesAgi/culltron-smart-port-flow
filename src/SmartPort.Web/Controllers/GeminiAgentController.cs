@@ -49,11 +49,24 @@ public class GeminiAgentController : Controller
         var summary = await _queue.GetFleetSummaryAsync();
         var plan = await _plans.GeneratePlanAsync($"{briefType} · human-approved demo plan");
         var prompt = BuildPrompt(briefType, summary);
-        var response = await _copilot.GenerateResponseAsync(prompt);
+        var narrative = await _narrative.GenerateAsync(new AgentNarrativeRequest
+        {
+            Purpose = "gemini operations console",
+            ReportType = NormalizeBriefType(briefType),
+            UserPrompt = prompt,
+            CurrentPage = "/gemini-agent",
+            RequestedMode = AgentMode.Hybrid,
+            Context = BuildOperationalContext(summary),
+            DeterministicRecommendations = new[] { DeterministicRecommendation(summary), summary.LatestAiQueueRecommendation }
+        });
+        var response = new CopilotChatResponse
+        {
+            ShortAnswer = string.IsNullOrWhiteSpace(narrative.Narrative) ? DeterministicRecommendation(summary) : narrative.Narrative,
+            RecommendedAction = DeterministicRecommendation(summary),
+            GeneratedBy = narrative.UsedGemini ? "Gemini" : narrative.FallbackActive ? "Hybrid" : "Local Fallback"
+        };
         var elapsed = (int)Math.Max(1, (DateTime.UtcNow - started).TotalMilliseconds);
-        var generatedBy = response.GeneratedBy.Contains("Gemini", StringComparison.OrdinalIgnoreCase)
-            ? "Hybrid / Gemini-enhanced"
-            : "Local Fallback";
+        var generatedBy = narrative.UsedGemini ? "Gemini" : narrative.FallbackActive ? "Hybrid / Local Fallback" : "Local Fallback";
         var recommendation = string.IsNullOrWhiteSpace(response.RecommendedAction) ? DeterministicRecommendation(summary) : response.RecommendedAction;
 
         var item = new GeminiAgentHistoryItem(
@@ -64,8 +77,8 @@ public class GeminiAgentController : Controller
             response.ShortAnswer,
             recommendation,
             DeterministicRecommendation(summary),
-            response.GeneratedBy.Contains("Gemini", StringComparison.OrdinalIgnoreCase) ? response.ShortAnswer : "Gemini not configured; deterministic recommendation retained.",
-            response.GeneratedBy.Contains("Gemini", StringComparison.OrdinalIgnoreCase) ? "Gemini added narrative reasoning; fallback kept executable action constraints." : "No Gemini delta because fallback generated the answer.",
+            narrative.UsedGemini ? response.ShortAnswer : "Gemini not configured or failed; deterministic recommendation retained.",
+            narrative.UsedGemini ? "Gemini added live narrative reasoning; fallback kept executable action constraints." : $"Fallback retained because: {narrative.Status}.",
             "Human approval required before external fleet/driver send",
             plan.PlanId,
             elapsed);
@@ -91,9 +104,10 @@ public class GeminiAgentController : Controller
     private GeminiReadinessViewModel BuildReadiness()
     {
         var apiKeyConfigured = !string.IsNullOrWhiteSpace(_configuration["GEMINI_API_KEY"] ?? _configuration["Gemini:ApiKey"]);
-        var enabled = bool.TryParse(_configuration["Gemini:Enabled"], out var parsed) && parsed;
-        var mode = _configuration["Gemini:Mode"] ?? "Hybrid demo / deterministic fallback";
-        var model = _configuration["Gemini:Model"] ?? "gemini-2.5-flash";
+        var enabledText = _configuration["Gemini:Enabled"] ?? _configuration["GEMINI_ENABLED"];
+        var enabled = bool.TryParse(enabledText, out var parsed) && parsed;
+        var mode = _configuration["Gemini:Mode"] ?? _configuration["GEMINI_MODE"] ?? "Hybrid demo / deterministic fallback";
+        var model = _configuration["Gemini:Model"] ?? _configuration["GEMINI_MODEL"] ?? "gemini-2.5-flash";
         var last = SnapshotHistory().FirstOrDefault();
         return new GeminiReadinessViewModel(apiKeyConfigured, enabled, mode, model, apiKeyConfigured && enabled ? "Gemini-enhanced when provider responds; deterministic fallback retained" : "Local deterministic fallback active", last?.BriefType ?? "No generation yet", last?.LatencyMs);
     }
@@ -118,6 +132,7 @@ public class GeminiAgentController : Controller
         "Executive Judge Summary" => "Prepare a two-minute judge demo summary showing public site, Gemini agent, execution plan, driver/WhatsApp simulation, governance, and audit trail.",
         "Risk & Governance Review" => "Review AI governance, human approval, prompt safety, synthetic data boundaries, secrets handling, and pilot connector readiness.",
         "Integration/Pilot Readiness Brief" => "Generate a pilot readiness brief for IPMS/TOS/gate/fleet/GPS/WhatsApp connector mapping without claiming live integration.",
+        "Live Gemini Connector Test" => "Run a concise live Gemini connector test using sanitized Smart Port context. Return status, source, and a safe one-paragraph operations observation.",
         _ => "Generate a Gemini operations brief for gate pressure, berth readiness, idling impact, fleet/driver actions, audit trail, and next approvals."
     };
 
@@ -132,7 +147,27 @@ public class GeminiAgentController : Controller
         "Executive Judge Summary" => "Executive Judge Summary",
         "Risk & Governance Review" => "Risk & Governance Review",
         "Integration/Pilot Readiness Brief" => "Integration/Pilot Readiness Brief",
+        "Live Gemini Connector Test" => "Live Gemini Connector Test",
         _ => briefType
+    };
+
+    private static OperationalContext BuildOperationalContext(FleetQueueSummaryDto summary) => new()
+    {
+        TrucksInQueue = summary.TotalTrucks,
+        ActiveTrips = summary.TrucksProceeding,
+        HighRiskTrips = summary.HighRiskTrucks.Count,
+        BerthUtilisationPct = summary.BerthReadiness.Count == 0 ? 78 : 84,
+        YardOccupancyPct = 82,
+        OpenIncidents = summary.DelayedOrRescheduledTrucks,
+        ActiveDisruptions = summary.DelayedOrRescheduledTrucks,
+        CriticalDisruptions = summary.HighRiskTrucks.Count(t => t.DelayRisk == QueueDelayRisk.Critical),
+        GatesOperational = summary.GateCapacities.Count(g => g.Status != CapacityStatus.Closed),
+        TotalIdlingMinutesToday = summary.TotalIdlingMinutesAvoided,
+        EstimatedCo2Today = summary.TotalCo2KgAvoided,
+        GateDelayActive = summary.TrucksWaiting > 0 || summary.TrucksHolding > 0,
+        RoadCongestionActive = summary.DelayedOrRescheduledTrucks > 0,
+        TopDisruptions = summary.BerthReadiness.Select(b => $"{b.BerthName}: {b.ReadinessStatus}").Take(4).ToList(),
+        TopRecommendations = new() { summary.LatestAiQueueRecommendation, DeterministicRecommendation(summary) }
     };
 
     private static string DeterministicRecommendation(FleetQueueSummaryDto summary)

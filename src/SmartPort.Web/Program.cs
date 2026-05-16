@@ -142,16 +142,13 @@ builder.Services.AddSingleton<INotificationTemplateService, NotificationTemplate
 builder.Services.AddSingleton<IInAppNotificationService, InAppNotificationService>();
 builder.Services.AddHttpClient<WhatsAppCloudApiNotificationSender>();
 builder.Services.AddSingleton<SimulatedWhatsAppNotificationSender>();
-builder.Services.AddSingleton<IWhatsAppNotificationSender>(sp =>
-{
-    var config = sp.GetRequiredService<IConfiguration>();
-    var mode = config["SMARTPORT_WHATSAPP_MODE"] ?? config["SMARTPORT_NOTIFICATION_MODE"] ?? "Demo";
-    var connectorMode = string.Equals(mode, "ConnectorReady", StringComparison.OrdinalIgnoreCase) || string.Equals(mode, "LiveTest", StringComparison.OrdinalIgnoreCase);
-    return connectorMode ? sp.GetRequiredService<WhatsAppCloudApiNotificationSender>() : sp.GetRequiredService<SimulatedWhatsAppNotificationSender>();
-});
+builder.Services.AddSingleton<IWhatsAppWebhookParser, WhatsAppWebhookParser>();
+builder.Services.AddSingleton<IWhatsAppNotificationSender>(sp => BuildWhatsAppSender(sp));
+builder.Services.AddSingleton<IWhatsAppConnectorService>(sp => BuildWhatsAppConnector(sp));
 builder.Services.AddSingleton<IPushNotificationSender, SimulatedPushNotificationSender>();
 builder.Services.AddSingleton<INotificationService, DriverNotificationService>();
 builder.Services.AddSingleton<IMobileDeviceRegistrationService, MobileDeviceRegistrationService>();
+builder.Services.AddSingleton<IOperationalActionService, OperationalActionService>();
 
 // ─── MVC ──────────────────────────────────────────────────────────────────────
 builder.Services.AddControllersWithViews(options =>
@@ -256,6 +253,22 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+static IWhatsAppNotificationSender BuildWhatsAppSender(IServiceProvider sp)
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var mode = config["SMARTPORT_WHATSAPP_MODE"] ?? config["SMARTPORT_NOTIFICATION_MODE"] ?? "Demo";
+    var connectorMode = string.Equals(mode, "ConnectorReady", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(mode, "LiveTest", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(mode, "Live", StringComparison.OrdinalIgnoreCase);
+    return connectorMode ? (IWhatsAppNotificationSender)sp.GetRequiredService<WhatsAppCloudApiNotificationSender>() : sp.GetRequiredService<SimulatedWhatsAppNotificationSender>();
+}
+
+static IWhatsAppConnectorService BuildWhatsAppConnector(IServiceProvider sp)
+{
+    var sender = BuildWhatsAppSender(sp);
+    return sender is IWhatsAppConnectorService connector ? connector : sp.GetRequiredService<SimulatedWhatsAppNotificationSender>();
+}
 
 static bool RequiresDemoAccess(PathString path)
 {

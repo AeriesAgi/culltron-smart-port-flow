@@ -51,3 +51,8 @@ Smart Port combines agentic reasoning with real operational workflow: fleet inst
 ## Limitations
 
 Synthetic demo data only; no live Transnet/IPMS/customer/WhatsApp/GPS integration is claimed. Production requires approved credentials, pilot governance and hardening.
+
+
+## Live connector setup
+
+See `docs/LIVE_API_SETUP.md` for exact Gemini and WhatsApp Cloud API environment variables, webhook callback setup, curl verify test, and safety rules. Future pilot/live connectors can ingest IPMS/TOS, gate systems, fleet GPS, weighbridge, ERP, WhatsApp Cloud API, driver app, berth schedules, weather/disruption feeds and emissions systems.

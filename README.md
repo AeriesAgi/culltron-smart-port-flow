@@ -36,15 +36,16 @@ Gemini is optional. Without configuration, the demo runs deterministic fallback 
 export GEMINI_API_KEY="..."
 export Gemini__Enabled=true
 export Gemini__Model=gemini-2.5-flash
+# fallback names also supported: GEMINI_ENABLED, GEMINI_MODE, GEMINI_MODEL
 ```
 
-The Gemini console shows key configured yes/no, enabled yes/no, model, mode, fallback status, latest generation and latency. All AI actions remain human-approved.
+The Gemini console shows key configured yes/no, enabled yes/no, model, mode, fallback status, latest generation and latency. Use **Run Live Gemini Test** on `/gemini-agent` to verify the server-side connector. All AI actions remain human-approved.
 
 ## WhatsApp setup
 
-WhatsApp is simulated by default. Live test mode requires approved Meta credentials, approved test recipients and verify token configuration. Do not claim production WhatsApp integration unless credentials and approval exist.
+WhatsApp is simulated by default. LiveTest/Live mode can call Meta WhatsApp Cloud API when server-side credentials are configured. LiveTest sends only to an approved test recipient or consented test driver. Do not claim production WhatsApp integration unless credentials, approval and live operations are configured.
 
-Relevant endpoints:
+Required WhatsApp environment variables are documented in `docs/LIVE_API_SETUP.md`. Relevant endpoints:
 
 - `GET /webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=...&hub.challenge=...`
 - `POST /webhooks/whatsapp`
@@ -102,3 +103,8 @@ Smart Port is pilot-ready and connector-ready for approved integrations with IPM
 - Gemini is only used when configured; deterministic fallback always works.
 - External sends and operational changes require human approval.
 - Integration requires approved pilot credentials.
+
+
+## Live connector setup
+
+See `docs/LIVE_API_SETUP.md` for exact Gemini and WhatsApp Cloud API environment variables, webhook callback setup, curl verify test, and safety rules. Future pilot/live connectors can ingest IPMS/TOS, gate systems, fleet GPS, weighbridge, ERP, WhatsApp Cloud API, driver app, berth schedules, weather/disruption feeds and emissions systems.

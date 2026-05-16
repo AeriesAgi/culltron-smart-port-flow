@@ -40,3 +40,6 @@ if curl -fsS "$BASE_URL/api/mobile/truck/status/SPQ-2026-0042" >/dev/null; then 
 
 curl -i -s "$BASE_URL/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=$VERIFY_TOKEN&hub.challenge=smartport" | head -n 1
 if curl -fsS "$BASE_URL/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=wrong&hub.challenge=smartport" >/dev/null; then echo "invalid WhatsApp verify token unexpectedly succeeded" >&2; exit 1; else echo "invalid WhatsApp verify token rejected"; fi
+
+SAMPLE_PAYLOAD='{"entry":[{"changes":[{"value":{"contacts":[{"profile":{"name":"Demo Driver"},"wa_id":"27820000000"}],"messages":[{"from":"27820000000","id":"wamid.demo","timestamp":"1760000000","type":"text","text":{"body":"STATUS SPQ-2026-0042"}}]}}]}]}'
+curl -fsS -X POST "$BASE_URL/webhooks/whatsapp" -H 'Content-Type: application/json' -d "$SAMPLE_PAYLOAD" >/dev/null
