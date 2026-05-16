@@ -1,28 +1,25 @@
 # Gemini Environment Setup
 
-Smart Port Copilot is backend-driven. The browser and Android companion never store Gemini keys.
-
-## Local environment
+Smart Port supports live Gemini calls from the server when configured and falls back deterministically when not configured.
 
 ```bash
-export GEMINI_API_KEY=<real key outside repo>
+export GEMINI_API_KEY="..."
 export Gemini__Enabled=true
 export Gemini__Mode=Hybrid
 export Gemini__Model=gemini-2.5-flash
 ```
 
-## Docker Compose / deployment
+Fallback variable names are also supported:
 
-Set the same variables in the host or deployment secret manager. Do not commit `.env` files containing secrets.
+```bash
+export GEMINI_ENABLED=true
+export GEMINI_MODE=Hybrid
+export GEMINI_MODEL=gemini-2.5-flash
+```
 
-## Verify Gemini is active
+Open `/gemini-agent` and use **Run Live Gemini Test**. Secrets are never rendered in the frontend. Logs should only contain safe metadata such as status/latency/source.
 
-1. Open `/demo-access` and enter a demo credential.
-2. Open `/fleet/settings`.
-3. Confirm **Gemini API key configured** is `Yes`.
-4. Run **Test Gemini Copilot**.
-5. Open `/Copilot` or call `/api/mobile/copilot/driver` and verify the response source indicates Gemini or hybrid Gemini mode.
 
-## Verify fallback mode
+## Demo and judge codes
 
-Unset `GEMINI_API_KEY` or set `Gemini__Enabled=false`, restart the app, then run the same test. The workflow should continue with deterministic Smart Port fallback responses.
+For hackathon judging, enable visible demo codes with `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`. Codes: Port Admin `culltron-admin-2026`, Fleet Owner `culltron-fleet-2026`, Driver `culltron-driver-2026`, Judge `culltron-judge-2026`. Do not commit real Gemini keys, WhatsApp tokens, `.env` files or private phone numbers.

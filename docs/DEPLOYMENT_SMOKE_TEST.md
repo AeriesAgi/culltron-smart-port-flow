@@ -1,23 +1,22 @@
 # Deployment Smoke Test
 
-```bash
-dotnet restore SmartPort.sln
-dotnet build SmartPort.sln
-dotnet publish src/SmartPort.Web/SmartPort.Web.csproj -c Release
-docker compose up -d --build
-docker compose logs -f web
-```
-
-Runtime checks:
+Run:
 
 ```bash
-BASE_URL=http://localhost:8080 SMARTPORT_DRIVER_DEMO_CODE=culltron-driver-2026 ./scripts/smoke-test.sh
+chmod +x scripts/smoke-test.sh
+./scripts/smoke-test.sh http://localhost:8080
 ```
 
-Android:
+Manual pages: `/`, `/platform`, `/demo-access`, `/demo-tour`, `/dashboard`, `/gemini-agent`, `/agent-governance`, `/enterprise-readiness`, `/execution/plans`, `/fleet`, `/fleet/trucks/SPQ-2026-0042`, `/driver/demo`, `/fleet/notifications`, `/fleet/download-app`, `/health`, `/health/readiness`, `/health/integrations`.
 
-```bash
-cd mobile/SmartPortDriverCompanion
-gradle assembleDebug
-ls -lah app/build/outputs/apk/debug/
-```
+API checks: mobile demo login, token-protected truck status, invalid token rejection and WhatsApp webhook verify token success/failure.
+
+
+## Live connector setup
+
+See `docs/LIVE_API_SETUP.md` for exact Gemini and WhatsApp Cloud API environment variables, webhook callback setup, curl verify test, and safety rules. Future pilot/live connectors can ingest IPMS/TOS, gate systems, fleet GPS, weighbridge, ERP, WhatsApp Cloud API, driver app, berth schedules, weather/disruption feeds and emissions systems.
+
+
+## Manual final checks
+
+Verify `/demo-access` shows quick-fill codes when `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`, `/gemini-agent` can run the Gemini test/fallback, `/fleet/notifications` shows WhatsApp readiness, and `/fleet/download-app` explains that web driver companion + WhatsApp + mobile API are primary while Android is optional.

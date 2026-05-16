@@ -142,16 +142,13 @@ builder.Services.AddSingleton<INotificationTemplateService, NotificationTemplate
 builder.Services.AddSingleton<IInAppNotificationService, InAppNotificationService>();
 builder.Services.AddHttpClient<WhatsAppCloudApiNotificationSender>();
 builder.Services.AddSingleton<SimulatedWhatsAppNotificationSender>();
-builder.Services.AddSingleton<IWhatsAppNotificationSender>(sp =>
-{
-    var config = sp.GetRequiredService<IConfiguration>();
-    var mode = config["SMARTPORT_WHATSAPP_MODE"] ?? config["SMARTPORT_NOTIFICATION_MODE"] ?? "Demo";
-    var connectorMode = string.Equals(mode, "ConnectorReady", StringComparison.OrdinalIgnoreCase) || string.Equals(mode, "LiveTest", StringComparison.OrdinalIgnoreCase);
-    return connectorMode ? sp.GetRequiredService<WhatsAppCloudApiNotificationSender>() : sp.GetRequiredService<SimulatedWhatsAppNotificationSender>();
-});
+builder.Services.AddSingleton<IWhatsAppWebhookParser, WhatsAppWebhookParser>();
+builder.Services.AddSingleton<IWhatsAppNotificationSender>(sp => BuildWhatsAppSender(sp));
+builder.Services.AddSingleton<IWhatsAppConnectorService>(sp => BuildWhatsAppConnector(sp));
 builder.Services.AddSingleton<IPushNotificationSender, SimulatedPushNotificationSender>();
 builder.Services.AddSingleton<INotificationService, DriverNotificationService>();
 builder.Services.AddSingleton<IMobileDeviceRegistrationService, MobileDeviceRegistrationService>();
+builder.Services.AddSingleton<IOperationalActionService, OperationalActionService>();
 
 // ─── MVC ──────────────────────────────────────────────────────────────────────
 builder.Services.AddControllersWithViews(options =>
@@ -182,13 +179,23 @@ else
 }
 
 app.UseForwardedHeaders();
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.TryAdd("X-Frame-Options", "DENY");
+    context.Response.Headers.TryAdd("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.TryAdd("Permissions-Policy", "camera=(), microphone=(), geolocation=(self)");
+    await next();
+});
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseAuthentication();
 
 app.Use(async (context, next) =>
 {
-    if (RequiresDemoAccess(context.Request.Path) && !context.Request.Cookies.ContainsKey("SmartPort.DemoAccess"))
+    var hasIdentitySession = context.User?.Identity?.IsAuthenticated == true;
+    if (RequiresDemoAccess(context.Request.Path) && !hasIdentitySession && !context.Request.Cookies.ContainsKey("SmartPort.DemoAccess"))
     {
         if (context.Request.Path.Value?.StartsWith("/api", StringComparison.OrdinalIgnoreCase) == true)
         {
@@ -206,7 +213,6 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
 
@@ -248,6 +254,22 @@ using (var scope = app.Services.CreateScope())
 
 app.Run();
 
+static IWhatsAppNotificationSender BuildWhatsAppSender(IServiceProvider sp)
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var mode = config["SMARTPORT_WHATSAPP_MODE"] ?? config["SMARTPORT_NOTIFICATION_MODE"] ?? "Demo";
+    var connectorMode = string.Equals(mode, "ConnectorReady", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(mode, "LiveTest", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(mode, "Live", StringComparison.OrdinalIgnoreCase);
+    return connectorMode ? (IWhatsAppNotificationSender)sp.GetRequiredService<WhatsAppCloudApiNotificationSender>() : sp.GetRequiredService<SimulatedWhatsAppNotificationSender>();
+}
+
+static IWhatsAppConnectorService BuildWhatsAppConnector(IServiceProvider sp)
+{
+    var sender = BuildWhatsAppSender(sp);
+    return sender is IWhatsAppConnectorService connector ? connector : sp.GetRequiredService<SimulatedWhatsAppNotificationSender>();
+}
+
 static bool RequiresDemoAccess(PathString path)
 {
     if (!path.HasValue) return false;
@@ -258,7 +280,7 @@ static bool RequiresDemoAccess(PathString path)
     string[] protectedPrefixes =
     {
         "/dashboard", "/fleet", "/driver", "/truck", "/execution", "/Copilot", "/gemini-agent", "/agent/gemini",
-        "/demo-tour", "/enterprise-readiness", "/Disruptions", "/Recommendations", "/Reports", "/mobile/download"
+        "/agent-governance", "/ops-ingest", "/agent/ingest", "/demo-tour", "/enterprise-readiness", "/Disruptions", "/Recommendations", "/Reports", "/mobile/download"
     };
 
     return protectedPrefixes.Any(prefix => value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));

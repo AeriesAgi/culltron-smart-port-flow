@@ -161,9 +161,10 @@ public class FleetController : Controller
     private readonly INotificationService _notifications;
     private readonly IDriverStatusCommandService _commands;
     private readonly ISmartPortCopilotChatService _copilot;
-    public FleetController(IFleetVehicleService fleet, IOrganisationService orgs, IFleetDriverQueueService queue, INotificationService notifications, IDriverStatusCommandService commands, ISmartPortCopilotChatService copilot)
+    private readonly IOperationalActionService _actions;
+    public FleetController(IFleetVehicleService fleet, IOrganisationService orgs, IFleetDriverQueueService queue, INotificationService notifications, IDriverStatusCommandService commands, ISmartPortCopilotChatService copilot, IOperationalActionService actions)
     {
-        _fleet = fleet; _orgs = orgs; _queue = queue; _notifications = notifications; _commands = commands; _copilot = copilot;
+        _fleet = fleet; _orgs = orgs; _queue = queue; _notifications = notifications; _commands = commands; _copilot = copilot; _actions = actions;
     }
 
     [HttpGet("/fleet")]
@@ -267,6 +268,7 @@ public class FleetController : Controller
         var selected = string.IsNullOrWhiteSpace(reference) ? refs.First() : reference;
         ViewBag.DemoReferences = refs;
         ViewBag.SelectedReference = selected;
+        ViewBag.WhatsAppStatus = _queue.GetWhatsAppConnectorStatus();
         return View(await _notifications.GetHistoryAsync(selected));
     }
 
@@ -274,18 +276,18 @@ public class FleetController : Controller
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> SendNotification(string reference, NotificationChannel channel)
     {
-        var eventType = channel == NotificationChannel.AndroidPush ? NotificationEventType.QueueStatusChanged : NotificationEventType.AiInstructionUpdated;
         var forceDemo = string.Equals(Request.Query["mode"], "demo", StringComparison.OrdinalIgnoreCase);
         if (forceDemo && channel == NotificationChannel.WhatsApp)
         {
             var truck = await _queue.GetTruckAsync(reference);
-            if (truck != null) await _notifications.RecordAsync(reference, NotificationChannel.WhatsApp, NotificationStatus.SimulatedSent, eventType, $"Simulated WhatsApp: {truck.LatestNotification}", DataProvenanceType.SyntheticDemoData, "Fleet owner");
+            if (truck != null) await _notifications.RecordAsync(reference, NotificationChannel.WhatsApp, NotificationStatus.SimulatedSent, NotificationEventType.AiInstructionUpdated, $"Simulated WhatsApp: {truck.LatestNotification}", DataProvenanceType.SyntheticDemoData, "Fleet owner");
+            TempData["Success"] = $"Demo WhatsApp notification recorded for {reference}.";
         }
         else
         {
-            await _notifications.SendAsync(reference, channel, eventType);
+            var action = await _actions.ExecuteAsync(new OperationalActionRequest(reference, OperationalActionType.RefreshStatus, "Fleet owner", DataProvenanceType.ManualOperatorInput, channel));
+            TempData[action.Success ? "Success" : "Warning"] = $"{action.Message} Source: {action.Source}. Meta ID: {action.WhatsAppMetaMessageId}";
         }
-        TempData["Success"] = $"{channel} notification recorded for {reference}.";
         return Redirect(Request.Headers.Referer.ToString() ?? "/fleet/notifications");
     }
 
@@ -293,8 +295,9 @@ public class FleetController : Controller
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> TruckAction(string reference, string commandText)
     {
-        var result = await _commands.HandleCommandAsync(new DriverCommandRequestDto { Reference = reference, CommandText = commandText, Actor = "Fleet operations console", Source = DataProvenanceType.ManualOperatorInput });
-        TempData[result.Success ? "Success" : "Warning"] = result.ReplyMessage;
+        var actionType = commandText switch { "ARRIVED_STAGING" => OperationalActionType.MoveToStaging, "PROCEEDING_GATE" => OperationalActionType.ReleaseToGate, "DELAYED 20" => OperationalActionType.Reschedule, "ISSUE" => OperationalActionType.MarkException, _ => OperationalActionType.RefreshStatus };
+        var result = await _actions.ExecuteAsync(new OperationalActionRequest(reference, actionType, "Fleet operations console", DataProvenanceType.ManualOperatorInput, CommandText: commandText));
+        TempData[result.Success ? "Success" : "Warning"] = $"{result.Message} Audit: {result.AuditTimestampUtc:u}. Next: {result.NextRecommendedAction}";
         return Redirect($"/fleet/trucks/{reference}");
     }
 
@@ -302,8 +305,8 @@ public class FleetController : Controller
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> RequestLocation(string reference)
     {
-        await _notifications.SendAsync(reference, NotificationChannel.WhatsApp, NotificationEventType.WhatsAppLocationCheckIn);
-        TempData["Success"] = "Location request recorded and notification history updated.";
+        var result = await _actions.ExecuteAsync(new OperationalActionRequest(reference, OperationalActionType.RequestLocation, "Fleet operations console", DataProvenanceType.ManualOperatorInput, NotificationChannel.WhatsApp));
+        TempData[result.Success ? "Success" : "Warning"] = $"{result.Message} Audit: {result.AuditTimestampUtc:u}.";
         return Redirect($"/fleet/trucks/{reference}");
     }
 

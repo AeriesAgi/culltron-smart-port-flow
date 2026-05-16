@@ -101,17 +101,17 @@ public class DemoFleetDriverQueueService : IFleetDriverQueueService
         var businessAccountId = !string.IsNullOrWhiteSpace(_config["SMARTPORT_WHATSAPP_BUSINESS_ACCOUNT_ID"]);
         var verifyToken = !string.IsNullOrWhiteSpace(_config["SMARTPORT_WHATSAPP_VERIFY_TOKEN"]);
         var publicBaseUrl = (_config["SMARTPORT_PUBLIC_BASE_URL"] ?? string.Empty).Trim().TrimEnd('/');
-        var graph = string.IsNullOrWhiteSpace(_config["SMARTPORT_WHATSAPP_GRAPH_VERSION"]) ? "v20.0" : _config["SMARTPORT_WHATSAPP_GRAPH_VERSION"]!.Trim();
+        var graph = string.IsNullOrWhiteSpace(_config["SMARTPORT_WHATSAPP_GRAPH_VERSION"]) ? "v22.0" : _config["SMARTPORT_WHATSAPP_GRAPH_VERSION"]!.Trim();
         var approvedDriverAvailable = BuildTrucks().Select(t => t.DriverContact).Concat(ManualContacts.Values).Any(c => c.IsLiveWhatsAppSafe);
         var checks = new List<string>
         {
-            mode == WhatsAppMode.LiveTest ? "Mode is LiveTest" : "Mode is not LiveTest",
+            mode is WhatsAppMode.LiveTest or WhatsAppMode.Live ? $"Mode is {mode}" : "Mode is not LiveTest/Live",
             enabled ? "WhatsApp enabled" : "WhatsApp not enabled",
             accessToken ? "Access token configured" : "Access token missing",
             phoneNumberId ? "Phone number ID configured" : "Phone number ID missing",
             verifyToken ? "Webhook verify token configured" : "Webhook verify token missing",
             !string.IsNullOrWhiteSpace(publicBaseUrl) ? "Public base URL configured" : "Public base URL missing",
-            approvedDriverAvailable ? "Approved consented tester driver available" : "No approved consented tester driver with valid WhatsApp number"
+            approvedDriverAvailable || !string.IsNullOrWhiteSpace(_config["SMARTPORT_WHATSAPP_TEST_RECIPIENT_NUMBER"]) ? "Approved consented tester driver or test recipient available" : "No approved consented tester driver/test recipient with valid WhatsApp number"
         };
         var configured = accessToken && phoneNumberId;
         return new WhatsAppConnectorStatusDto
@@ -119,9 +119,9 @@ public class DemoFleetDriverQueueService : IFleetDriverQueueService
             Mode = mode, Enabled = enabled, AccessTokenConfigured = accessToken, PhoneNumberIdConfigured = phoneNumberId, BusinessAccountIdConfigured = businessAccountId,
             VerifyTokenConfigured = verifyToken, PublicBaseUrlConfigured = !string.IsNullOrWhiteSpace(publicBaseUrl), GraphVersion = graph, PublicBaseUrl = publicBaseUrl,
             WebhookCallbackUrl = string.IsNullOrWhiteSpace(publicBaseUrl) ? "Set SMARTPORT_PUBLIC_BASE_URL to show callback URL" : $"{publicBaseUrl}/webhooks/whatsapp",
-            ApprovedDriverAvailable = approvedDriverAvailable, CredentialsConfigured = configured, LiveSendingAllowed = mode == WhatsAppMode.LiveTest && enabled && configured && verifyToken && !string.IsNullOrWhiteSpace(publicBaseUrl) && approvedDriverAvailable,
+            ApprovedDriverAvailable = approvedDriverAvailable || !string.IsNullOrWhiteSpace(_config["SMARTPORT_WHATSAPP_TEST_RECIPIENT_NUMBER"]), CredentialsConfigured = configured, LiveSendingAllowed = (mode is WhatsAppMode.LiveTest or WhatsAppMode.Live) && enabled && configured && verifyToken && !string.IsNullOrWhiteSpace(publicBaseUrl) && (approvedDriverAvailable || !string.IsNullOrWhiteSpace(_config["SMARTPORT_WHATSAPP_TEST_RECIPIENT_NUMBER"])),
             LiveTestReadinessChecks = checks,
-            SafetyMessage = mode switch { WhatsAppMode.Demo => "Demo Mode: no external WhatsApp calls; simulated messages are stored in history.", WhatsAppMode.ConnectorReady => "ConnectorReady Mode: credentials can be checked, but live sending is blocked until LiveTest.", _ => "LiveTest Mode: sends only go to manually added, active, approved and consented tester numbers." }
+            SafetyMessage = mode switch { WhatsAppMode.Demo => "Demo Mode: no external WhatsApp calls; simulated messages are stored in history.", WhatsAppMode.ConnectorReady => "ConnectorReady Mode: credentials can be checked, but live sending is blocked until LiveTest/Live.", WhatsAppMode.Live => "Live Mode: external sends require credentials, webhook, and approved/consented recipients.", _ => "LiveTest Mode: sends only go to SMARTPORT_WHATSAPP_TEST_RECIPIENT_NUMBER or manually added, active, approved and consented tester numbers." }
         };
     }
 
@@ -250,8 +250,8 @@ public class DriverNotificationService : INotificationService
         var truck = await _queue.GetTruckAsync(reference) ?? throw new InvalidOperationException("Truck/reference not found.");
         var message = _templates.BuildMessage(truck, eventType, channel);
         var whatsAppResult = new WhatsAppSendResult(NotificationStatus.Failed);
-        var status = channel switch { NotificationChannel.InApp => await _inApp.SendAsync(truck, message), NotificationChannel.WhatsApp when !truck.DriverContact.IsLiveWhatsAppSafe && _queue.GetWhatsAppConnectorStatus().Mode == WhatsAppMode.LiveTest => NotificationStatus.BlockedSafety, NotificationChannel.WhatsApp => (whatsAppResult = await _whatsApp.SendAsync(truck, message)).Status, NotificationChannel.AndroidPush => await _push.SendAsync(truck, message), _ => NotificationStatus.Failed };
-        var source = channel == NotificationChannel.WhatsApp && status == NotificationStatus.LiveTestSent ? DataProvenanceType.FutureLiveConnector : DataProvenanceType.ManualOperatorInput;
+        var status = channel switch { NotificationChannel.InApp => await _inApp.SendAsync(truck, message), NotificationChannel.WhatsApp when !truck.DriverContact.IsLiveWhatsAppSafe && (_queue.GetWhatsAppConnectorStatus().Mode is WhatsAppMode.LiveTest or WhatsAppMode.Live) => NotificationStatus.BlockedSafety, NotificationChannel.WhatsApp => (whatsAppResult = await _whatsApp.SendAsync(truck, message)).Status, NotificationChannel.AndroidPush => await _push.SendAsync(truck, message), _ => NotificationStatus.Failed };
+        var source = channel == NotificationChannel.WhatsApp && status is NotificationStatus.LiveTestSent or NotificationStatus.Sent ? DataProvenanceType.FutureLiveConnector : DataProvenanceType.ManualOperatorInput;
         return await RecordAsync(truck.BookingReference, channel, status, eventType, status == NotificationStatus.BlockedSafety ? $"Blocked for WhatsApp safety: {message}" : message, source, "Fleet owner", whatsAppResult.ExternalMessageId);
     }
     public async Task<DriverNotificationDto?> RecordAsync(string reference, NotificationChannel channel, NotificationStatus status, NotificationEventType eventType, string message, DataProvenanceType source, string actor = "Smart Port", string externalMessageId = "")
@@ -267,19 +267,93 @@ public class DriverNotificationService : INotificationService
 }
 
 public class InAppNotificationService : IInAppNotificationService { public Task<NotificationStatus> SendAsync(FleetTruckDto truck, string message) => Task.FromResult(NotificationStatus.SimulatedSent); }
-public class SimulatedWhatsAppNotificationSender : IWhatsAppNotificationSender { public Task<WhatsAppSendResult> SendAsync(FleetTruckDto truck, string message) => Task.FromResult(new WhatsAppSendResult(NotificationStatus.SimulatedSent)); }
-public class WhatsAppCloudApiNotificationSender : IWhatsAppNotificationSender
+public class SimulatedWhatsAppNotificationSender : IWhatsAppNotificationSender, IWhatsAppConnectorService
+{
+    private readonly IConfiguration? _config;
+    public SimulatedWhatsAppNotificationSender(IConfiguration? config = null) => _config = config;
+    public WhatsAppConnectorStatusDto GetStatus() => BuildStatus(_config, approvedDriverAvailable: false);
+    public Task<WhatsAppSendResult> SendAsync(FleetTruckDto truck, string message) => SendAsync(truck, message, null);
+    public Task<WhatsAppSendResult> SendAsync(FleetTruckDto truck, string message, string? overrideRecipient = null, CancellationToken cancellationToken = default) => Task.FromResult(new WhatsAppSendResult(NotificationStatus.SimulatedSent, ProviderStatus: "Demo simulation"));
+    internal static WhatsAppConnectorStatusDto BuildStatus(IConfiguration? config, bool approvedDriverAvailable)
+    {
+        static bool IsTrue(string? value) => string.Equals(value, "true", StringComparison.OrdinalIgnoreCase) || string.Equals(value, "1", StringComparison.OrdinalIgnoreCase) || string.Equals(value, "yes", StringComparison.OrdinalIgnoreCase);
+        static WhatsAppMode ParseMode(string? value) => Enum.TryParse<WhatsAppMode>(value, true, out var parsed) ? parsed : WhatsAppMode.Demo;
+        var mode = ParseMode(config?["SMARTPORT_WHATSAPP_MODE"] ?? config?["SMARTPORT_NOTIFICATION_MODE"]);
+        var enabled = IsTrue(config?["SMARTPORT_WHATSAPP_ENABLED"]);
+        var accessToken = !string.IsNullOrWhiteSpace(config?["SMARTPORT_WHATSAPP_ACCESS_TOKEN"]);
+        var phoneNumberId = !string.IsNullOrWhiteSpace(config?["SMARTPORT_WHATSAPP_PHONE_NUMBER_ID"]);
+        var businessAccountId = !string.IsNullOrWhiteSpace(config?["SMARTPORT_WHATSAPP_BUSINESS_ACCOUNT_ID"]);
+        var verifyToken = !string.IsNullOrWhiteSpace(config?["SMARTPORT_WHATSAPP_VERIFY_TOKEN"]);
+        var publicBaseUrl = (config?["SMARTPORT_PUBLIC_BASE_URL"] ?? string.Empty).Trim().TrimEnd('/');
+        var graph = string.IsNullOrWhiteSpace(config?["SMARTPORT_WHATSAPP_GRAPH_VERSION"]) ? "v22.0" : config!["SMARTPORT_WHATSAPP_GRAPH_VERSION"]!.Trim();
+        var configured = accessToken && phoneNumberId;
+        var liveTestRecipient = !string.IsNullOrWhiteSpace(config?["SMARTPORT_WHATSAPP_TEST_RECIPIENT_NUMBER"]);
+        var liveAllowed = enabled && configured && verifyToken && !string.IsNullOrWhiteSpace(publicBaseUrl) && (mode == WhatsAppMode.Live ? liveTestRecipient || approvedDriverAvailable : mode == WhatsAppMode.LiveTest && (liveTestRecipient || approvedDriverAvailable));
+        var checks = new List<string>
+        {
+            $"Mode is {mode}",
+            enabled ? "WhatsApp enabled" : "WhatsApp not enabled",
+            accessToken ? "Access token configured" : "Access token missing",
+            phoneNumberId ? "Phone number ID configured" : "Phone number ID missing",
+            businessAccountId ? "Business account ID configured" : "Business account ID missing",
+            verifyToken ? "Webhook verify token configured" : "Webhook verify token missing",
+            !string.IsNullOrWhiteSpace(publicBaseUrl) ? "Public base URL configured" : "Public base URL missing",
+            liveTestRecipient ? "Optional test recipient configured" : approvedDriverAvailable ? "Approved consented tester driver available" : "No approved/test recipient configured"
+        };
+        return new WhatsAppConnectorStatusDto
+        {
+            Mode = mode, Enabled = enabled, AccessTokenConfigured = accessToken, PhoneNumberIdConfigured = phoneNumberId, BusinessAccountIdConfigured = businessAccountId,
+            VerifyTokenConfigured = verifyToken, PublicBaseUrlConfigured = !string.IsNullOrWhiteSpace(publicBaseUrl), GraphVersion = graph, PublicBaseUrl = publicBaseUrl,
+            WebhookCallbackUrl = string.IsNullOrWhiteSpace(publicBaseUrl) ? "Set SMARTPORT_PUBLIC_BASE_URL to show callback URL" : $"{publicBaseUrl}/webhooks/whatsapp",
+            ApprovedDriverAvailable = approvedDriverAvailable || liveTestRecipient, CredentialsConfigured = configured, LiveSendingAllowed = liveAllowed,
+            LiveTestReadinessChecks = checks,
+            SafetyMessage = mode switch
+            {
+                WhatsAppMode.Demo => "Demo Mode: no external WhatsApp calls; simulated messages are stored in history.",
+                WhatsAppMode.ConnectorReady => "ConnectorReady Mode: credentials can be checked, but live sending is blocked until LiveTest/Live.",
+                WhatsAppMode.Live => "Live Mode: external sends are enabled only when credentials, public webhook and approved recipients are configured.",
+                _ => "LiveTest Mode: sends only go to SMARTPORT_WHATSAPP_TEST_RECIPIENT_NUMBER or manually added, active, approved and consented tester numbers."
+            }
+        };
+    }
+}
+public class WhatsAppCloudApiNotificationSender : IWhatsAppNotificationSender, IWhatsAppConnectorService
 {
     private readonly HttpClient _http; private readonly IConfiguration _config; public WhatsAppCloudApiNotificationSender(HttpClient http, IConfiguration config) { _http = http; _config = config; }
-    public async Task<WhatsAppSendResult> SendAsync(FleetTruckDto truck, string message)
+    public WhatsAppConnectorStatusDto GetStatus() => SimulatedWhatsAppNotificationSender.BuildStatus(_config, approvedDriverAvailable: true);
+    public Task<WhatsAppSendResult> SendAsync(FleetTruckDto truck, string message) => SendAsync(truck, message, null);
+    public async Task<WhatsAppSendResult> SendAsync(FleetTruckDto truck, string message, string? overrideRecipient = null, CancellationToken cancellationToken = default)
     {
-        var mode = Enum.TryParse<WhatsAppMode>(_config["SMARTPORT_WHATSAPP_MODE"], true, out var parsed) ? parsed : WhatsAppMode.Demo; var enabled = string.Equals(_config["SMARTPORT_WHATSAPP_ENABLED"], "true", StringComparison.OrdinalIgnoreCase); var token = _config["SMARTPORT_WHATSAPP_ACCESS_TOKEN"]; var phoneNumberId = _config["SMARTPORT_WHATSAPP_PHONE_NUMBER_ID"]; var graph = string.IsNullOrWhiteSpace(_config["SMARTPORT_WHATSAPP_GRAPH_VERSION"]) ? "v20.0" : _config["SMARTPORT_WHATSAPP_GRAPH_VERSION"];
-        if (mode != WhatsAppMode.LiveTest || !enabled) return new WhatsAppSendResult(NotificationStatus.ConnectorNotConfigured);
-        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(phoneNumberId)) return new WhatsAppSendResult(NotificationStatus.ConnectorNotConfigured);
-        if (!truck.DriverContact.IsLiveWhatsAppSafe) return new WhatsAppSendResult(NotificationStatus.BlockedSafety);
-        var to = truck.DriverContact.NormalizedWhatsAppNumber.Replace("+", string.Empty);
-        if (to.Length < 8 || !to.All(char.IsDigit)) return new WhatsAppSendResult(NotificationStatus.BlockedSafety);
-        try { using var request = new HttpRequestMessage(HttpMethod.Post, $"https://graph.facebook.com/{graph}/{phoneNumberId}/messages"); request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token); request.Content = new StringContent(JsonSerializer.Serialize(new { messaging_product = "whatsapp", to, type = "text", text = new { body = message } }), Encoding.UTF8, "application/json"); using var response = await _http.SendAsync(request); var body = await response.Content.ReadAsStringAsync(); var externalId = ExtractMetaMessageId(body); return response.IsSuccessStatusCode ? new WhatsAppSendResult(NotificationStatus.LiveTestSent, externalId) : new WhatsAppSendResult(NotificationStatus.Failed); } catch { return new WhatsAppSendResult(NotificationStatus.Failed); }
+        var status = GetStatus();
+        var token = _config["SMARTPORT_WHATSAPP_ACCESS_TOKEN"]; var phoneNumberId = _config["SMARTPORT_WHATSAPP_PHONE_NUMBER_ID"]; var graph = status.GraphVersion;
+        if (status.Mode is WhatsAppMode.Demo or WhatsAppMode.ConnectorReady || !status.Enabled) return new WhatsAppSendResult(NotificationStatus.ConnectorNotConfigured, ProviderStatus: "WhatsApp external send disabled by mode");
+        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(phoneNumberId)) return new WhatsAppSendResult(NotificationStatus.ConnectorNotConfigured, ProviderStatus: "WhatsApp credentials missing");
+        var configuredTestRecipient = NormalizeRecipient(_config["SMARTPORT_WHATSAPP_TEST_RECIPIENT_NUMBER"]);
+        var recipient = NormalizeRecipient(overrideRecipient) ?? (!string.IsNullOrWhiteSpace(configuredTestRecipient) && status.Mode == WhatsAppMode.LiveTest ? configuredTestRecipient : NormalizeRecipient(truck.DriverContact.NormalizedWhatsAppNumber));
+        if (string.IsNullOrWhiteSpace(recipient)) return new WhatsAppSendResult(NotificationStatus.BlockedSafety, SafeError: "No approved WhatsApp recipient available");
+        if (status.Mode == WhatsAppMode.LiveTest && !string.Equals(recipient, configuredTestRecipient, StringComparison.Ordinal) && !truck.DriverContact.IsLiveWhatsAppSafe) return new WhatsAppSendResult(NotificationStatus.BlockedSafety, SafeError: "LiveTest sends require configured test recipient or approved consented driver");
+        if (status.Mode == WhatsAppMode.Live && !truck.DriverContact.IsLiveWhatsAppSafe && string.IsNullOrWhiteSpace(overrideRecipient)) return new WhatsAppSendResult(NotificationStatus.BlockedSafety, SafeError: "Live sends require approved consented driver recipient");
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"https://graph.facebook.com/{graph}/{phoneNumberId}/messages");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = new StringContent(JsonSerializer.Serialize(new { messaging_product = "whatsapp", to = recipient, type = "text", text = new { body = SafeMessage(message) } }), Encoding.UTF8, "application/json");
+            using var response = await _http.SendAsync(request, cancellationToken);
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            var externalId = ExtractMetaMessageId(body);
+            if (response.IsSuccessStatusCode) return new WhatsAppSendResult(status.Mode == WhatsAppMode.Live ? NotificationStatus.Sent : NotificationStatus.LiveTestSent, externalId, $"Meta accepted message ({(int)response.StatusCode})");
+            return new WhatsAppSendResult(NotificationStatus.Failed, externalId, $"Meta send failed ({(int)response.StatusCode})", ExtractSafeError(body));
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+        catch { return new WhatsAppSendResult(NotificationStatus.Failed, SafeError: "WhatsApp Cloud API request failed safely"); }
+    }
+    private static string? NormalizeRecipient(string? value) { if (string.IsNullOrWhiteSpace(value)) return null; var digits = new string(value.Where(char.IsDigit).ToArray()); return digits.Length >= 8 ? digits : null; }
+    private static string SafeMessage(string message) => string.IsNullOrWhiteSpace(message) ? "Smart Port update: please check your driver instructions." : message.Length > 1000 ? message[..1000] : message;
+    private static string ExtractSafeError(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return string.Empty;
+        try { using var doc = JsonDocument.Parse(json); if (doc.RootElement.TryGetProperty("error", out var err) && err.TryGetProperty("message", out var msg)) return msg.GetString() ?? string.Empty; } catch { }
+        return "Meta returned an error";
     }
     private static string ExtractMetaMessageId(string json)
     {
@@ -293,5 +367,95 @@ public class WhatsAppCloudApiNotificationSender : IWhatsAppNotificationSender
         return string.Empty;
     }
 }
+public class WhatsAppWebhookParser : IWhatsAppWebhookParser
+{
+    public IReadOnlyList<WhatsAppInboundMessage> Parse(JsonElement payload)
+    {
+        var results = new List<WhatsAppInboundMessage>();
+        if (!payload.TryGetProperty("entry", out var entries) || entries.ValueKind != JsonValueKind.Array) return results;
+        foreach (var entry in entries.EnumerateArray())
+        {
+            if (!entry.TryGetProperty("changes", out var changes) || changes.ValueKind != JsonValueKind.Array) continue;
+            foreach (var change in changes.EnumerateArray())
+            {
+                if (!change.TryGetProperty("value", out var value)) continue;
+                var profileName = string.Empty;
+                if (value.TryGetProperty("contacts", out var contacts) && contacts.ValueKind == JsonValueKind.Array && contacts.GetArrayLength() > 0)
+                {
+                    var contact = contacts[0];
+                    if (contact.TryGetProperty("profile", out var profile) && profile.TryGetProperty("name", out var name)) profileName = name.GetString() ?? string.Empty;
+                }
+                if (!value.TryGetProperty("messages", out var messages) || messages.ValueKind != JsonValueKind.Array) continue;
+                foreach (var message in messages.EnumerateArray()) results.Add(ParseMessage(message, profileName));
+            }
+        }
+        return results;
+    }
+    private static WhatsAppInboundMessage ParseMessage(JsonElement message, string profileName)
+    {
+        var from = message.TryGetProperty("from", out var f) ? f.GetString() ?? string.Empty : string.Empty;
+        var id = message.TryGetProperty("id", out var i) ? i.GetString() ?? string.Empty : string.Empty;
+        var timestamp = DateTimeOffset.UtcNow;
+        if (message.TryGetProperty("timestamp", out var ts) && long.TryParse(ts.GetString(), out var unix)) timestamp = DateTimeOffset.FromUnixTimeSeconds(unix);
+        var type = message.TryGetProperty("type", out var t) ? t.GetString() ?? string.Empty : string.Empty;
+        string text = string.Empty, mediaType = string.Empty, mediaId = string.Empty; decimal? lat = null, lng = null;
+        if (message.TryGetProperty("text", out var textElement) && textElement.TryGetProperty("body", out var body)) text = body.GetString() ?? string.Empty;
+        if (message.TryGetProperty("button", out var button) && button.TryGetProperty("text", out var buttonText)) text = buttonText.GetString() ?? text;
+        if (message.TryGetProperty("interactive", out var interactive)) text = ExtractInteractiveText(interactive, text);
+        if (message.TryGetProperty("location", out var loc))
+        {
+            if (loc.TryGetProperty("latitude", out var la) && la.TryGetDecimal(out var latitude)) lat = latitude;
+            if (loc.TryGetProperty("longitude", out var lo) && lo.TryGetDecimal(out var longitude)) lng = longitude;
+            text = loc.TryGetProperty("name", out var name) ? name.GetString() ?? "WhatsApp shared location" : "WhatsApp shared location";
+        }
+        foreach (var candidate in new[] { "image", "audio", "voice", "video", "document" })
+        {
+            if (!message.TryGetProperty(candidate, out var media)) continue;
+            mediaType = candidate; mediaId = media.TryGetProperty("id", out var mid) ? mid.GetString() ?? string.Empty : string.Empty;
+            if (string.IsNullOrWhiteSpace(text)) text = $"Inbound WhatsApp {candidate} received for operator review.";
+        }
+        return new WhatsAppInboundMessage(from, id, timestamp, text, lat, lng, profileName, mediaType, mediaId, type);
+    }
+    private static string ExtractInteractiveText(JsonElement interactive, string fallback)
+    {
+        if (interactive.TryGetProperty("button_reply", out var br) && br.TryGetProperty("title", out var bt)) return bt.GetString() ?? fallback;
+        if (interactive.TryGetProperty("list_reply", out var lr) && lr.TryGetProperty("title", out var lt)) return lt.GetString() ?? fallback;
+        return fallback;
+    }
+}
 public class SimulatedPushNotificationSender : IPushNotificationSender { public Task<NotificationStatus> SendAsync(FleetTruckDto truck, string message) => Task.FromResult(NotificationStatus.SimulatedSent); }
 public class MobileDeviceRegistrationService : IMobileDeviceRegistrationService { private static readonly ConcurrentDictionary<string, MobileDeviceRegistrationDto> Devices = new(StringComparer.OrdinalIgnoreCase); public Task RegisterAsync(MobileDeviceRegistrationDto registration) { Devices[$"{registration.Reference}:{registration.DeviceToken}"] = registration; return Task.CompletedTask; } public Task UnregisterAsync(string reference, string deviceToken) { Devices.TryRemove($"{reference}:{deviceToken}", out _); return Task.CompletedTask; } }
+
+public class OperationalActionService : IOperationalActionService
+{
+    private readonly IDriverStatusCommandService _commands;
+    private readonly INotificationService _notifications;
+    private readonly IFleetDriverQueueService _queue;
+    public OperationalActionService(IDriverStatusCommandService commands, INotificationService notifications, IFleetDriverQueueService queue) { _commands = commands; _notifications = notifications; _queue = queue; }
+    public async Task<OperationalActionResult> ExecuteAsync(OperationalActionRequest request, CancellationToken cancellationToken = default)
+    {
+        var truck = await _queue.GetTruckAsync(request.Reference);
+        if (truck == null) return new(false, "Truck/reference not found.", request.Source.ToString(), request.Reference, DateTime.UtcNow, NextRecommendedAction: "Verify the booking reference and retry.");
+        if (request.NotificationChannel.HasValue)
+        {
+            var notification = await _notifications.SendAsync(truck.BookingReference, request.NotificationChannel.Value, request.ActionType == OperationalActionType.RequestLocation ? NotificationEventType.WhatsAppLocationCheckIn : NotificationEventType.AiInstructionUpdated);
+            return new(notification.Status is not NotificationStatus.Failed and not NotificationStatus.BlockedSafety and not NotificationStatus.ConnectorNotConfigured, $"{request.NotificationChannel} notification recorded with status {notification.Status}.", request.NotificationChannel == NotificationChannel.WhatsApp && notification.Status == NotificationStatus.Sent ? "Live" : notification.Status == NotificationStatus.LiveTestSent ? "LiveTest" : "Demo", truck.BookingReference, notification.Timestamp, notification.RelatedInstructionReference, notification.ExternalMessageId, truck.CurrentInstruction.Instruction);
+        }
+        var command = string.IsNullOrWhiteSpace(request.CommandText) ? ActionToCommand(request.ActionType) : request.CommandText!;
+        var result = await _commands.HandleCommandAsync(new DriverCommandRequestDto { Reference = truck.BookingReference, CommandText = command, Actor = request.Actor, Source = request.Source });
+        var updated = result.Truck ?? truck;
+        return new(result.Success, result.ReplyMessage, request.Source.ToString(), updated.BookingReference, DateTime.UtcNow, NextRecommendedAction: updated.CurrentInstruction.Instruction);
+    }
+    private static string ActionToCommand(OperationalActionType action) => action switch
+    {
+        OperationalActionType.MoveToStaging or OperationalActionType.ArrivedAtStaging => "ARRIVED_STAGING",
+        OperationalActionType.ReleaseToGate or OperationalActionType.ProceedingToGate => "PROCEEDING_GATE",
+        OperationalActionType.Reschedule or OperationalActionType.Delayed20 => "DELAYED 20",
+        OperationalActionType.MarkException or OperationalActionType.ReportIssue => "ISSUE",
+        OperationalActionType.ConfirmHolding => "HOLDING",
+        OperationalActionType.ArrivedAtGate => "ARRIVED_GATE",
+        OperationalActionType.CompleteJob => "COMPLETED",
+        OperationalActionType.Ready => "READY",
+        _ => "STATUS"
+    };
+}

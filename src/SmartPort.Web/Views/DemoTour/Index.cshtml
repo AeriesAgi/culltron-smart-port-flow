@@ -1,18 +1,21 @@
 @{ ViewData["Title"] = "Smart Port Demo Tour"; }
-<section class="sp-page-hero"><div><span class="sp-badge">2–5 minute judge path</span><h1>Smart Port Demo Tour</h1><p>Follow the complete loop: public story → Identity role login → command centre → Gemini agent → fleet/driver actions → audit and emissions impact.</p></div><a class="sp-btn sp-btn--primary" href="/gemini-agent">Start with Gemini Agent</a></section>
+<section class="sp-page-hero"><div><span class="sp-badge">2–5 minute judge path</span><h1>Smart Port Demo Tour</h1><p>Follow the complete loop: public story → Identity role login → command centre → Gemini agent → governance → ops ingest → execution plan → fleet/driver actions → notifications → audit and emissions impact.</p></div><div class="sp-action-row"><a class="sp-btn sp-btn--primary" href="/gemini-agent">Start with Gemini Agent</a><a class="sp-btn sp-btn--outline" href="/agent-governance">Agent Governance</a><a class="sp-btn sp-btn--outline" href="/ops-ingest">Ops Ingest</a><a class="sp-btn sp-btn--outline" href="/health/integrations">Integration Status</a></div></section>
 <div class="sp-grid sp-grid--3 sp-mt">
 @foreach (var role in new[] { "Port Admin / Control Room", "Fleet Owner / Durban Freight", "Driver Companion", "Hackathon Judge / Viewer" }) { <article class="sp-card"><h3>@role</h3><p>Seeded Identity role with demo-scoped access and synthetic data boundaries.</p></article> }
 </div>
 @{ var steps = new[] {
 ("Public platform story", "Open the homepage", "Shows enterprise logistics positioning without fake live integration claims.", "/", "Premium public website and demo CTA."),
 ("Port Admin dashboard", "Click Dashboard", "Shows command-centre KPIs and Gemini status.", "/dashboard", "Operational pressure and recommended next actions."),
-("Gemini Operations Agent", "Generate an operations brief", "Shows agentic reasoning with fallback resilience.", "/gemini-agent", "Brief saved to session audit history."),
+("Gemini Operations Agent", "Run Gemini Test / generate an operations brief", "Shows Gemini readiness, source label, latency and fallback resilience.", "/gemini-agent", "Brief saved to session audit history."),
+("Agent Governance", "Run a safety check", "Shows human approval, blocked secret requests and action guardrails.", "/agent-governance", "Governance audit entry appears."),
+("Ops Ingest", "Analyze the sample operations note", "Extracts structured signals and suggested actions from messy operational text.", "/ops-ingest", "Ingest audit entry appears."),
 ("Execution plan generator", "Generate a plan", "Turns insights into human-approved truck actions.", "/execution/plans", "Plan with truck cards, risks and emissions."),
 ("Fleet owner console", "Open Fleet", "Fleet operator can coordinate drivers.", "/fleet", "Queue state and notifications."),
 ("Truck detail and actions", "Open SPQ-2026-0042", "Shows request location, WhatsApp, staging and gate actions.", "/fleet/trucks/SPQ-2026-0042", "Shared state updates and audit history."),
 ("Driver status page", "Open Driver Demo", "Driver sees current instruction and allowed actions.", "/driver/demo", "Confirmation timeline and Copilot."),
-("WhatsApp/demo notifications", "Open Notifications", "Shows simulated/live-test-safe messaging history.", "/fleet/notifications", "No unapproved live messages claimed."),
+("WhatsApp Cloud API live-test step", "Open Notifications and truck WhatsApp actions", "Shows Demo/LiveTest/Live mode, webhook callback readiness, masked recipients, Meta message IDs when configured, and simulated fallback when credentials are absent.", "/fleet/notifications", "No unapproved live messages claimed; live sending requires Meta env vars and approved test recipient."),
 ("Android companion/API", "Open Download App", "Native app uses mobile demo token, not browser cookies.", "/fleet/download-app", "APK/API instructions."),
-("Reports/audit/emissions", "Open Reports", "Shows business impact and governance.", "/reports", "Audit-ready emissions/idling narrative.") };
+("Enterprise readiness", "Open Enterprise Readiness", "Shows what is demo, configured, connector-ready, LiveTest-ready and production-hardening required.", "/enterprise-readiness", "Honest pilot path and limitations."),
+("Integration health", "Open Health Integrations", "Shows Gemini and WhatsApp runtime readiness without secrets.", "/health/integrations", "JSON readiness for APIs and deploy checks.") };
 }
 <section class="sp-mt">@for (var i=0;i<steps.Length;i++){ var s=steps[i]; <article class="sp-card sp-mt"><span class="sp-badge">Step @(i+1)</span><h2>@s.Item1</h2><p><strong>What to click:</strong> @s.Item2</p><p><strong>Why it matters:</strong> @s.Item3</p><p><strong>Expected result:</strong> @s.Item5</p><a class="sp-btn sp-btn--outline" href="@s.Item4">Open step</a></article> }</section>
