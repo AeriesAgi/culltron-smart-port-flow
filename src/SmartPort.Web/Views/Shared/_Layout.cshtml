@@ -20,11 +20,24 @@
     var roles = currentUser != null ? await UserManager.GetRolesAsync(currentUser) : new List<string>();
     var ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     var act  = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    var isAdmin = User.IsInRole(Roles.Admin) || User.IsInRole(Roles.PortOperationsManager);
+    var isOpsStaff = isAdmin || User.IsInRole(Roles.TerminalStaff);
+    var isFleetOwner = User.IsInRole(Roles.FleetOwner) || User.IsInRole(Roles.LogisticsPartner);
+    var isDriver = User.IsInRole(Roles.Driver);
+    var isJudge = User.IsInRole(Roles.JudgeDemo);
+    var dashboardHref = isDriver ? "/driver/demo" : isFleetOwner ? "/fleet" : isJudge ? "/demo-tour" : "/dashboard";
+    var path = Context.Request.Path.Value ?? string.Empty;
+    var showCommand = isOpsStaff || isFleetOwner || isDriver || isJudge;
+    var showOperations = isOpsStaff || isFleetOwner || isDriver || isJudge;
+    var showImpact = isOpsStaff;
+    var showPilot = isOpsStaff || isFleetOwner || isJudge;
+    var showCoreRecords = isOpsStaff;
+    string IsActive(string controllerName, string? startsWith = null) => ctrl == controllerName || (!string.IsNullOrWhiteSpace(startsWith) && path.StartsWith(startsWith, StringComparison.OrdinalIgnoreCase)) ? "active" : "";
 }
 
 <aside class="sp-sidebar" id="sidebar">
     <div class="sp-sidebar__header">
-        <a href="/dashboard" class="sp-logo">
+        <a href="@dashboardHref" class="sp-logo">
             <span class="sp-logo__mark">⬡</span>
             <span class="sp-logo__text">Culltron</span>
         </a>
@@ -32,68 +45,125 @@
     </div>
 
     <nav class="sp-nav" role="navigation">
+        @if (showCommand)
+        {
+            <div class="sp-nav__section">
+                <span class="sp-nav__label">Command</span>
+                @if (isOpsStaff || isJudge)
+                {
+                    <a href="/dashboard" class="sp-nav__item @(IsActive("Dashboard"))"><span class="sp-nav__icon">⬡</span><span>Dashboard</span></a>
+                }
+                @if (isOpsStaff)
+                {
+                    <a asp-controller="Agent" asp-action="Index" class="sp-nav__item @(IsActive("Agent"))"><span class="sp-nav__icon">🤖</span><span>AI Command Centre</span></a>
+                }
+                @if (isFleetOwner || isOpsStaff)
+                {
+                    <a asp-controller="Copilot" asp-action="Index" class="sp-nav__item @(IsActive("Copilot"))"><span class="sp-nav__icon">✦</span><span>@(isFleetOwner ? "Fleet Copilot" : "SmartPort Copilot Chat")</span></a>
+                }
+                @if (isOpsStaff || isFleetOwner || isJudge)
+                {
+                    <a href="/gemini-agent" class="sp-nav__item @(IsActive("GeminiAgent", "/gemini-agent"))"><span class="sp-nav__icon">💎</span><span>Gemini Operations Agent</span></a>
+                }
+                @if (isOpsStaff || isJudge)
+                {
+                    <a href="/agent-governance" class="sp-nav__item @(IsActive("AgentGovernance", "/agent-governance"))"><span class="sp-nav__icon">🛡️</span><span>Agent Governance</span></a>
+                    <a href="/ops-ingest" class="sp-nav__item @(IsActive("OpsIngest", "/ops-ingest"))"><span class="sp-nav__icon">📄</span><span>Ops Ingest</span></a>
+                }
+                <a href="/demo-tour" class="sp-nav__item @(IsActive("DemoTour", "/demo-tour"))"><span class="sp-nav__icon">🎬</span><span>Demo Tour</span></a>
+            </div>
+        }
 
-        <!-- ── Command ── -->
-        <div class="sp-nav__section">
-            <span class="sp-nav__label">Command</span>
-            <a asp-controller="Dashboard" asp-action="Index" class="sp-nav__item @(ctrl=="Dashboard"?"active":"")"><span class="sp-nav__icon">⬡</span><span>Dashboard</span></a>
-            <a asp-controller="Agent" asp-action="Index" class="sp-nav__item @(ctrl=="Agent"?"active":"")"><span class="sp-nav__icon">🤖</span><span>AI Command Centre</span></a>
-            <a asp-controller="Copilot" asp-action="Index" class="sp-nav__item @(ctrl=="Copilot"?"active":"")"><span class="sp-nav__icon">✦</span><span>SmartPort Copilot Chat</span></a>
-            <a href="/gemini-agent" class="sp-nav__item @(ctrl=="GeminiAgent"?"active":"")"><span class="sp-nav__icon">💎</span><span>Gemini Operations Agent</span></a>
-            <a href="/demo-tour" class="sp-nav__item @(ctrl=="DemoTour"?"active":"")"><span class="sp-nav__icon">🎬</span><span>Demo Tour</span></a>
-        </div>
+        @if (showOperations)
+        {
+            <div class="sp-nav__section">
+                <span class="sp-nav__label">Operations</span>
+                @if (isOpsStaff)
+                {
+                    <a asp-controller="TruckTracking" asp-action="Index" class="sp-nav__item @(IsActive("TruckTracking"))"><span class="sp-nav__icon">📡</span><span>Truck Tracking</span></a>
+                    <a asp-controller="Simulator" asp-action="Index" class="sp-nav__item @(IsActive("Simulator"))"><span class="sp-nav__icon">🔬</span><span>Scenario Simulator</span></a>
+                    <a asp-controller="Incidents" asp-action="Index" class="sp-nav__item @(IsActive("Incidents"))"><span class="sp-nav__icon">⚠️</span><span>Incidents</span></a>
+                    <a asp-controller="Flow" asp-action="Recommendations" class="sp-nav__item @(IsActive("Flow"))"><span class="sp-nav__icon">🧠</span><span>Recommendations</span></a>
+                    <a asp-controller="Dispatch" asp-action="Index" class="sp-nav__item @(IsActive("Dispatch"))"><span class="sp-nav__icon">🚛</span><span>Dispatch Trips</span></a>
+                }
+                @if (isOpsStaff || isFleetOwner || isJudge)
+                {
+                    <a href="/fleet" class="sp-nav__item @(path.Equals("/fleet", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">🚚</span><span>Fleet Dashboard</span></a>
+                    <a href="/execution/plans" class="sp-nav__item @(IsActive("Execution", "/execution"))"><span class="sp-nav__icon">🧭</span><span>Execution Plans</span></a>
+                    <a href="/fleet/trucks/SPQ-2026-0042" class="sp-nav__item @(path.StartsWith("/fleet/trucks/SPQ-2026-0042", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">🚛</span><span>@(isFleetOwner ? "My Trucks" : "Fleet Truck Detail")</span></a>
+                    <a href="/fleet/notifications" class="sp-nav__item @(path.StartsWith("/fleet/notifications", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">💬</span><span>WhatsApp Notifications</span></a>
+                    <a href="/fleet/download-app" class="sp-nav__item @(path.StartsWith("/fleet/download-app", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">🤖</span><span>Android Companion</span></a>
+                }
+                @if (isOpsStaff || isFleetOwner || isDriver || isJudge)
+                {
+                    <a href="/driver" class="sp-nav__item @(path.Equals("/driver", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">📱</span><span>Driver Queue Companion</span></a>
+                    <a href="/driver/demo" class="sp-nav__item @(path.StartsWith("/driver/demo", StringComparison.OrdinalIgnoreCase) || path.StartsWith("/driver/status", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">✅</span><span>Driver Status Page</span></a>
+                }
+                @if (isOpsStaff)
+                {
+                    <a asp-controller="Disruptions" asp-action="Index" class="sp-nav__item @(IsActive("Disruptions"))"><span class="sp-nav__icon">⚡</span><span>Disruptions</span></a>
+                }
+            </div>
+        }
 
-        <!-- ── Operations ── -->
-        <div class="sp-nav__section">
-            <span class="sp-nav__label">Operations</span>
-            <a asp-controller="TruckTracking" asp-action="Index" class="sp-nav__item @(ctrl=="TruckTracking"?"active":"")"><span class="sp-nav__icon">📡</span><span>Truck Tracking</span></a>
-            <a asp-controller="Simulator" asp-action="Index" class="sp-nav__item @(ctrl=="Simulator"?"active":"")"><span class="sp-nav__icon">🔬</span><span>Scenario Simulator</span></a>
-            <a asp-controller="Incidents" asp-action="Index" class="sp-nav__item @(ctrl=="Incidents"&&act=="Index"?"active":"")"><span class="sp-nav__icon">⚠️</span><span>Incidents</span></a>
-            <a asp-controller="Flow" asp-action="Recommendations" class="sp-nav__item @(ctrl=="Flow"?"active":"")"><span class="sp-nav__icon">🧠</span><span>Recommendations</span></a>
-            <a asp-controller="Dispatch" asp-action="Index" class="sp-nav__item @(ctrl=="Dispatch"?"active":"")"><span class="sp-nav__icon">🚛</span><span>Dispatch Trips</span></a>
-            <a href="/fleet" class="sp-nav__item @(ctrl=="Fleet"?"active":"")"><span class="sp-nav__icon">🚚</span><span>Fleet Dashboard</span></a>
-            <a href="/driver" class="sp-nav__item @(ctrl=="Driver"?"active":"")"><span class="sp-nav__icon">📱</span><span>Driver Queue Companion</span></a>
-            <a href="/fleet/notifications" class="sp-nav__item"><span class="sp-nav__icon">💬</span><span>WhatsApp Notifications</span></a>
-            <a href="/fleet/download-app" class="sp-nav__item"><span class="sp-nav__icon">🤖</span><span>Android Companion</span></a>
-            <a asp-controller="Disruptions" asp-action="Index" class="sp-nav__item @(ctrl=="Disruptions"?"active":"")"><span class="sp-nav__icon">⚡</span><span>Disruptions</span></a>
-        </div>
+        @if (showImpact)
+        {
+            <div class="sp-nav__section">
+                <span class="sp-nav__label">Impact</span>
+                @if (isOpsStaff)
+                {
+                    <a asp-controller="Impact" asp-action="Index" class="sp-nav__item @(IsActive("Impact"))"><span class="sp-nav__icon">📈</span><span>Executive Impact Centre</span></a>
+                    <a asp-controller="CleanLogistics" asp-action="Index" class="sp-nav__item @(IsActive("CleanLogistics"))"><span class="sp-nav__icon">🌍</span><span>Clean Logistics Impact</span></a>
+                    <a asp-controller="Emissions" asp-action="Index" class="sp-nav__item @(IsActive("Emissions"))"><span class="sp-nav__icon">🌿</span><span>Emissions</span></a>
+                    <a asp-controller="Brief" asp-action="Index" class="sp-nav__item @(IsActive("Brief"))"><span class="sp-nav__icon">🧾</span><span>Executive Brief</span></a>
+                    <a asp-controller="Reports" asp-action="Index" class="sp-nav__item @(IsActive("Reports"))"><span class="sp-nav__icon">📋</span><span>Reports</span></a>
+                }
+            </div>
+        }
 
-        <!-- ── Impact ── -->
-        <div class="sp-nav__section">
-            <span class="sp-nav__label">Impact</span>
-            <a asp-controller="Impact" asp-action="Index" class="sp-nav__item @(ctrl=="Impact"?"active":"")"><span class="sp-nav__icon">📈</span><span>Executive Impact Centre</span></a>
-            <a asp-controller="CleanLogistics" asp-action="Index" class="sp-nav__item @(ctrl=="CleanLogistics"?"active":"")"><span class="sp-nav__icon">🌍</span><span>Clean Logistics Impact</span></a>
-            <a asp-controller="Emissions" asp-action="Index" class="sp-nav__item @(ctrl=="Emissions"?"active":"")"><span class="sp-nav__icon">🌿</span><span>Emissions</span></a>
-            <a asp-controller="Brief" asp-action="Index" class="sp-nav__item @(ctrl=="Brief"?"active":"")"><span class="sp-nav__icon">🧾</span><span>Executive Brief</span></a>
-            <a asp-controller="Reports" asp-action="Index" class="sp-nav__item @(ctrl=="Reports"?"active":"")"><span class="sp-nav__icon">📋</span><span>Reports</span></a>
-        </div>
+        @if (showPilot)
+        {
+            <div class="sp-nav__section">
+                <span class="sp-nav__label">Pilot</span>
+                @if (isOpsStaff)
+                {
+                    <a asp-controller="PilotReadiness" asp-action="Index" class="sp-nav__item @(IsActive("PilotReadiness"))"><span class="sp-nav__icon">🗺️</span><span>Pilot Readiness</span></a>
+                }
+                @if (isOpsStaff || isFleetOwner || isJudge)
+                {
+                    <a href="/enterprise-readiness" class="sp-nav__item @(IsActive("EnterpriseReadiness", "/enterprise-readiness"))"><span class="sp-nav__icon">✅</span><span>Enterprise Readiness</span></a>
+                }
+                @if (isOpsStaff || isJudge)
+                {
+                    <a href="/health/integrations" class="sp-nav__item @(path.StartsWith("/health", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">🔌</span><span>Health/Integrations</span></a>
+                }
+                @if (isOpsStaff)
+                {
+                    <a asp-controller="Integration" asp-action="Index" class="sp-nav__item @(IsActive("Integration"))"><span class="sp-nav__icon">🧩</span><span>Integration Readiness</span></a>
+                    <a asp-controller="Stakeholders" asp-action="Index" class="sp-nav__item @(IsActive("Stakeholders"))"><span class="sp-nav__icon">🤝</span><span>Stakeholder Value</span></a>
+                    <a asp-controller="Pilot" asp-action="Index" class="sp-nav__item @(IsActive("Pilot"))"><span class="sp-nav__icon">📊</span><span>Pilot Metrics</span></a>
+                }
+            </div>
+        }
 
-        <!-- ── Pilot ── -->
-        <div class="sp-nav__section">
-            <span class="sp-nav__label">Pilot</span>
-            <a asp-controller="PilotReadiness" asp-action="Index" class="sp-nav__item @(ctrl=="PilotReadiness"?"active":"")"><span class="sp-nav__icon">🗺️</span><span>Pilot Readiness</span></a>
-            <a href="/enterprise-readiness" class="sp-nav__item @(ctrl=="EnterpriseReadiness"?"active":"")"><span class="sp-nav__icon">✅</span><span>Enterprise Readiness</span></a>
-            <a asp-controller="Integration" asp-action="Index" class="sp-nav__item @(ctrl=="Integration"?"active":"")"><span class="sp-nav__icon">🔌</span><span>Integration Readiness</span></a>
-            <a asp-controller="Stakeholders" asp-action="Index" class="sp-nav__item @(ctrl=="Stakeholders"?"active":"")"><span class="sp-nav__icon">🤝</span><span>Stakeholder Value</span></a>
-            <a asp-controller="Pilot" asp-action="Index" class="sp-nav__item @(ctrl=="Pilot"?"active":"")"><span class="sp-nav__icon">📊</span><span>Pilot Metrics</span></a>
-        </div>
+        @if (showCoreRecords)
+        {
+            <div class="sp-nav__section">
+                <span class="sp-nav__label">Core Records</span>
+                <a asp-controller="Vessels" asp-action="Index" class="sp-nav__item @(IsActive("Vessels"))"><span class="sp-nav__icon">⚓</span><span>Vessels</span></a>
+                <a asp-controller="Berths" asp-action="Index" class="sp-nav__item @(IsActive("Berths"))"><span class="sp-nav__icon">🗓️</span><span>Berths</span></a>
+                <a asp-controller="Containers" asp-action="Index" class="sp-nav__item @(IsActive("Containers"))"><span class="sp-nav__icon">📦</span><span>Containers</span></a>
+                <a asp-controller="Gates" asp-action="Index" class="sp-nav__item @(IsActive("Gates"))"><span class="sp-nav__icon">🚪</span><span>Gates</span></a>
+                <a asp-controller="Fleet" asp-action="Index" class="sp-nav__item @(path.Equals("/fleet", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">🚚</span><span>Fleet</span></a>
+                <a asp-controller="Organisations" asp-action="Index" class="sp-nav__item @(IsActive("Organisations"))"><span class="sp-nav__icon">🏢</span><span>Organisations</span></a>
+            </div>
+        }
 
-        <!-- ── Core Records ── -->
-        <div class="sp-nav__section">
-            <span class="sp-nav__label">Core Records</span>
-            <a asp-controller="Vessels" asp-action="Index" class="sp-nav__item @(ctrl=="Vessels"?"active":"")"><span class="sp-nav__icon">⚓</span><span>Vessels</span></a>
-            <a asp-controller="Berths" asp-action="Index" class="sp-nav__item @(ctrl=="Berths"?"active":"")"><span class="sp-nav__icon">🗓️</span><span>Berths</span></a>
-            <a asp-controller="Containers" asp-action="Index" class="sp-nav__item @(ctrl=="Containers"?"active":"")"><span class="sp-nav__icon">📦</span><span>Containers</span></a>
-            <a asp-controller="Gates" asp-action="Index" class="sp-nav__item @(ctrl=="Gates"?"active":"")"><span class="sp-nav__icon">🚪</span><span>Gates</span></a>
-            <a asp-controller="Fleet" asp-action="Index" class="sp-nav__item @(ctrl=="Fleet"?"active":"")"><span class="sp-nav__icon">🚚</span><span>Fleet</span></a>
-            <a asp-controller="Organisations" asp-action="Index" class="sp-nav__item @(ctrl=="Organisations"?"active":"")"><span class="sp-nav__icon">🏢</span><span>Organisations</span></a>
-        </div>
-
-        @if (User.IsInRole("Admin"))
+        @if (isAdmin)
         {
             <div class="sp-nav__section">
                 <span class="sp-nav__label">Administration</span>
-                <a asp-controller="Admin" asp-action="Index" class="sp-nav__item @(ctrl=="Admin"?"active":"")">
+                <a asp-controller="Admin" asp-action="Index" class="sp-nav__item @(IsActive("Admin"))">
                     <span class="sp-nav__icon">⚙️</span><span>Admin</span>
                 </a>
             </div>
@@ -127,6 +197,8 @@
             <a asp-controller="Auth" asp-action="Profile" class="sp-topbar__profile-link">@currentUser?.FullName</a>
         </div>
     </header>
+
+    <div class="sp-alert sp-alert--info" role="note">Demo data / synthetic operational scenario. Future pilot connectors can ingest IPMS/TOS, gate systems, fleet GPS, weighbridge, ERP, WhatsApp Cloud API, driver app, berth schedules, and weather/disruption feeds.</div>
 
     @if (TempData["Success"] != null)
     { <div class="sp-alert sp-alert--success" role="alert">✓ @TempData["Success"]</div> }

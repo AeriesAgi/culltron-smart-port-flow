@@ -39,6 +39,7 @@ services:
       SMARTPORT_DRIVER_DEMO_CODE: "culltron-driver-2026"
       SMARTPORT_JUDGE_DEMO_CODE: "culltron-judge-2026"
       SMARTPORT_DEMO_ACCESS_CODE: "culltron-demo-2026"
+      SMARTPORT_SHOW_DEMO_CREDENTIALS: "true"
       SMARTPORT_WHATSAPP_VERIFY_TOKEN: "demo-verify-token"
     ports:
       - "8080:8080"

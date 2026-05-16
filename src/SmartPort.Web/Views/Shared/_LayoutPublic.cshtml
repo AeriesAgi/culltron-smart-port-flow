@@ -10,6 +10,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body class="sp-public">
+@{
+    var isSignedIn = User.Identity?.IsAuthenticated == true || Context.Request.Cookies.ContainsKey("SmartPort.DemoAccess");
+    var publicDashboardHref = "/demo-access";
+    var publicDashboardText = "Go to Demo Access";
+    if (User.IsInRole(Roles.Driver)) { publicDashboardHref = "/driver/demo"; publicDashboardText = "Open Driver Demo"; }
+    else if (User.IsInRole(Roles.FleetOwner) || User.IsInRole(Roles.LogisticsPartner)) { publicDashboardHref = "/fleet"; publicDashboardText = "Open Fleet Dashboard"; }
+    else if (User.IsInRole(Roles.JudgeDemo)) { publicDashboardHref = "/demo-tour"; publicDashboardText = "Resume Judge Tour"; }
+    else if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.PortOperationsManager) || User.IsInRole(Roles.TerminalStaff)) { publicDashboardHref = "/dashboard"; publicDashboardText = "Open Dashboard"; }
+}
+
 
 <!-- ─── Navbar ─────────────────────────────────────────────────────────── -->
 <nav class="sp-pub-nav" id="pubNav">
@@ -27,9 +37,9 @@
             <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
         </ul>
         <div class="sp-pub-nav__actions">
-            @if (Context.Request.Cookies.ContainsKey("SmartPort.DemoAccess"))
+            @if (isSignedIn)
             {
-                <a href="/dashboard" class="sp-btn sp-btn--primary">Go to Dashboard</a>
+                <a href="@publicDashboardHref" class="sp-btn sp-btn--primary">@publicDashboardText</a>
             }
             else
             {

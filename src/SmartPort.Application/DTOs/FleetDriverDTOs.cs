@@ -9,7 +9,7 @@ public enum NotificationStatus { Pending, SimulatedSent, LiveTestSent, Sent, Fai
 public enum NotificationEventType { QueueStatusChanged, ProceedToGate, HoldPosition, GateChanged, AppointmentRescheduled, DelayRiskIncreased, IncidentDisruptionWarning, AppointmentCompleted, AiInstructionUpdated, DriverCheckIn, DriverConfirmation, WhatsAppLocationCheckIn, ExecutionPlanGenerated, InboundWhatsAppCommand, CopilotAnswerGenerated, ExceptionReported }
 public enum DriverAcknowledgement { Seen, Holding, Proceeding }
 public enum DriverNotificationPreference { InApp, WhatsApp, Both }
-public enum WhatsAppMode { Demo, ConnectorReady, LiveTest }
+public enum WhatsAppMode { Demo, ConnectorReady, LiveTest, Live }
 public enum DataProvenanceType { SyntheticDemoData, ExternalPortFeedPlaceholder, ManualOperatorInput, WhatsAppDriverCheckIn, AndroidDriverApp, GeminiAiRecommendation, DeterministicFallback, FutureLiveConnector }
 public enum DriverEventType { WhatsAppLocationRequested, WhatsAppLocationShared, AndroidAppStatusChecked, DriverAcknowledgedInstruction, DriverConfirmedHolding, DriverArrivedAtStaging, DriverProceedingToGate, DriverArrivedAtGate, DriverCompletedJob, DriverReady, DriverBreak, DriverLunch, DriverDelayed, DriverIssueReported }
 public enum OperationalActionType { CheckEta, RequestLocation, ShareLocation, ConfirmHolding, ArrivedAtStaging, ProceedingToGate, ArrivedAtGate, CompleteJob, Ready, Break15, Lunch30, Delayed20, MoveToStaging, ReleaseToGate, Reschedule, MarkException, ReportIssue, RefreshStatus }
@@ -158,7 +158,7 @@ public class WhatsAppConnectorStatusDto
     public bool BusinessAccountIdConfigured { get; set; }
     public bool VerifyTokenConfigured { get; set; }
     public bool PublicBaseUrlConfigured { get; set; }
-    public string GraphVersion { get; set; } = "v20.0";
+    public string GraphVersion { get; set; } = "v22.0";
     public string PublicBaseUrl { get; set; } = string.Empty;
     public string WebhookCallbackUrl { get; set; } = string.Empty;
     public bool ApprovedDriverAvailable { get; set; }

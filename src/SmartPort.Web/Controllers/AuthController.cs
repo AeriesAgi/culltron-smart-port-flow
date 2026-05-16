@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SmartPort.Infrastructure.Persistence;
+using SmartPort.Shared.Constants;
 
 namespace SmartPort.Web.Controllers;
 
@@ -23,11 +24,11 @@ public class AuthController : Controller
 
     // GET /auth/login
     [HttpGet]
-    public IActionResult Login(string? returnUrl = null)
+    public async Task<IActionResult> Login(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
-            return RedirectToAction("Index", "Dashboard");
-        ViewData["ReturnUrl"] = returnUrl;
+            return Redirect(await ResolveCurrentUserLandingAsync());
+        ViewData["ReturnUrl"] = NormalizeLocalReturnUrl(returnUrl);
         return View();
     }
 
@@ -35,7 +36,8 @@ public class AuthController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
     {
-        ViewData["ReturnUrl"] = returnUrl;
+        var safeReturnUrl = NormalizeLocalReturnUrl(returnUrl);
+        ViewData["ReturnUrl"] = safeReturnUrl;
         if (!ModelState.IsValid) return View(model);
 
         var result = await _signInManager.PasswordSignInAsync(
@@ -50,7 +52,7 @@ public class AuthController : Controller
                 await _userManager.UpdateAsync(user);
             }
             _logger.LogInformation("User {Email} logged in.", model.Email);
-            return LocalRedirect(returnUrl ?? "/dashboard");
+            return Redirect(!string.IsNullOrWhiteSpace(safeReturnUrl) ? safeReturnUrl : user == null ? "/demo-tour" : await ResolveLandingForUserAsync(user));
         }
         if (result.IsLockedOut)
         {
@@ -76,7 +78,18 @@ public class AuthController : Controller
 
     // GET /auth/access-denied
     [HttpGet]
-    public IActionResult AccessDenied() => View();
+    public async Task<IActionResult> AccessDenied()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        var roles = user == null ? Array.Empty<string>() : (await _userManager.GetRolesAsync(user)).ToArray();
+        var vm = new AccessDeniedViewModel
+        {
+            DisplayName = user?.FullName ?? User.Identity?.Name ?? "Demo visitor",
+            Roles = roles.ToList(),
+            DashboardPath = ResolveLandingFromRoles(roles)
+        };
+        return View(vm);
+    }
 
     // GET /auth/profile
     [HttpGet, Authorize]
@@ -98,6 +111,36 @@ public class AuthController : Controller
         };
         return View(vm);
     }
+    private string? NormalizeLocalReturnUrl(string? returnUrl)
+    {
+        if (string.IsNullOrWhiteSpace(returnUrl)) return null;
+        if (!Url.IsLocalUrl(returnUrl)) return null;
+        if (returnUrl.StartsWith("/auth", StringComparison.OrdinalIgnoreCase)) return null;
+        return returnUrl;
+    }
+
+    private async Task<string> ResolveCurrentUserLandingAsync()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        return user == null ? "/demo-access" : await ResolveLandingForUserAsync(user);
+    }
+
+    private async Task<string> ResolveLandingForUserAsync(ApplicationUser user)
+    {
+        var roles = await _userManager.GetRolesAsync(user);
+        return ResolveLandingFromRoles(roles);
+    }
+
+    private static string ResolveLandingFromRoles(IEnumerable<string> roles)
+    {
+        var roleSet = roles.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (roleSet.Contains(Roles.Driver)) return "/driver/demo";
+        if (roleSet.Contains(Roles.FleetOwner) || roleSet.Contains(Roles.LogisticsPartner)) return "/fleet";
+        if (roleSet.Contains(Roles.JudgeDemo)) return "/demo-tour";
+        if (roleSet.Contains(Roles.Admin) || roleSet.Contains(Roles.PortOperationsManager) || roleSet.Contains(Roles.TerminalStaff)) return "/dashboard";
+        return "/demo-tour";
+    }
+
 }
 
 // ─── ViewModels ───────────────────────────────────────────────────────────────
@@ -111,6 +154,13 @@ public class LoginViewModel
     public string Password { get; set; } = string.Empty;
 
     public bool RememberMe { get; set; }
+}
+
+public class AccessDeniedViewModel
+{
+    public string DisplayName { get; set; } = string.Empty;
+    public List<string> Roles { get; set; } = new();
+    public string DashboardPath { get; set; } = "/demo-tour";
 }
 
 public class ProfileViewModel

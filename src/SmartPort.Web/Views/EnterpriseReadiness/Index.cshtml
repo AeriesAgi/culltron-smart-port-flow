@@ -1,15 +1,31 @@
-@{ ViewData["Title"] = "Enterprise Readiness"; var rows = new[] {
-("Authentication & roles", "Ready for demo", "Seeded Identity roles protect command, fleet, driver and report surfaces."),
-("Audit trail", "Ready for demo", "Generated plans, notifications and driver actions are visible in demo history."),
-("Human approval", "Ready for demo", "Agent recommendations are not auto-executed."),
-("Gemini/fallback resilience", "Ready for demo", "Local fallback remains available when Gemini is not configured."),
-("Data source readiness", "Connector-ready", "Synthetic data today; pilot connectors require approved credentials."),
-("WhatsApp readiness", "Needs pilot credentials", "Webhook verification requires token; outbound live test requires Meta credentials and approved senders."),
-("Android readiness", "Ready for demo", "APK build uses Java/Kotlin 17 and mobile demo token auth."),
-("API readiness", "Connector-ready", "Mobile API requires X-SmartPort-Mobile-Token."),
-("Deployment readiness", "Connector-ready", "Docker/PostgreSQL compose path and forwarded headers support reverse proxy deployment."),
-("Security boundaries", "Future production hardening", "Secrets stay in env vars; production would add managed secrets, rate limits and formal pen testing."),
-("Privacy/data disclaimer", "Ready for demo", "Synthetic demo data; no live Transnet/IPMS/customer integration claimed."),
-("Pilot integration steps", "Connector-ready", "Validate data-sharing, map fields, test shadow mode, then human-approved pilot actions.") }; }
-<section class="sp-page-hero"><div><span class="sp-badge">Pilot-ready architecture</span><h1>Enterprise Readiness Checklist</h1><p>Market-facing view of what is demo-ready, connector-ready, credential-dependent, and future production hardening.</p></div></section>
-<div class="sp-grid sp-grid--3 sp-mt">@foreach (var row in rows) { <article class="sp-card"><span class="sp-badge">@row.Item2</span><h3>@row.Item1</h3><p>@row.Item3</p></article> }</div>
+@{
+    ViewData["Title"] = "Enterprise Readiness";
+    var rows = new[] {
+        ("Authentication & roles", "Configured", "ASP.NET Identity demo users for Port Admin, Fleet Owner, Driver and Judge Demo."),
+        ("Role-based authorization", "Configured", "Protected control room, fleet, driver, Gemini agent and reports policies include Judge Demo where appropriate."),
+        ("Audit trail", "Demo Ready", "Execution plans, driver events, notifications, Gemini actions and governance checks create visible demo history."),
+        ("Human approval", "Demo Ready", "Agent recommendations remain draft/human-approved before any fleet or driver send."),
+        ("Agent guardrails", "Demo Ready", "Deterministic safety checks block secrets, approval bypasses and unsafe autonomous actions."),
+        ("Gemini/fallback resilience", "Configured", "Gemini-enhanced when configured; local deterministic fallback always works."),
+        ("Data source readiness", "Connector Ready", "Synthetic demo data today; IPMS/TOS/gate/fleet/GPS field mapping ready for approved pilots."),
+        ("Webhook/API readiness", "Connector Ready", "Mobile API and WhatsApp webhook endpoints exist with token/verify-token checks."),
+        ("WhatsApp readiness", "Demo / LiveTest Ready", "Demo simulation works without credentials; configured LiveTest/Live can use Meta Cloud API with enabled mode, access token, phone-number ID, verify token, public URL and approved recipient."),
+        ("Android/mobile readiness", "Demo Ready", "Driver companion flow uses demo login token header and stores no Gemini/WhatsApp secrets."),
+        ("Docker/PostgreSQL deployment", "Configured", "Compose/Dockerfile target web + PostgreSQL deployment; environment must provide Docker and DB access."),
+        ("Reverse proxy/HTTPS readiness", "Production Hardening Required", "Forwarded headers and HTTPS are prepared; final domains/certificates remain deployment tasks."),
+        ("Secrets/env-var handling", "Configured", "Gemini, WhatsApp and demo codes come from environment/configuration, not hard-coded production secrets."),
+        ("Logging/monitoring", "Production Hardening Required", "Request IDs and health endpoints are present; centralized telemetry is a hardening backlog item."),
+        ("Privacy/security disclaimer", "Demo Ready", "No customer data or live Transnet/IPMS claims; demo data is synthetic."),
+        ("Pilot integration steps", "Connector Ready", "NDA, system mapping, sandbox connector, supervised pilot and KPI validation path documented."),
+        ("Production hardening backlog", "Production Hardening Required", "Pen test, DR, SSO, observability, rate limiting and operational runbooks remain next steps.")
+    };
+}
+<section class="sp-page-hero"><div><span class="sp-badge">Pilot-ready architecture · honest production story</span><h1>Enterprise Readiness</h1><p>Culltron Smart Port Flow is designed as an enterprise AI operations agent for smart ports and freight logistics. It is demo-ready and connector-ready today; live integrations require approved pilot credentials and production hardening.</p></div><a class="sp-btn sp-btn--primary" href="/demo-access">Start judge demo</a></section>
+
+<section class="sp-card"><h2>Market-readiness checklist</h2><div class="sp-table-wrap"><table class="sp-table"><thead><tr><th>Category</th><th>Status</th><th>Evidence / next step</th></tr></thead><tbody>@foreach (var row in rows) { <tr><td>@row.Item1</td><td><span class="sp-badge">@row.Item2</span></td><td>@row.Item3</td></tr> }</tbody></table></div></section>
+
+<div class="sp-grid sp-grid--3 sp-mt"><article class="sp-card"><h2>Demo Ready</h2><p>Identity role paths, protected demo screens, fleet/driver execution loop, Gemini/fallback agent console, governance checks, mobile API and public product pages are available for judges.</p></article><article class="sp-card"><h2>Connector Ready</h2><p>IPMS/TOS/gate/fleet/GPS/WhatsApp integrations are represented as pilot connector paths and field mappings. No live customer integration is claimed.</p></article><article class="sp-card"><h2>Production Hardening</h2><p>Before production: customer security review, SSO, secrets vault, rate limits, observability, DR, SLA, data retention, penetration testing and approved pilot credentials.</p></article></div>
+
+<section class="sp-card sp-mt"><h2>Pilot pathway</h2><ol class="sp-timeline"><li>NDA/data-sharing agreement.</li><li>Identify systems: IPMS/TOS/gate/fleet/GPS/WhatsApp.</li><li>Map fields and data quality rules.</li><li>Build sandbox connector using synthetic + approved pilot data.</li><li>Run supervised pilot with human-approved actions.</li><li>Validate KPIs: queue time, idling minutes, CO₂, ETA reliability and driver confirmation rates.</li><li>Complete production hardening before autonomous or live-scale rollout.</li></ol></section>
+
+<section class="sp-card sp-mt"><h2>Honest limitations</h2><ul class="sp-list"><li>No live Transnet, IPMS, TOS, WhatsApp production or GPS integration is claimed in this demo.</li><li>Gemini is used only when GEMINI_API_KEY and Gemini__Enabled=true are configured.</li><li>WhatsApp live sending requires approved Meta credentials and approved test recipients.</li><li>All demo actions use synthetic data and visible audit records.</li></ul></section>
