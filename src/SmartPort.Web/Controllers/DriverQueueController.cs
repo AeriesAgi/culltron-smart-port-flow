@@ -180,7 +180,8 @@ public class MobileApiController : ControllerBase
     public async Task<IActionResult> LocationCheckIn([FromBody] DriverEventRequestDto request)
     {
         if (!EnsureMobileToken()) return MobileUnauthorized();
-        var truck = await _queue.RecordLocationCheckInAsync(request.Reference, request.Latitude, request.Longitude, request.LocationLabel, DataProvenanceType.WhatsAppDriverCheckIn);
+        var source = string.Equals(request.SourceLabel, "WhatsApp", StringComparison.OrdinalIgnoreCase) ? DataProvenanceType.WhatsAppDriverCheckIn : DataProvenanceType.AndroidDriverApp;
+        var truck = await _queue.RecordLocationCheckInAsync(request.Reference, request.Latitude, request.Longitude, request.LocationLabel, source);
         return truck == null ? NotFound(new { message = "Truck/reference not found" }) : Ok(truck);
     }
 

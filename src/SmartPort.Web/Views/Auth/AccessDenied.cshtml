@@ -1,6 +1,6 @@
 @model SmartPort.Web.Controllers.AccessDeniedViewModel
 @{
-    Layout = "_LayoutPublic";
+    Layout = User.Identity?.IsAuthenticated == true ? "_Layout" : "_LayoutPublic";
     ViewData["Title"] = "Access Denied";
     var roleText = Model.Roles.Any() ? string.Join(", ", Model.Roles) : "No active demo role";
 }
@@ -19,7 +19,7 @@
         <div style="text-align:center;margin-top:1.5rem;display:flex;flex-direction:column;gap:.75rem">
             <a href="/demo-tour" class="sp-btn sp-btn--primary">Return to Demo Tour</a>
             <a href="/demo-access" class="sp-btn sp-btn--outline">Switch Role</a>
-            <a href="@Model.DashboardPath" class="sp-btn sp-btn--outline">Go to Dashboard</a>
+            <a href="@Model.DashboardPath" class="sp-btn sp-btn--outline">Go to role dashboard</a>
         </div>
         <p class="sp-muted" style="margin-top:1rem;text-align:center">No secrets, API keys, phone numbers or live integration credentials are exposed on this page.</p>
     </article>

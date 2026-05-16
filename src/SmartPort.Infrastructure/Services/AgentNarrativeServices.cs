@@ -19,9 +19,27 @@ public class GeminiSettings
 {
     public bool Enabled { get; set; } = false;
     public string Model { get; set; } = "gemini-2.5-flash";
+    public string PrimaryModel { get; set; } = "gemini-2.5-flash";
+    public string PremiumModel { get; set; } = "gemini-2.5-flash";
+    public string RoutineModel { get; set; } = "gemini-3.1-flash-lite";
+    public string FallbackModels { get; set; } = "gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.0-flash-lite,gemini-2.0-flash";
+    public string ExperimentalFallbackModels { get; set; } = string.Empty;
+    public bool AllowExperimentalModels { get; set; } = false;
+    public int MaxCallsPerSession { get; set; } = 20;
+    public int ManualTestCooldownSeconds { get; set; } = 60;
+    public int QuotaCooldownMinutes { get; set; } = 30;
+    public bool AutoRunOnAgentPage { get; set; } = false;
+    public bool AutoRunOnDemoTour { get; set; } = false;
+    public int AutoRunCooldownMinutes { get; set; } = 30;
     public int TimeoutSeconds { get; set; } = 20;
     public int MaxOutputTokens { get; set; } = 2048;
     public AgentMode Mode { get; set; } = AgentMode.Hybrid;
+}
+
+public enum GeminiTaskCategory
+{
+    Routine,
+    Premium
 }
 
 public class AgentNarrativeRequest
@@ -36,6 +54,8 @@ public class AgentNarrativeRequest
     public OperationalContext Context { get; set; } = new();
     public IReadOnlyList<string> DeterministicRecommendations { get; set; } = Array.Empty<string>();
     public string ScenarioSummary { get; set; } = string.Empty;
+    public GeminiTaskCategory TaskCategory { get; set; } = GeminiTaskCategory.Routine;
+    public string ActionType { get; set; } = "operations-brief";
 }
 
 public class AgentNarrativeResult
@@ -49,6 +69,11 @@ public class AgentNarrativeResult
     public DateTime GeneratedAtUtc { get; set; } = DateTime.UtcNow;
     public string InputContextSummary { get; set; } = string.Empty;
     public string SafetyNote { get; set; } = "Human approval required. Not automatically executed.";
+    public string ModelAttempted { get; set; } = string.Empty;
+    public string ModelUsed { get; set; } = "Local deterministic fallback";
+    public string SourceLabel { get; set; } = "Local deterministic fallback";
+    public string FallbackReason { get; set; } = string.Empty;
+    public int? LatencyMs { get; set; }
 }
 
 public class OperationalReportRequest
@@ -95,6 +120,23 @@ public class AgentModeStatus
     public bool GeminiEnabled { get; set; }
     public string GeminiStatus { get; set; } = "Not configured";
     public DateTime? LastGeneratedBriefUtc { get; set; }
+    public string PrimaryModel { get; set; } = "gemini-2.5-flash";
+    public string PremiumModel { get; set; } = "gemini-2.5-flash";
+    public string RoutineModel { get; set; } = "gemini-3.1-flash-lite";
+    public string FallbackModels { get; set; } = string.Empty;
+    public int CallsSinceStart { get; set; }
+    public IReadOnlyDictionary<string, int> CallsByActionType { get; set; } = new Dictionary<string, int>();
+    public DateTime? LastCallUtc { get; set; }
+    public string LastActionType { get; set; } = string.Empty;
+    public string LastRouteSource { get; set; } = string.Empty;
+    public string LastModelUsed { get; set; } = string.Empty;
+    public string LastResult { get; set; } = string.Empty;
+    public int? LastLatencyMs { get; set; }
+    public bool QuotaLimited { get; set; }
+    public bool FallbackActive { get; set; }
+    public bool AutoRunOnAgentPage { get; set; }
+    public bool AutoRunOnDemoTour { get; set; }
+    public int AutoRunCooldownMinutes { get; set; }
 }
 
 public interface IAgentNarrativeService
@@ -140,7 +182,10 @@ public class LocalAgentNarrativeService : IAgentNarrativeService
             UsedGemini = false,
             FallbackActive = request.RequestedMode != AgentMode.Local,
             Status = request.RequestedMode == AgentMode.Local ? "Local fallback" : "Local fallback",
-            InputContextSummary = BuildContextSummary(ctx, request)
+            InputContextSummary = BuildContextSummary(ctx, request),
+            ModelAttempted = "Local deterministic fallback",
+            ModelUsed = "Local deterministic fallback",
+            SourceLabel = "Local deterministic fallback"
         };
         return Task.FromResult(result);
     }
@@ -178,6 +223,20 @@ public class LocalAgentNarrativeService : IAgentNarrativeService
 public class GeminiAgentNarrativeService : IAgentNarrativeService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly object DiagnosticsLock = new();
+    private static readonly Dictionary<string, DateTime> QuotaLimitedModels = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly HashSet<string> UnsupportedModels = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<string, int> CallsByActionType = new(StringComparer.OrdinalIgnoreCase);
+    private static int CallsSinceStart;
+    private static DateTime? LastCallUtc;
+    private static string LastActionType = string.Empty;
+    private static string LastRouteSource = string.Empty;
+    private static string LastModelUsed = string.Empty;
+    private static string LastResult = string.Empty;
+    private static int? LastLatencyMs;
+    private static bool LastQuotaLimited;
+    private static bool LastFallbackActive;
+
     private readonly HttpClient _httpClient;
     private readonly GeminiSettings _settings;
     private readonly IConfiguration _configuration;
@@ -193,100 +252,241 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
 
     public async Task<AgentNarrativeResult> GenerateAsync(AgentNarrativeRequest request, CancellationToken cancellationToken = default)
     {
+        var started = DateTime.UtcNow;
         var key = GetGeminiApiKey();
         var enabled = IsGeminiEnabled();
+        var chain = BuildModelChain(request).ToList();
+        var attempted = string.Join(" → ", chain);
         if (!enabled || string.IsNullOrWhiteSpace(key))
         {
-            return new AgentNarrativeResult
-            {
-                Title = request.ReportType,
-                GeneratedBy = AgentMode.Local,
-                FallbackActive = true,
-                Status = string.IsNullOrWhiteSpace(key) ? "Gemini not configured" : "Gemini disabled",
-                InputContextSummary = LocalAgentNarrativeService.BuildContextSummary(request.Context, request)
-            };
+            var status = string.IsNullOrWhiteSpace(key) ? "Gemini not configured" : "Gemini disabled";
+            RecordDiagnostics(request, "Local deterministic fallback", status, (int)(DateTime.UtcNow - started).TotalMilliseconds, quotaLimited: false, fallbackActive: true);
+            return Failure(request, status, attempted, null, started);
+        }
+
+        if (CallsSinceStart >= GetInt("Gemini:MaxCallsPerSession", "Gemini__MaxCallsPerSession", _settings.MaxCallsPerSession))
+        {
+            RecordDiagnostics(request, "Local deterministic fallback", "Gemini max calls per session reached", (int)(DateTime.UtcNow - started).TotalMilliseconds, quotaLimited: false, fallbackActive: true);
+            return Failure(request, "Gemini max calls per session reached", attempted, null, started);
         }
 
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(Math.Clamp(_settings.TimeoutSeconds, 3, 60)));
 
-        try
+        string? lastFailure = null;
+        foreach (var model in chain)
         {
-            var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/{Uri.EscapeDataString(GetGeminiModel())}:generateContent?key={Uri.EscapeDataString(key)}";
-            var body = new
-            {
-                contents = new[] { new { role = "user", parts = new[] { new { text = BuildPrompt(request) } } } },
-                generationConfig = new { maxOutputTokens = _settings.MaxOutputTokens, temperature = 0.35, topP = 0.9 }
-            };
+            if (string.IsNullOrWhiteSpace(model) || UnsupportedModels.Contains(model)) continue;
+            if (IsModelQuotaCooling(model)) { lastFailure = $"{model} quota cooldown active"; continue; }
 
-            using var response = await _httpClient.PostAsJsonAsync(endpoint, body, JsonOptions, timeoutCts.Token);
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                return Failure(request, response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.Forbidden ? "Gemini authentication failed" : response.StatusCode == (HttpStatusCode)429 ? "Gemini rate limit reached" : $"Gemini unavailable ({(int)response.StatusCode})");
+                _logger.LogInformation("Gemini call requested. action={ActionType} route={RouteSource} category={Category} model={Model}", Safe(request.ActionType), Safe(request.CurrentPage), request.TaskCategory, model);
+                var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/{Uri.EscapeDataString(model)}:generateContent?key={Uri.EscapeDataString(key)}";
+                var body = new
+                {
+                    contents = new[] { new { role = "user", parts = new[] { new { text = BuildPrompt(request) } } } },
+                    generationConfig = new { maxOutputTokens = _settings.MaxOutputTokens, temperature = request.TaskCategory == GeminiTaskCategory.Premium ? 0.32 : 0.25, topP = 0.9 }
+                };
+
+                using var response = await _httpClient.PostAsJsonAsync(endpoint, body, JsonOptions, timeoutCts.Token);
+                if (!response.IsSuccessStatusCode)
+                {
+                    lastFailure = ClassifyFailure(response.StatusCode, model);
+                    if (response.StatusCode == (HttpStatusCode)429)
+                    {
+                        MarkQuotaLimited(model);
+                    }
+                    else if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        UnsupportedModels.Add(model);
+                    }
+                    _logger.LogWarning("Gemini model skipped. action={ActionType} route={RouteSource} model={Model} reason={Reason}", Safe(request.ActionType), Safe(request.CurrentPage), model, lastFailure);
+                    continue;
+                }
+
+                await using var stream = await response.Content.ReadAsStreamAsync(timeoutCts.Token);
+                using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: timeoutCts.Token);
+                var text = ExtractText(doc);
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    lastFailure = $"{model} returned an empty response";
+                    continue;
+                }
+
+                var latency = (int)Math.Max(1, (DateTime.UtcNow - started).TotalMilliseconds);
+                var sourceLabel = LabelForModel(request, model);
+                RecordDiagnostics(request, model, "Gemini available", latency, quotaLimited: false, fallbackActive: sourceLabel.Contains("fallback", StringComparison.OrdinalIgnoreCase));
+                return new AgentNarrativeResult
+                {
+                    Title = request.ReportType,
+                    Narrative = text.Trim(),
+                    GeneratedBy = AgentMode.Gemini,
+                    UsedGemini = true,
+                    FallbackActive = sourceLabel.Contains("fallback", StringComparison.OrdinalIgnoreCase),
+                    Status = "Gemini available",
+                    InputContextSummary = LocalAgentNarrativeService.BuildContextSummary(request.Context, request),
+                    ModelAttempted = attempted,
+                    ModelUsed = model,
+                    SourceLabel = sourceLabel,
+                    LatencyMs = latency
+                };
             }
-
-            await using var stream = await response.Content.ReadAsStreamAsync(timeoutCts.Token);
-            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: timeoutCts.Token);
-            var text = ExtractText(doc);
-            if (string.IsNullOrWhiteSpace(text)) return Failure(request, "Gemini returned an empty response");
-
-            return new AgentNarrativeResult
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
-                Title = request.ReportType,
-                Narrative = text.Trim(),
-                GeneratedBy = AgentMode.Gemini,
-                UsedGemini = true,
-                FallbackActive = false,
-                Status = "Gemini available",
-                InputContextSummary = LocalAgentNarrativeService.BuildContextSummary(request.Context, request)
-            };
+                lastFailure = $"{model} timed out";
+                break;
+            }
+            catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
+            {
+                lastFailure = $"{model} network or response error";
+                _logger.LogWarning("Gemini model failed; trying configured fallback. action={ActionType} route={RouteSource} model={Model}", Safe(request.ActionType), Safe(request.CurrentPage), model);
+            }
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            return Failure(request, "Gemini timed out");
-        }
-        catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
-        {
-            _logger.LogWarning("Gemini narrative generation failed; falling back to local response.");
-            return Failure(request, "Gemini network or response error");
-        }
+
+        var failure = string.IsNullOrWhiteSpace(lastFailure) ? "No supported Gemini text model available" : lastFailure;
+        var totalLatency = (int)Math.Max(1, (DateTime.UtcNow - started).TotalMilliseconds);
+        RecordDiagnostics(request, "Local deterministic fallback", failure, totalLatency, LastQuotaLimited, fallbackActive: true);
+        return Failure(request, failure, attempted, null, started);
     }
 
     public AgentModeStatus GetStatus()
     {
         var configured = !string.IsNullOrWhiteSpace(GetGeminiApiKey());
         var enabled = IsGeminiEnabled();
-        return new AgentModeStatus
+        lock (DiagnosticsLock)
         {
-            CurrentMode = GetGeminiMode(),
-            GeminiConfigured = configured,
-            GeminiEnabled = enabled,
-            GeminiStatus = enabled && configured ? "Available" : configured ? "Configured but disabled" : "Not configured"
-        };
+            return new AgentModeStatus
+            {
+                CurrentMode = GetGeminiMode(),
+                GeminiConfigured = configured,
+                GeminiEnabled = enabled,
+                GeminiStatus = enabled && configured ? "Configured; on-demand only" : configured ? "Configured but disabled" : "Not configured",
+                PrimaryModel = GetString("Gemini:PrimaryModel", "GEMINI_MODEL", GetString("Gemini:Model", "GEMINI_MODEL", _settings.PrimaryModel)),
+                PremiumModel = GetString("Gemini:PremiumModel", null, _settings.PremiumModel),
+                RoutineModel = GetString("Gemini:RoutineModel", null, _settings.RoutineModel),
+                FallbackModels = string.Join(", ", BuildFallbackModels()),
+                CallsSinceStart = CallsSinceStart,
+                CallsByActionType = new Dictionary<string, int>(CallsByActionType),
+                LastCallUtc = LastCallUtc,
+                LastActionType = LastActionType,
+                LastRouteSource = LastRouteSource,
+                LastModelUsed = LastModelUsed,
+                LastResult = LastResult,
+                LastLatencyMs = LastLatencyMs,
+                QuotaLimited = LastQuotaLimited || QuotaLimitedModels.Values.Any(until => until > DateTime.UtcNow),
+                FallbackActive = LastFallbackActive,
+                AutoRunOnAgentPage = GetBool("Gemini:AutoRunOnAgentPage", "Gemini__AutoRunOnAgentPage", _settings.AutoRunOnAgentPage),
+                AutoRunOnDemoTour = GetBool("Gemini:AutoRunOnDemoTour", "Gemini__AutoRunOnDemoTour", _settings.AutoRunOnDemoTour),
+                AutoRunCooldownMinutes = GetInt("Gemini:AutoRunCooldownMinutes", "Gemini__AutoRunCooldownMinutes", _settings.AutoRunCooldownMinutes)
+            };
+        }
     }
 
     private string? GetGeminiApiKey() => _configuration["GEMINI_API_KEY"] ?? _configuration["Gemini:ApiKey"];
-    private bool IsGeminiEnabled()
-    {
-        var configured = _configuration["Gemini:Enabled"] ?? _configuration["GEMINI_ENABLED"];
-        if (bool.TryParse(configured, out var enabled)) return enabled;
-        return _settings.Enabled;
-    }
-    private string GetGeminiModel() => _configuration["Gemini:Model"] ?? _configuration["GEMINI_MODEL"] ?? _settings.Model;
+    private bool IsGeminiEnabled() => GetBool("Gemini:Enabled", "GEMINI_ENABLED", _settings.Enabled);
     private AgentMode GetGeminiMode()
     {
         var configured = _configuration["Gemini:Mode"] ?? _configuration["GEMINI_MODE"];
         return Enum.TryParse<AgentMode>(configured, true, out var mode) ? mode : _settings.Mode;
     }
 
-    private AgentNarrativeResult Failure(AgentNarrativeRequest request, string status) => new()
+    private IEnumerable<string> BuildModelChain(AgentNarrativeRequest request)
+    {
+        var first = request.TaskCategory == GeminiTaskCategory.Premium
+            ? GetString("Gemini:PremiumModel", null, _settings.PremiumModel)
+            : GetString("Gemini:RoutineModel", null, _settings.RoutineModel);
+        yield return first;
+        foreach (var model in BuildFallbackModels()) yield return model;
+    }
+
+    private IEnumerable<string> BuildFallbackModels()
+    {
+        var fallback = GetString("Gemini:FallbackModels", null, _settings.FallbackModels);
+        var models = SplitCsv(fallback).ToList();
+        if (GetBool("Gemini:AllowExperimentalModels", null, _settings.AllowExperimentalModels)) models.AddRange(SplitCsv(GetString("Gemini:ExperimentalFallbackModels", null, _settings.ExperimentalFallbackModels)));
+        return models.Distinct(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private bool IsModelQuotaCooling(string model)
+    {
+        lock (DiagnosticsLock)
+        {
+            return QuotaLimitedModels.TryGetValue(model, out var until) && until > DateTime.UtcNow;
+        }
+    }
+
+    private void MarkQuotaLimited(string model)
+    {
+        lock (DiagnosticsLock)
+        {
+            QuotaLimitedModels[model] = DateTime.UtcNow.AddMinutes(GetInt("Gemini:QuotaCooldownMinutes", "Gemini__QuotaCooldownMinutes", _settings.QuotaCooldownMinutes));
+            LastQuotaLimited = true;
+        }
+    }
+
+    private void RecordDiagnostics(AgentNarrativeRequest request, string model, string result, int latencyMs, bool quotaLimited, bool fallbackActive)
+    {
+        lock (DiagnosticsLock)
+        {
+            CallsSinceStart++;
+            var action = string.IsNullOrWhiteSpace(request.ActionType) ? request.ReportType : request.ActionType;
+            CallsByActionType[action] = CallsByActionType.GetValueOrDefault(action) + 1;
+            LastCallUtc = DateTime.UtcNow;
+            LastActionType = action;
+            LastRouteSource = request.CurrentPage;
+            LastModelUsed = model;
+            LastResult = result;
+            LastLatencyMs = latencyMs;
+            LastQuotaLimited = quotaLimited || result.Contains("quota", StringComparison.OrdinalIgnoreCase) || QuotaLimitedModels.Values.Any(until => until > DateTime.UtcNow);
+            LastFallbackActive = fallbackActive;
+        }
+    }
+
+    private AgentNarrativeResult Failure(AgentNarrativeRequest request, string status, string attempted, string? modelUsed, DateTime started) => new()
     {
         Title = request.ReportType,
         GeneratedBy = AgentMode.Local,
         FallbackActive = true,
         Status = status,
-        InputContextSummary = LocalAgentNarrativeService.BuildContextSummary(request.Context, request)
+        InputContextSummary = LocalAgentNarrativeService.BuildContextSummary(request.Context, request),
+        ModelAttempted = attempted,
+        ModelUsed = modelUsed ?? "Local deterministic fallback",
+        SourceLabel = "Local deterministic fallback",
+        FallbackReason = status,
+        LatencyMs = (int)Math.Max(1, (DateTime.UtcNow - started).TotalMilliseconds)
     };
+
+    private static string LabelForModel(AgentNarrativeRequest request, string model)
+    {
+        var first = request.TaskCategory == GeminiTaskCategory.Premium ? "premium" : "routine";
+        if ((request.TaskCategory == GeminiTaskCategory.Premium && model.Contains("2.5-flash", StringComparison.OrdinalIgnoreCase) && !model.Contains("lite", StringComparison.OrdinalIgnoreCase)) ||
+            (request.TaskCategory == GeminiTaskCategory.Routine && model.Contains("3.1-flash-lite", StringComparison.OrdinalIgnoreCase)))
+        {
+            return $"Gemini {first}: {model}";
+        }
+        return $"Gemini fallback: {model}";
+    }
+
+    private static string ClassifyFailure(HttpStatusCode code, string model) =>
+        code == HttpStatusCode.Unauthorized || code == HttpStatusCode.Forbidden ? "Gemini authentication failed" :
+        code == (HttpStatusCode)429 ? $"{model} quota-limited; fallback active" :
+        code == HttpStatusCode.NotFound || code == HttpStatusCode.BadRequest ? $"{model} unsupported or unavailable" :
+        $"{model} unavailable ({(int)code})";
+
+    private string GetString(string key, string? envKey, string fallback) => _configuration[key] ?? (envKey is null ? null : _configuration[envKey]) ?? fallback;
+    private bool GetBool(string key, string? envKey, bool fallback)
+    {
+        var configured = _configuration[key] ?? (envKey is null ? null : _configuration[envKey]);
+        return bool.TryParse(configured, out var value) ? value : fallback;
+    }
+    private int GetInt(string key, string? envKey, int fallback)
+    {
+        var configured = _configuration[key] ?? (envKey is null ? null : _configuration[envKey]);
+        return int.TryParse(configured, out var value) ? value : fallback;
+    }
+    private static IEnumerable<string> SplitCsv(string value) => (value ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Where(v => !string.IsNullOrWhiteSpace(v));
+    private static string Safe(string value) => string.IsNullOrWhiteSpace(value) ? "n/a" : value.Replace('\n', ' ').Replace('\r', ' ');
 
     private static string ExtractText(JsonDocument doc)
     {
