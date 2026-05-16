@@ -1,128 +1,145 @@
 package app.culltron.smartportdriver
 
-import android.app.*
-import android.os.*
+import android.app.Activity
+import android.os.Bundle
 import android.graphics.Color
-import android.view.*
+import android.graphics.Typeface
+import android.text.InputType
 import android.widget.*
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 import kotlin.concurrent.thread
 
 class MainActivity : Activity() {
-    private var backend = "https://smartport.culltron.app"
+    private var backend = "http://10.0.2.2:8080"
     private lateinit var root: LinearLayout
     private var currentReference = "SPQ-2026-0042"
-    private var demoCode = ""
+    private var demoCode = "culltron-driver-2026"
     private var mobileToken = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        showSearch()
-        registerDevicePlaceholder()
+        val prefs = getSharedPreferences("smartport-driver", MODE_PRIVATE)
+        backend = prefs.getString("backend", backend) ?: backend
+        currentReference = prefs.getString("reference", currentReference) ?: currentReference
+        demoCode = prefs.getString("demoCode", demoCode) ?: demoCode
+        mobileToken = prefs.getString("mobileToken", "") ?: ""
+        showLogin()
     }
+
+    private fun persist() = getSharedPreferences("smartport-driver", MODE_PRIVATE).edit()
+        .putString("backend", backend).putString("reference", currentReference).putString("demoCode", demoCode).putString("mobileToken", mobileToken).apply()
 
     private fun baseLayout(): LinearLayout {
         val scroll = ScrollView(this)
-        root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(28, 42, 28, 28); setBackgroundColor(Color.rgb(7,21,38)) }
+        root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(28, 42, 28, 28); setBackgroundColor(Color.rgb(5, 16, 31)) }
         scroll.addView(root); setContentView(scroll); return root
     }
 
-    private fun showSearch() {
+    private fun showLogin() {
         baseLayout()
-        titleText("Culltron Smart Port")
-        label("Driver Queue Companion", 18)
-        val backendInput = input(backend, "Backend URL")
-        val refInput = input(currentReference, "Booking, truck, or job reference")
-        val codeInput = input(demoCode, "Demo code")
-        button("Demo login") { backend = backendInput.text.toString().trimEnd('/'); demoCode = codeInput.text.toString(); demoLogin(refInput) }
-        button("Check queue status") { backend = backendInput.text.toString().trimEnd('/'); currentReference = refInput.text.toString(); fetchStatus(currentReference) }
-        button("Use Demo Driver") { refInput.setText("SPQ-2026-0042"); if (codeInput.text.isBlank()) codeInput.setText("culltron-driver-2026"); demoCode = codeInput.text.toString(); backend = backendInput.text.toString().trimEnd('/'); demoLogin(refInput) }
-        label("Demo token auth pulls queue status and notification history from Smart Port APIs. No Firebase, Gemini key, or WhatsApp credential is stored in the app.", 14)
+        titleText("Smart Port Driver Companion")
+        label("Real Android companion for the Smart Port backend. The APK calls mobile APIs; it stores no Gemini keys, WhatsApp tokens, or provider secrets.", 15)
+        val backendInput = input(backend, "Backend URL, e.g. Codespaces/DigitalOcean HTTPS URL")
+        val refInput = input(currentReference, "Truck/job reference")
+        val codeInput = input(demoCode, "Demo driver code")
+        codeInput.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+        button("Quick-fill Android emulator localhost") { backendInput.setText("http://10.0.2.2:8080") }
+        button("Quick-fill demo driver") { refInput.setText("SPQ-2026-0042"); codeInput.setText("culltron-driver-2026") }
+        button("Login to backend") {
+            backend = backendInput.text.toString().trim().trimEnd('/')
+            currentReference = refInput.text.toString().trim().ifBlank { "SPQ-2026-0042" }
+            demoCode = codeInput.text.toString().trim()
+            persist(); demoLogin()
+        }
+        button("Refresh status with saved token") {
+            backend = backendInput.text.toString().trim().trimEnd('/'); currentReference = refInput.text.toString().trim(); persist(); fetchStatus()
+        }
+        whatsAppInfoCard()
     }
 
-    private fun demoLogin(refInput: EditText) = thread {
+    private fun demoLogin() = thread {
         try {
-            val body = "{\"role\":\"Driver Demo\",\"accessCode\":\"$demoCode\"}"
-            val json = JSONObject(postJsonForText("$backend/api/mobile/auth/demo-login", body, false))
+            val body = JSONObject().put("role", "Driver Demo").put("accessCode", demoCode).toString()
+            val json = JSONObject(postJsonForText("$backend/api/mobile/auth/demo-login", body, includeToken = false))
             mobileToken = json.getString("token")
-            currentReference = json.optString("demoReference", refInput.text.toString())
-            runOnUiThread { refInput.setText(currentReference); toast("Demo access granted"); fetchStatus(currentReference) }
-        } catch (ex: Exception) { runOnUiThread { toast("Demo access required: ${ex.message}") } }
+            currentReference = json.optString("demoReference", currentReference)
+            persist()
+            runOnUiThread { toast("Demo access granted"); fetchStatus() }
+        } catch (ex: Exception) { runOnUiThread { toast("Backend login failed: ${ex.message}") } }
     }
 
-    private fun fetchStatus(reference: String) = thread {
+    private fun fetchStatus() = thread {
         try {
-            val json = getJson("$backend/api/mobile/truck/status/$reference")
+            val ref = URLEncoder.encode(currentReference, "UTF-8")
+            val json = getJson("$backend/api/mobile/truck/status/$ref")
             runOnUiThread { showStatus(json) }
-        } catch (ex: Exception) { runOnUiThread { toast(if (ex.message?.contains("401") == true) "Demo access required" else "Unable to load status: ${ex.message}") } }
+        } catch (ex: Exception) { runOnUiThread { toast(if (ex.message?.contains("401") == true) "Invalid/expired demo token. Login again." else "Unable to load status: ${ex.message}") } }
     }
 
     private fun showStatus(json: JSONObject) {
-        baseLayout(); currentReference = json.getString("bookingReference")
-        titleText(json.getString("truckRegistration")); label(json.getString("driverName") + " · " + json.getString("fleetOperatorName"), 16)
-        card("Queue #${json.getInt("queueNumber")}", "Status: ${json.getString("currentStatus")}\nGate: ${json.getString("assignedGate")}\nCall-forward: ${json.getString("etaCallForwardTime")}")
-        val instruction = json.getJSONObject("currentInstruction")
-        card("AI movement instruction", instruction.getString("instruction") + "\n\nWhy: " + instruction.getString("reason"))
-        card("Impact", "Delay risk: ${json.getString("delayRisk")}\nIdling avoided: ${json.getInt("estimatedIdlingMinutesAvoided")} min\nCO₂ avoided: ${json.getDouble("estimatedCo2KgAvoided")} kg")
-        card("Latest notification", json.optString("latestNotification"))
-        LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; root.addView(this)
-            listOf("Seen", "Holding", "Proceeding").forEach { ack -> addView(actionButton(ack) { acknowledge(ack) }) }
-        }
-        label("Allowed actions", 18)
-        val allowed = json.optJSONArray("allowedNextActions")
-        if (allowed != null) for (i in 0 until allowed.length()) { val action = allowed.getString(i); button(action) { confirmStatus(action) } }
-        val questionInput = input("HOW LONG", "Ask Smart Port Copilot")
-        button("Ask Copilot") { askCopilot(questionInput.text.toString()) }
-        button("Share demo WhatsApp location check-in") { locationCheckIn() }
-        button("Notification history") { showNotifications(json) }
-        button("Back") { showSearch() }
-        if (json.getString("currentStatus").contains("Proceed") || json.getString("currentStatus").contains("Hold") || json.getString("currentStatus").contains("Delayed")) toast("Smart Port update: ${instruction.getString("instruction")}")
-    }
-
-    private fun acknowledge(ack: String) = thread {
-        val body = "{\"reference\":\"$currentReference\",\"acknowledgement\":\"$ack\"}"
-        try { postJson("$backend/api/mobile/driver/acknowledge", body); runOnUiThread { toast("Acknowledged: $ack") } } catch (ex: Exception) { runOnUiThread { toast("Ack failed") } }
+        baseLayout(); currentReference = json.getString("bookingReference"); persist()
+        titleText(json.optString("truckRegistration", currentReference))
+        label("${json.optString("driverName", "Demo Driver")} · ${json.optString("fleetOperatorName", "Fleet Operator")}", 16)
+        card("Truck Status", "Reference: $currentReference\nStatus: ${json.optString("currentStatus")}\nQueue #: ${json.optInt("queueNumber")}\nGate: ${json.optString("assignedGate")}\nStaging: ${json.optString("stagingZone")}\nCall-forward/ETA: ${json.optString("etaCallForwardTime")}\nLast updated: ${json.optString("lastUpdatedUtc", "backend timestamp")}")
+        val instruction = json.optJSONObject("currentInstruction") ?: JSONObject()
+        card("Current Instruction", "${instruction.optString("instruction", "Refresh for latest instruction")}\nReason: ${instruction.optString("reason", "Smart Port operational state")}")
+        card("Impact", "Delay risk: ${json.optString("delayRisk")}\nIdling avoided: ${json.optInt("estimatedIdlingMinutesAvoided")} min\nCO₂ avoided: ${json.optDouble("estimatedCo2KgAvoided")} kg\nAI/source: ${json.optString("aiSource", "Backend Gemini/local fallback")}")
+        button("Ready") { confirmStatus("DriverReady") }
+        button("Arrived at Staging") { confirmStatus("ArrivedAtStaging") }
+        button("Delayed 20") { confirmStatus("Delayed20") }
+        button("Report Issue") { confirmStatus("ReportIssue") }
+        button("Confirm Instruction") { confirmStatus("ConfirmInstruction") }
+        button("Send Location / Check-in") { locationCheckIn() }
+        button("Refresh Status") { fetchStatus() }
+        val questionInput = input("What should I do now?", "Driver Copilot question")
+        button("Ask Driver Copilot") { askCopilot(questionInput.text.toString()) }
+        LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; root.addView(this); listOf("Why am I delayed?", "Where do I go?", "What is my ETA?").forEach { q -> addView(actionButton(q) { askCopilot(q) }) } }
+        button("Notifications") { fetchNotifications() }
+        button("Backend setup") { showLogin() }
+        whatsAppInfoCard()
     }
 
     private fun confirmStatus(action: String) = thread {
-        val event = when(action) { "ConfirmHolding" -> "DriverConfirmedHolding"; "ArrivedAtStaging" -> "DriverArrivedAtStaging"; "ProceedingToGate" -> "DriverProceedingToGate"; "ArrivedAtGate" -> "DriverArrivedAtGate"; "CompleteJob" -> "DriverCompletedJob"; "Break15" -> "DriverBreak"; "Lunch30" -> "DriverLunch"; "Delayed20" -> "DriverDelayed"; "ReportIssue" -> "DriverIssueReported"; else -> "DriverAcknowledgedInstruction" }
-        val body = "{\"reference\":\"$currentReference\",\"eventType\":\"$event\",\"sourceLabel\":\"Android\"}"
-        try { postJson("$backend/api/mobile/driver/confirm-status", body); runOnUiThread { toast("Action sent: $action"); fetchStatus(currentReference) } } catch (ex: Exception) { runOnUiThread { toast("Action failed") } }
+        val event = when (action) { "ArrivedAtStaging" -> "DriverArrivedAtStaging"; "Delayed20" -> "DriverDelayed"; "ReportIssue" -> "DriverIssueReported"; "ConfirmInstruction" -> "DriverAcknowledgedInstruction"; else -> action }
+        val body = JSONObject().put("reference", currentReference).put("eventType", event).put("sourceLabel", "Android").toString()
+        try { postJsonForText("$backend/api/mobile/driver/confirm-status", body); runOnUiThread { toast("Action sent: $action"); fetchStatus() } } catch (ex: Exception) { runOnUiThread { toast("Action failed: ${ex.message}") } }
     }
 
     private fun locationCheckIn() = thread {
-        val body = "{\"reference\":\"$currentReference\",\"eventType\":\"WhatsAppLocationShared\",\"sourceLabel\":\"WhatsApp\",\"locationLabel\":\"Demo WhatsApp check-in from Android companion\"}"
-        try { postJson("$backend/api/mobile/driver/location-checkin", body); runOnUiThread { toast("Location check-in shared"); fetchStatus(currentReference) } } catch (ex: Exception) { runOnUiThread { toast("Location failed") } }
+        val body = JSONObject().put("reference", currentReference).put("eventType", "AndroidLocationCheckIn").put("sourceLabel", "Android").put("locationLabel", "Driver Companion check-in").toString()
+        try { postJsonForText("$backend/api/mobile/driver/location-checkin", body); runOnUiThread { toast("Location check-in shared"); fetchStatus() } } catch (ex: Exception) { runOnUiThread { toast("Location failed: ${ex.message}") } }
     }
 
     private fun askCopilot(question: String) = thread {
-        val body = "{\"reference\":\"$currentReference\",\"userRole\":\"Driver\",\"question\":\"$question\"}"
-        try { val text = postJsonForText("$backend/api/mobile/copilot/driver", body); runOnUiThread { card("Copilot", text) } } catch (ex: Exception) { runOnUiThread { toast("Copilot unavailable") } }
+        val body = JSONObject().put("reference", currentReference).put("userRole", "Driver").put("question", question).toString()
+        try { val json = JSONObject(postJsonForText("$backend/api/mobile/copilot/driver", body)); runOnUiThread { card("Driver Copilot · ${json.optString("source", "backend fallback")}", "${json.optString("answer")}\n\nSuggested action: ${json.optString("suggestedAction")}") } } catch (ex: Exception) { runOnUiThread { toast("Copilot unavailable: ${ex.message}") } }
     }
 
-    private fun showNotifications(json: JSONObject) {
+    private fun fetchNotifications() = thread {
+        try { val arrText = getText("$backend/api/mobile/notifications/${URLEncoder.encode(currentReference, "UTF-8")}"); runOnUiThread { showNotifications(arrText) } } catch (ex: Exception) { runOnUiThread { toast("Notifications unavailable: ${ex.message}") } }
+    }
+
+    private fun showNotifications(text: String) {
         baseLayout(); titleText("Notifications")
-        val arr = json.getJSONArray("notificationHistory")
-        for (i in 0 until arr.length()) { val n = arr.getJSONObject(i); card(n.getString("channel") + " · " + n.getString("status"), n.getString("message")) }
-        button("Back to status") { showStatus(json) }
+        val arr = org.json.JSONArray(text)
+        if (arr.length() == 0) label("No notifications yet.", 16)
+        for (i in 0 until arr.length()) { val n = arr.getJSONObject(i); card("${n.optString("channel")} · ${n.optString("status")}", "${n.optString("message")}\n${n.optString("timestampUtc")}\nSource: ${n.optString("source")}\nExternal id: ${n.optString("externalMessageId")}\nContact: ${n.optString("maskedContact")}") }
+        button("Back to status") { fetchStatus() }
     }
 
-    private fun registerDevicePlaceholder() = thread { try { postJson("$backend/api/mobile/device/register", "{\"reference\":\"$currentReference\",\"deviceToken\":\"demo-local-device\",\"platform\":\"Android\",\"appVersion\":\"1.0\"}") } catch (_: Exception) {} }
-    private fun getJson(url: String): JSONObject {
-        val conn = (URL(url).openConnection() as HttpURLConnection)
-        if (mobileToken.isNotBlank()) conn.setRequestProperty("X-SmartPort-Mobile-Token", mobileToken)
-        if (conn.responseCode == 401) throw Exception("401 Demo access required")
-        return JSONObject(conn.inputStream.bufferedReader().readText())
-    }
-    private fun postJson(url: String, body: String) { postJsonForText(url, body) }
-    private fun postJsonForText(url: String, body: String, includeToken: Boolean = true): String { return (URL(url).openConnection() as HttpURLConnection).run { requestMethod="POST"; setRequestProperty("Content-Type","application/json"); if (includeToken && mobileToken.isNotBlank()) setRequestProperty("X-SmartPort-Mobile-Token", mobileToken); doOutput=true; outputStream.use{it.write(body.toByteArray())}; if (responseCode == 401) throw Exception("401 Demo access required"); inputStream.bufferedReader().readText() } }
-    private fun titleText(text: String) = label(text, 28)
-    private fun label(text: String, size: Int) { root.addView(TextView(this).apply { setText(text); textSize=size.toFloat(); setTextColor(Color.WHITE); setPadding(0,10,0,10) }) }
-    private fun input(text: String, hint: String) = EditText(this).apply { setText(text); setHint(hint); setTextColor(Color.WHITE); setHintTextColor(Color.GRAY); root.addView(this) }
+    private fun whatsAppInfoCard() = card("WhatsApp connector-ready", "WhatsApp Cloud API is optional sandbox/live-test connector readiness. Production use requires WhatsApp Business setup, opt-in/templates, and billing. This driver app works through Smart Port web/mobile APIs without WhatsApp production approval.")
+
+    private fun getJson(url: String) = JSONObject(getText(url))
+    private fun getText(url: String): String = (URL(url).openConnection() as HttpURLConnection).run { if (mobileToken.isNotBlank()) setRequestProperty("X-SmartPort-Mobile-Token", mobileToken); connectTimeout = 8000; readTimeout = 12000; if (responseCode == 401) throw Exception("401 Demo access required"); if (responseCode >= 400) throw Exception("HTTP $responseCode"); inputStream.bufferedReader().readText() }
+    private fun postJsonForText(url: String, body: String, includeToken: Boolean = true): String = (URL(url).openConnection() as HttpURLConnection).run { requestMethod = "POST"; setRequestProperty("Content-Type", "application/json"); if (includeToken && mobileToken.isNotBlank()) setRequestProperty("X-SmartPort-Mobile-Token", mobileToken); connectTimeout = 8000; readTimeout = 15000; doOutput = true; outputStream.use { it.write(body.toByteArray()) }; if (responseCode == 401) throw Exception("401 Demo access required"); if (responseCode >= 400) throw Exception("HTTP $responseCode"); inputStream.bufferedReader().readText() }
+    private fun titleText(text: String) { val t = TextView(this); t.text = text; t.textSize = 28f; t.typeface = Typeface.DEFAULT_BOLD; t.setTextColor(Color.WHITE); t.setPadding(0, 10, 0, 16); root.addView(t) }
+    private fun label(text: String, size: Int) { root.addView(TextView(this).apply { this.text = text; textSize = size.toFloat(); setTextColor(Color.rgb(219, 234, 254)); setPadding(0, 8, 0, 10) }) }
+    private fun input(text: String, hint: String) = EditText(this).apply { setText(text); setHint(hint); setTextColor(Color.WHITE); setHintTextColor(Color.GRAY); setSingleLine(false); root.addView(this) }
     private fun button(text: String, action: () -> Unit) { root.addView(actionButton(text, action)) }
-    private fun actionButton(text: String, action: () -> Unit) = Button(this).apply { setText(text); setOnClickListener { action() } }
-    private fun card(title: String, body: String) { root.addView(TextView(this).apply { text="$title\n$body"; textSize=16f; setTextColor(Color.rgb(165,243,252)); setPadding(22,22,22,22); background=android.graphics.drawable.GradientDrawable().apply { setColor(Color.rgb(11,31,52)); cornerRadius=24f; setStroke(1, Color.rgb(6,182,212)) } }) }
+    private fun actionButton(text: String, action: () -> Unit) = Button(this).apply { this.text = text; setOnClickListener { action() } }
+    private fun card(title: String, body: String) { root.addView(TextView(this).apply { text = "$title\n$body"; textSize = 16f; setTextColor(Color.rgb(165, 243, 252)); setPadding(22, 22, 22, 22); background = android.graphics.drawable.GradientDrawable().apply { setColor(Color.rgb(11, 31, 52)); cornerRadius = 24f; setStroke(1, Color.rgb(6, 182, 212)) } }) }
     private fun toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_LONG).show()
 }

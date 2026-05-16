@@ -202,16 +202,18 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
             ReportType = CopilotReportType(intent),
             DetectedIntent = response.IntentCategory,
             UserPrompt = prompt,
-            CurrentPage = "SmartPort Copilot",
+            CurrentPage = prompt.Contains("Driver asks", StringComparison.OrdinalIgnoreCase) ? "Mobile Driver Copilot" : "SmartPort Copilot",
             ConversationHistory = conversationHistory ?? string.Empty,
             RequestedMode = AgentMode.Hybrid,
+            TaskCategory = IsPremiumIntent(intent) ? GeminiTaskCategory.Premium : GeminiTaskCategory.Routine,
+            ActionType = $"copilot-{intent}",
             Context = ctx,
             DeterministicRecommendations = ctx.TopRecommendations
         });
 
         if (enhanced.UsedGemini && !string.IsNullOrWhiteSpace(enhanced.Narrative))
         {
-            return BuildGeminiResponse(prompt, intent, response, enhanced.Narrative);
+            return BuildGeminiResponse(prompt, intent, response, enhanced.Narrative, enhanced.SourceLabel);
         }
 
         ApplyEngineStatus(response, usedGemini: false, fallbackReason: "Gemini unavailable — local fallback used");
@@ -219,10 +221,10 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
     }
 
 
-    private CopilotChatResponse BuildGeminiResponse(string prompt, string intent, CopilotChatResponse localResponse, string geminiText)
+    private CopilotChatResponse BuildGeminiResponse(string prompt, string intent, CopilotChatResponse localResponse, string geminiText, string sourceLabel)
     {
         var response = localResponse;
-        response.GeneratedBy = "Gemini";
+        response.GeneratedBy = string.IsNullOrWhiteSpace(sourceLabel) ? "Gemini" : sourceLabel;
         response.IntentCategory = IntentCategory(intent);
         response.Intent = response.IntentCategory;
         response.Title = response.IntentCategory switch
@@ -240,10 +242,12 @@ public class SmartPortCopilotChatService : ISmartPortCopilotChatService
         response.MessageType = response.IntentCategory is "greeting" or "help" or "harmless" ? "compact" : response.MessageType;
         response.IsSmallTalk = response.IntentCategory is "greeting" or "help" or "harmless";
         response.IsOperational = response.IntentCategory is "operational" or "report" or "demo";
-        response.DataNote = "Gemini Agent Mode · sanitized synthetic Smart Port context";
+        response.DataNote = $"{response.GeneratedBy} · sanitized synthetic Smart Port context";
         response.MetricBadges = BuildMetricBadges(response.Severity, response.ConfidenceScore, response.AffectedArea, response.IntentCategory, "Gemini");
         return response;
     }
+
+    private static bool IsPremiumIntent(string intent) => intent is "executive-brief" or "risk" or "demo";
 
     private static void ApplyEngineStatus(CopilotChatResponse response, bool usedGemini, string? fallbackReason)
     {

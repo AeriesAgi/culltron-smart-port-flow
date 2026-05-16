@@ -56,6 +56,8 @@ public class GeminiAgentController : Controller
             UserPrompt = prompt,
             CurrentPage = "/gemini-agent",
             RequestedMode = AgentMode.Hybrid,
+            TaskCategory = TaskCategoryFor(briefType),
+            ActionType = NormalizeBriefType(briefType),
             Context = BuildOperationalContext(summary),
             DeterministicRecommendations = new[] { DeterministicRecommendation(summary), summary.LatestAiQueueRecommendation }
         });
@@ -66,14 +68,14 @@ public class GeminiAgentController : Controller
             GeneratedBy = narrative.UsedGemini ? "Gemini" : narrative.FallbackActive ? "Hybrid" : "Local Fallback"
         };
         var elapsed = (int)Math.Max(1, (DateTime.UtcNow - started).TotalMilliseconds);
-        var generatedBy = narrative.UsedGemini ? "Gemini" : narrative.FallbackActive ? "Hybrid / Local Fallback" : "Local Fallback";
+        var generatedBy = string.IsNullOrWhiteSpace(narrative.SourceLabel) ? (narrative.UsedGemini ? "Gemini" : narrative.FallbackActive ? "Hybrid / Local Fallback" : "Local Fallback") : narrative.SourceLabel;
         var recommendation = string.IsNullOrWhiteSpace(response.RecommendedAction) ? DeterministicRecommendation(summary) : response.RecommendedAction;
 
         var item = new GeminiAgentHistoryItem(
             DateTime.UtcNow,
             NormalizeBriefType(briefType),
             generatedBy,
-            $"queue={summary.TotalTrucks}; waiting={summary.TrucksWaiting}; holding={summary.TrucksHolding}; disruptions={summary.DelayedOrRescheduledTrucks}; notifications={summary.LatestNotifications.Count}; idlingAvoided={summary.TotalIdlingMinutesAvoided}",
+            $"queue={summary.TotalTrucks}; waiting={summary.TrucksWaiting}; holding={summary.TrucksHolding}; disruptions={summary.DelayedOrRescheduledTrucks}; notifications={summary.LatestNotifications.Count}; idlingAvoided={summary.TotalIdlingMinutesAvoided}; attempted={narrative.ModelAttempted}; used={narrative.ModelUsed}",
             response.ShortAnswer,
             recommendation,
             DeterministicRecommendation(summary),
@@ -103,13 +105,11 @@ public class GeminiAgentController : Controller
 
     private GeminiReadinessViewModel BuildReadiness()
     {
-        var apiKeyConfigured = !string.IsNullOrWhiteSpace(_configuration["GEMINI_API_KEY"] ?? _configuration["Gemini:ApiKey"]);
-        var enabledText = _configuration["Gemini:Enabled"] ?? _configuration["GEMINI_ENABLED"];
-        var enabled = bool.TryParse(enabledText, out var parsed) && parsed;
-        var mode = _configuration["Gemini:Mode"] ?? _configuration["GEMINI_MODE"] ?? "Hybrid demo / deterministic fallback";
-        var model = _configuration["Gemini:Model"] ?? _configuration["GEMINI_MODEL"] ?? "gemini-2.5-flash";
+        var status = _narrative.GetStatus();
         var last = SnapshotHistory().FirstOrDefault();
-        return new GeminiReadinessViewModel(apiKeyConfigured, enabled, mode, model, apiKeyConfigured && enabled ? "Gemini-enhanced when provider responds; deterministic fallback retained" : "Local deterministic fallback active", last?.BriefType ?? "No generation yet", last?.LatencyMs);
+        var modelPlan = $"Premium {status.PremiumModel} · Routine {status.RoutineModel} · Fallbacks {status.FallbackModels}";
+        var fallback = status.QuotaLimited ? "Gemini quota-limited; fallback active" : status.FallbackActive ? "Fallback active" : "On-demand only; no page-load Gemini calls";
+        return new GeminiReadinessViewModel(status.GeminiConfigured, status.GeminiEnabled, status.CurrentModeLabel, modelPlan, fallback, status.LastResult.Length > 0 ? status.LastResult : last?.BriefType ?? "No generation yet", status.LastLatencyMs ?? last?.LatencyMs);
     }
 
     private static OperationalIntelligenceViewModel BuildIntelligence(FleetQueueSummaryDto summary)
@@ -135,6 +135,14 @@ public class GeminiAgentController : Controller
         "Live Gemini Connector Test" => "Run a concise live Gemini connector test using sanitized Smart Port context. Return status, source, and a safe one-paragraph operations observation.",
         _ => "Generate a Gemini operations brief for gate pressure, berth readiness, idling impact, fleet/driver actions, audit trail, and next approvals."
     };
+
+    private static GeminiTaskCategory TaskCategoryFor(string briefType)
+    {
+        var normalized = NormalizeBriefType(briefType);
+        return normalized.Contains("Executive Judge", StringComparison.OrdinalIgnoreCase) || normalized.Contains("Risk & Governance", StringComparison.OrdinalIgnoreCase) || normalized.Contains("Disruption Recovery", StringComparison.OrdinalIgnoreCase)
+            ? GeminiTaskCategory.Premium
+            : GeminiTaskCategory.Routine;
+    }
 
     private static string NormalizeBriefType(string briefType) => briefType switch
     {

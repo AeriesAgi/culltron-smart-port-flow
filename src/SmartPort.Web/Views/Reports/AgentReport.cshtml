@@ -20,7 +20,7 @@
             <a class="sp-btn sp-btn--outline" asp-controller="Reports" asp-action="Index">Back to Reports</a>
         </div>
     </div>
-    <div class="sp-command-risk-dial sp-command-risk-dial--@(Model.UsedGemini ? "high" : "medium")">
+    <div class="sp-command-hazard-dial sp-command-hazard-dial--@(Model.UsedGemini ? "high" : "medium")">
         <span>@Model.GeneratedBy</span>
         <strong>@(Model.FallbackActive ? "Fallback" : "Ready")</strong>
         <small>@Model.GeminiStatus</small>

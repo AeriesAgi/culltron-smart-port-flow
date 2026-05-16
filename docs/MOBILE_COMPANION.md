@@ -1,27 +1,49 @@
-# Judge Quickstart
+# Smart Port Driver Companion — Android Source
 
-1. Open the live URL or `http://localhost:8080`.
-2. Click **Demo Access**.
-3. Choose **Judge Demo**.
-4. Open **Demo Tour**.
-5. Open **Gemini Operations Agent** and click **Generate Gemini Operations Brief**.
-6. Open **Execution Plans** and generate a plan.
-7. Open truck `SPQ-2026-0042`, send a simulated WhatsApp or driver action, then review notification/timeline history.
-8. Open **Agent Governance** and **Enterprise Readiness**.
+The Android Driver Companion source is included under `mobile/SmartPortDriverCompanion`. It is a native Kotlin project intended for queue status, driver confirmations, demo location check-ins, notification history, and backend Copilot calls.
 
-Best path: `/demo-access` → Judge Demo → `/demo-tour` → `/gemini-agent` → `/execution/plans` → `/fleet/trucks/SPQ-2026-0042` → `/enterprise-readiness`.
+## Backend URL
 
+Default deployment URL:
 
-## Live connector setup
+```text
+https://smartport.culltron.app
+```
 
-See `docs/LIVE_API_SETUP.md` for exact Gemini and WhatsApp Cloud API environment variables, webhook callback setup, curl verify test, and safety rules. Future pilot/live connectors can ingest IPMS/TOS, gate systems, fleet GPS, weighbridge, ERP, WhatsApp Cloud API, driver app, berth schedules, weather/disruption feeds and emissions systems.
+For local Android emulator testing, use a reachable ASP.NET backend URL such as:
 
+```text
+https://10.0.2.2:5001
+```
 
-## Demo access codes
+For a physical device, use a LAN, tunnel, or deployed HTTPS URL that the device can reach.
 
-If codes are visible, use **Judge**: `culltron-judge-2026`. Other role codes are Port Admin `culltron-admin-2026`, Fleet Owner `culltron-fleet-2026`, and Driver `culltron-driver-2026`.
+## Security model
 
-Full low-friction path: `/demo-access` → quick-fill Judge code → `/demo-tour` → `/gemini-agent` → `/agent-governance` → `/ops-ingest` → `/execution/plans` → `/fleet/trucks/SPQ-2026-0042` → simulated WhatsApp → `/driver/demo` → `/fleet/notifications` → `/enterprise-readiness` → `/health/integrations`.
+- The Android app stores no Gemini API key.
+- The Android app stores no WhatsApp token.
+- AI and WhatsApp logic remain on the backend.
+- The app calls Smart Port backend APIs and renders the returned state.
+
+## Expected capabilities
+
+- Fetch truck status from `/api/mobile/truck/status/{reference}`.
+- Show queue number, ETA, assigned gate, staging zone, current status, and latest instruction.
+- Show notification history from `/api/mobile/notifications/{reference}`.
+- Post confirmations and commands through backend endpoints.
+- Post demo location check-ins.
+- Call `/api/mobile/copilot/driver` for scoped driver assistance.
+- Handle connectivity and validation errors without exposing secrets.
+
+## Build APK
+
+Open `mobile/SmartPortDriverCompanion` in Android Studio and run a debug build. If building from a CLI environment with the Android SDK installed, use the project Gradle wrapper or Gradle installation to assemble a debug APK, then place the resulting file at:
+
+```text
+src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk
+```
+
+The web app does not require the Android SDK to build or deploy.
 
 ## Final enterprise hackathon pass — Gemini, mobile driver loop, and connector readiness
 

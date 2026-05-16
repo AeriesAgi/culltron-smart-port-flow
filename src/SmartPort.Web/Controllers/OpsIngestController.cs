@@ -39,10 +39,12 @@ public class OpsIngestController : Controller
             UserPrompt = prompt,
             CurrentPage = "/ops-ingest",
             RequestedMode = AgentMode.Hybrid,
+            TaskCategory = GeminiTaskCategory.Routine,
+            ActionType = "ops-ingest",
             Context = new OperationalContext { TrucksInQueue = signals.StructuredSignals.Contains("truck_delay") ? 3 : 1, GateDelayActive = signals.StructuredSignals.Contains("gate_pressure"), ActiveDisruptions = signals.StructuredSignals.Contains("power") ? 2 : 1, TopRecommendations = new() { signals.PlanPreview } },
             DeterministicRecommendations = new[] { signals.PlanPreview }
         });
-        var response = string.IsNullOrWhiteSpace(narrative.Narrative) ? await _copilot.GenerateResponseAsync(prompt) : new CopilotChatResponse { ShortAnswer = narrative.Narrative, GeneratedBy = narrative.UsedGemini ? "Gemini" : narrative.FallbackActive ? "Hybrid" : "Local Fallback" };
+        var response = string.IsNullOrWhiteSpace(narrative.Narrative) ? await _copilot.GenerateResponseAsync(prompt) : new CopilotChatResponse { ShortAnswer = narrative.Narrative, GeneratedBy = string.IsNullOrWhiteSpace(narrative.SourceLabel) ? (narrative.UsedGemini ? "Gemini" : narrative.FallbackActive ? "Hybrid" : "Local Fallback") : narrative.SourceLabel };
         var item = new OpsIngestAuditItem(DateTime.UtcNow, note, signals.DisruptionType, signals.StructuredSignals, signals.PlanPreview, response.ShortAnswer, response.GeneratedBy, "Audit entry created; preview only until operator approves", "IPMS/TOS, berth schedule, gate OCR, weighbridge, fleet GPS, driver app, WhatsApp, ERP, weather/disruption feeds");
         lock (IngestLock)
         {

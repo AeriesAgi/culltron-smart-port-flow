@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartPort.Application.Interfaces;
 using SmartPort.Infrastructure.Persistence;
+using SmartPort.Infrastructure.Services;
 
 namespace SmartPort.Web.Controllers;
 
@@ -11,13 +12,15 @@ public class HealthController : Controller
     private readonly IConfiguration _configuration;
     private readonly IWebHostEnvironment _environment;
     private readonly IFleetDriverQueueService _queue;
+    private readonly IAgentNarrativeService _narrative;
 
-    public HealthController(SmartPortDbContext db, IConfiguration configuration, IWebHostEnvironment environment, IFleetDriverQueueService queue)
+    public HealthController(SmartPortDbContext db, IConfiguration configuration, IWebHostEnvironment environment, IFleetDriverQueueService queue, IAgentNarrativeService narrative)
     {
         _db = db;
         _configuration = configuration;
         _environment = environment;
         _queue = queue;
+        _narrative = narrative;
     }
 
     [HttpGet("/health")]
@@ -75,11 +78,28 @@ public class HealthController : Controller
 
     private object BuildGeminiStatus()
     {
-        var configured = !string.IsNullOrWhiteSpace(_configuration["GEMINI_API_KEY"] ?? _configuration["Gemini:ApiKey"]);
-        var enabled = bool.TryParse(_configuration["Gemini:Enabled"] ?? _configuration["GEMINI_ENABLED"], out var parsed) && parsed;
-        var model = _configuration["Gemini:Model"] ?? _configuration["GEMINI_MODEL"] ?? "gemini-2.5-flash";
-        var mode = _configuration["Gemini:Mode"] ?? _configuration["GEMINI_MODE"] ?? "Hybrid";
-        var status = enabled && configured ? "Live Ready" : configured ? "Configured" : enabled ? "Needs API Key" : "Fallback Active";
-        return new { apiKeyPresent = configured, enabled, model, mode, status, lastTestStatus = "See /gemini-agent audit history", lastLatencyMs = (int?)null, outputSource = enabled && configured ? "Gemini / Hybrid" : "Local Fallback" };
+        var status = _narrative.GetStatus();
+        return new
+        {
+            apiKeyPresent = status.GeminiConfigured,
+            enabled = status.GeminiEnabled,
+            primaryModel = status.PrimaryModel,
+            premiumModel = status.PremiumModel,
+            routineModel = status.RoutineModel,
+            fallbackModels = status.FallbackModels,
+            mode = status.CurrentModeLabel,
+            status = status.GeminiStatus,
+            lastCallUtc = status.LastCallUtc,
+            lastActionType = status.LastActionType,
+            lastRouteSource = status.LastRouteSource,
+            lastModelUsed = status.LastModelUsed,
+            lastResult = status.LastResult,
+            lastLatencyMs = status.LastLatencyMs,
+            callsSinceStart = status.CallsSinceStart,
+            callsByActionType = status.CallsByActionType,
+            fallbackActive = status.FallbackActive,
+            quotaLimited = status.QuotaLimited,
+            outputSource = status.FallbackActive ? "Local deterministic fallback or Gemini fallback" : "Gemini on-demand / no health-call usage"
+        };
     }
 }

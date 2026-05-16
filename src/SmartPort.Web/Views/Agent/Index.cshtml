@@ -22,7 +22,7 @@
     </div>
     @if (snapshot != null)
     {
-        <div class="sp-command-risk-dial sp-command-risk-dial--@snapshot.TopRiskSeverity.ToLowerInvariant()">
+        <div class="sp-command-hazard-dial sp-command-hazard-dial--@snapshot.TopRiskSeverity.ToLowerInvariant()">
             <span>@snapshot.TopRiskSeverity</span>
             <strong>@snapshot.Confidence%</strong>
             <small>confidence</small>
@@ -79,10 +79,10 @@
                 <h3 class="sp-card__title">Top Risk Panel</h3>
                 <span class="sp-badge sp-badge--@(snapshot.TopRiskSeverity.ToLowerInvariant() == "critical" ? "danger" : snapshot.TopRiskSeverity.ToLowerInvariant() == "high" ? "warning" : "info")">@snapshot.TopRiskSeverity</span>
             </div>
-            <div class="sp-command-risk-body">
+            <div class="sp-command-hazard-body">
                 <h2>@snapshot.TopRisk</h2>
                 <p>@snapshot.TopRiskReason</p>
-                <div class="sp-command-risk-meta">
+                <div class="sp-command-hazard-meta">
                     <div><span>Affected area</span><strong>@snapshot.AffectedArea</strong></div>
                     <div><span>Expected consequence</span><strong>@snapshot.ExpectedConsequence</strong></div>
                     <div><span>Top bottleneck</span><strong>@snapshot.TopGateBottleneck</strong></div>
