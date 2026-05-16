@@ -1,14 +1,26 @@
-@{ Layout = "_LayoutPublic"; ViewData["Title"] = "Access Denied"; }
-<div class="sp-auth-page">
-    <div class="sp-auth-card sp-auth-card--error">
+@model SmartPort.Web.Controllers.AccessDeniedViewModel
+@{
+    Layout = "_LayoutPublic";
+    ViewData["Title"] = "Access Denied";
+    var roleText = Model.Roles.Any() ? string.Join(", ", Model.Roles) : "No active demo role";
+}
+<section class="sp-auth-page">
+    <article class="sp-auth-card sp-auth-card--error">
         <div class="sp-auth-card__header">
             <div style="font-size:3rem;margin-bottom:.5rem">🔒</div>
-            <h1>Access Denied</h1>
-            <p>You do not have permission to access this section. Contact your system administrator if you believe this is an error.</p>
+            <span class="spx-kicker">Role boundary</span>
+            <h1>This page is not available for your current role</h1>
+            <p>Culltron Smart Port keeps demo roles scoped so fleet owners, drivers, judges and port admins only see actions they are allowed to preview.</p>
+        </div>
+        <div class="spx-access__note" style="margin-top:1rem">
+            <strong>Current user:</strong> @Model.DisplayName<br />
+            <strong>Current role:</strong> @roleText
         </div>
         <div style="text-align:center;margin-top:1.5rem;display:flex;flex-direction:column;gap:.75rem">
-            <a asp-controller="Dashboard" asp-action="Index" class="sp-btn sp-btn--primary">Back to Dashboard</a>
-            <a asp-controller="Auth" asp-action="Profile" class="sp-btn sp-btn--outline">View My Profile</a>
+            <a href="/demo-tour" class="sp-btn sp-btn--primary">Return to Demo Tour</a>
+            <a href="/demo-access" class="sp-btn sp-btn--outline">Switch Role</a>
+            <a href="@Model.DashboardPath" class="sp-btn sp-btn--outline">Go to Dashboard</a>
         </div>
-    </div>
-</div>
+        <p class="sp-muted" style="margin-top:1rem;text-align:center">No secrets, API keys, phone numbers or live integration credentials are exposed on this page.</p>
+    </article>
+</section>

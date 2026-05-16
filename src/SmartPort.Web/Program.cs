@@ -56,7 +56,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(Policies.CanAccessFleet,       p => p.RequireRole(Roles.Admin, Roles.PortOperationsManager, Roles.FleetOwner, Roles.LogisticsPartner, Roles.JudgeDemo));
     options.AddPolicy(Policies.CanAccessDriver,      p => p.RequireRole(Roles.Driver, Roles.FleetOwner, Roles.Admin, Roles.JudgeDemo));
     options.AddPolicy(Policies.CanAccessGeminiAgent, p => p.RequireRole(Roles.Admin, Roles.PortOperationsManager, Roles.FleetOwner, Roles.JudgeDemo));
-    options.AddPolicy(Policies.CanAccessReports,     p => p.RequireRole(Roles.Admin, Roles.PortOperationsManager, Roles.Viewer, Roles.JudgeDemo));
+    options.AddPolicy(Policies.CanAccessReports,     p => p.RequireRole(Roles.Admin, Roles.PortOperationsManager, Roles.FleetOwner, Roles.Viewer, Roles.JudgeDemo));
     options.AddPolicy(Policies.CanManageSettings,    p => p.RequireRole(Roles.Admin, Roles.PortOperationsManager));
 });
 
@@ -160,12 +160,14 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
 });
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 // ─── Middleware Pipeline ──────────────────────────────────────────────────────
 if (!app.Environment.IsDevelopment())
@@ -178,7 +180,6 @@ else
     app.UseDeveloperExceptionPage();
 }
 
-app.UseForwardedHeaders();
 app.Use(async (context, next) =>
 {
     context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");

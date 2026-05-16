@@ -8,9 +8,9 @@ Get a Gemini API key from Google AI Studio, then configure the server environmen
 
 ```bash
 export GEMINI_API_KEY="..."
-export Gemini__Enabled=true
-export Gemini__Mode=Hybrid
-export Gemini__Model=gemini-2.5-flash
+export export Gemini__Enabled=true
+export export Gemini__Mode=Hybrid
+export export Gemini__Model=gemini-2.5-flash
 ```
 
 Fallback names are also supported:
@@ -28,8 +28,8 @@ Open `/gemini-agent` and click **Run Live Gemini Test**. If the key is missing, 
 Create/configure a Meta App with WhatsApp API access, then set:
 
 ```bash
-export SMARTPORT_WHATSAPP_ENABLED=true
-export SMARTPORT_WHATSAPP_MODE=LiveTest
+export export SMARTPORT_WHATSAPP_ENABLED=true
+export export SMARTPORT_WHATSAPP_MODE=LiveTest
 export SMARTPORT_WHATSAPP_ACCESS_TOKEN="..."
 export SMARTPORT_WHATSAPP_PHONE_NUMBER_ID="..."
 export SMARTPORT_WHATSAPP_BUSINESS_ACCOUNT_ID="..."
@@ -89,3 +89,35 @@ Pilot/live data connectors can ingest IPMS/TOS, berth schedules, gate OCR/RFID, 
 ## Demo and judge codes
 
 For hackathon judging, enable visible demo codes with `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`. Codes: Port Admin `culltron-admin-2026`, Fleet Owner `culltron-fleet-2026`, Driver `culltron-driver-2026`, Judge `culltron-judge-2026`. Do not commit real Gemini keys, WhatsApp tokens, `.env` files or private phone numbers.
+
+## Final API Verification Readiness
+
+Use these environment variables for a Gemini + WhatsApp LiveTest-ready run. Keep values in the deployment environment only; do not commit `.env` files, API keys, access tokens, phone numbers, or bearer tokens.
+
+```bash
+export GEMINI_API_KEY="..."
+export Gemini__Enabled=true
+export Gemini__Mode=Hybrid
+export Gemini__Model=gemini-2.5-flash
+
+export SMARTPORT_WHATSAPP_ENABLED=true
+export SMARTPORT_WHATSAPP_MODE=LiveTest
+export SMARTPORT_WHATSAPP_ACCESS_TOKEN="..."
+export SMARTPORT_WHATSAPP_PHONE_NUMBER_ID="..."
+export SMARTPORT_WHATSAPP_BUSINESS_ACCOUNT_ID="..."
+export SMARTPORT_WHATSAPP_VERIFY_TOKEN="..."
+export SMARTPORT_WHATSAPP_GRAPH_VERSION=v20.0
+export SMARTPORT_PUBLIC_BASE_URL=https://your-forwarded-or-deployed-host
+export SMARTPORT_WHATSAPP_TEST_RECIPIENT_NUMBER="..."
+```
+
+Verification commands:
+
+```bash
+./scripts/api-check.sh http://localhost:8080
+./scripts/link-audit.sh http://localhost:8080
+```
+
+The API check confirms mobile demo login, token-protected truck status, token-protected notifications, invalid mobile-token rejection, invalid WhatsApp verify-token rejection, valid WhatsApp verify-token challenge when `SMARTPORT_WHATSAPP_VERIFY_TOKEN` is set, and Gemini readiness status through `/health/integrations`.
+
+Smoke and link-audit scripts never require a real Meta send. LiveTest sending should only target `SMARTPORT_WHATSAPP_TEST_RECIPIENT_NUMBER`, and UI/logs must continue to mask live recipient details.
