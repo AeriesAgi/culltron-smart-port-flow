@@ -56,3 +56,8 @@ Synthetic demo data only; no live Transnet/IPMS/customer/WhatsApp/GPS integratio
 ## Live connector setup
 
 See `docs/LIVE_API_SETUP.md` for exact Gemini and WhatsApp Cloud API environment variables, webhook callback setup, curl verify test, and safety rules. Future pilot/live connectors can ingest IPMS/TOS, gate systems, fleet GPS, weighbridge, ERP, WhatsApp Cloud API, driver app, berth schedules, weather/disruption feeds and emissions systems.
+
+
+## Final judge route
+
+Use `/demo-access` with Judge code `culltron-judge-2026`, then follow Demo Tour through Gemini, governance, ops ingest, execution plans, truck action, driver companion, notifications, enterprise readiness and health integrations.

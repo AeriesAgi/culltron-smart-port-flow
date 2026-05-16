@@ -84,3 +84,8 @@ Safety rules:
 ## Future live data sources
 
 Pilot/live data connectors can ingest IPMS/TOS, berth schedules, gate OCR/RFID, weighbridge data, fleet GPS/telematics, driver mobile app events, WhatsApp Cloud API inbound messages, ERP/fleet systems, weather/disruption feeds and emissions factors.
+
+
+## Demo and judge codes
+
+For hackathon judging, enable visible demo codes with `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`. Codes: Port Admin `culltron-admin-2026`, Fleet Owner `culltron-fleet-2026`, Driver `culltron-driver-2026`, Judge `culltron-judge-2026`. Do not commit real Gemini keys, WhatsApp tokens, `.env` files or private phone numbers.

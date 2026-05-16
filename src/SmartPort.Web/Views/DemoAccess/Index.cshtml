@@ -23,9 +23,20 @@
         <div class="spx-role-grid spx-role-grid--cards">
           @foreach (var role in roles.Where(r => r.Role != "General Demo"))
           {
-            <label class="spx-role-card spx-role-card--rich">
-              <input type="radio" name="role" value="@role.Role" checked="@(role.Role == selectedRole)" />
-              <span><strong>@role.Role.Replace(" Demo", string.Empty)</strong><small>@role.Description</small></span>
+            var isJudge = role.Role == "Judge Demo";
+            <label class="spx-role-card spx-role-card--rich @(isJudge ? "spx-role-card--recommended" : "")">
+              <input type="radio" name="role" value="@role.Role" checked="@(role.Role == selectedRole || (isJudge && selectedRole == "Judge Demo"))" />
+              <span>
+                @if (isJudge) { <em class="spx-recommended">Recommended hackathon path</em> }
+                <strong>@role.Role.Replace(" Demo", string.Empty)</strong>
+                <small>@role.Description</small>
+                <small class="spx-route">Opens <code>@role.LandingPath</code></small>
+                @if (showCredentials)
+                {
+                  <code class="spx-access-code">@role.Code</code>
+                  <span class="spx-card-actions"><button type="button" class="sp-btn sp-btn--outline sp-btn--sm" data-demo-code="@role.Code" data-demo-role="@role.Role">Use this code</button><button type="button" class="sp-btn sp-btn--primary sp-btn--sm" data-demo-code="@role.Code" data-demo-role="@role.Role" data-demo-submit="true">Continue as @role.Role.Replace(" Demo", string.Empty)</button></span>
+                }
+              </span>
             </label>
           }
         </div>
@@ -56,7 +67,7 @@
         }
         else
         {
-          <div class="spx-access__note">Demo access code provided by the Smart Port team.</div>
+          <div class="spx-access__note">Credentials hidden. Set <code>SMARTPORT_SHOW_DEMO_CREDENTIALS=true</code> for hackathon judging or use the private access code.</div>
         }
       </div>
       <div class="spx-access-card spx-access-card--one"><strong>Control Room</strong><span>Gated internal route</span></div>
@@ -73,6 +84,10 @@
       const role = button.dataset.demoRole;
       const radio = role ? document.querySelector(`input[name="role"][value="${role}"]`) : null;
       if (radio) radio.checked = true;
+      if (button.dataset.demoSubmit === 'true') {
+        document.getElementById('demoAccessForm').submit();
+        return;
+      }
       document.getElementById('accessCode').focus();
     });
   });

@@ -108,3 +108,12 @@ Smart Port is pilot-ready and connector-ready for approved integrations with IPM
 ## Live connector setup
 
 See `docs/LIVE_API_SETUP.md` for exact Gemini and WhatsApp Cloud API environment variables, webhook callback setup, curl verify test, and safety rules. Future pilot/live connectors can ingest IPMS/TOS, gate systems, fleet GPS, weighbridge, ERP, WhatsApp Cloud API, driver app, berth schedules, weather/disruption feeds and emissions systems.
+
+
+## Final judge demo codes
+
+When running locally or with `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`, `/demo-access` shows quick-fill cards for: Port Admin `culltron-admin-2026`, Fleet Owner `culltron-fleet-2026`, Driver `culltron-driver-2026`, and Judge `culltron-judge-2026`. Judge Demo is the recommended hackathon path.
+
+## Driver/mobile companion story
+
+Primary driver channels are WhatsApp sandbox/live-test, the web driver companion at `/driver/demo`, and the mobile API. The optional Android source lives at `mobile/SmartPortDriverCompanion`; APKs are built through GitHub Actions or Android Studio and should contain no Gemini or WhatsApp secrets.

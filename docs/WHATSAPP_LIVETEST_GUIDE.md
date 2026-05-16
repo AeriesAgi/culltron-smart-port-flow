@@ -31,3 +31,8 @@ Expected: `12345`.
 Inbound webhook POST parses text, interactive, location and media metadata, then routes known approved senders through Smart Port driver command/location handling. Unknown senders are logged as ignored without changing truck state.
 
 LiveTest sends are gated to approved test recipient/consented test drivers. Demo mode remains fully functional without Meta credentials.
+
+
+## Demo and judge codes
+
+For hackathon judging, enable visible demo codes with `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`. Codes: Port Admin `culltron-admin-2026`, Fleet Owner `culltron-fleet-2026`, Driver `culltron-driver-2026`, Judge `culltron-judge-2026`. Do not commit real Gemini keys, WhatsApp tokens, `.env` files or private phone numbers.

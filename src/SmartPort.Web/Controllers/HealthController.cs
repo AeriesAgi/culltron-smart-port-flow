@@ -33,7 +33,7 @@ public class HealthController : Controller
             appRunning = true,
             databaseReachable,
             geminiConfigured = !string.IsNullOrWhiteSpace(_configuration["GEMINI_API_KEY"] ?? _configuration["Gemini:ApiKey"]),
-            geminiEnabled = bool.TryParse(_configuration["Gemini:Enabled"], out var enabled) && enabled,
+            geminiEnabled = bool.TryParse(_configuration["Gemini:Enabled"] ?? _configuration["GEMINI_ENABLED"], out var enabled) && enabled,
             whatsappMode = whatsapp.Mode.ToString(),
             mobileApiEnabled = true,
             dataConnectorMode = _configuration["SmartPortIntegration:Mode"] ?? "SyntheticDemoData",
@@ -48,12 +48,38 @@ public class HealthController : Controller
         var whatsapp = _queue.GetWhatsAppConnectorStatus();
         return Ok(new
         {
-            gemini = new { configured = !string.IsNullOrWhiteSpace(_configuration["GEMINI_API_KEY"] ?? _configuration["Gemini:ApiKey"]), enabled = bool.TryParse(_configuration["Gemini:Enabled"], out var enabled) && enabled, model = _configuration["Gemini:Model"] ?? "gemini-2.5-flash" },
-            whatsApp = new { mode = whatsapp.Mode.ToString(), whatsapp.Enabled, whatsapp.CredentialsConfigured, whatsapp.VerifyTokenConfigured, whatsapp.LiveSendingAllowed, whatsapp.SafetyMessage },
+            gemini = BuildGeminiStatus(),
+            whatsApp = new
+            {
+                mode = whatsapp.Mode.ToString(),
+                readiness = whatsapp.LiveSendingAllowed ? "Send Ready" : whatsapp.VerifyTokenConfigured && whatsapp.PublicBaseUrlConfigured ? "Webhook Ready" : whatsapp.CredentialsConfigured ? "Configured" : "Sandbox",
+                whatsapp.Enabled,
+                accessTokenPresent = whatsapp.AccessTokenConfigured,
+                phoneNumberIdPresent = whatsapp.PhoneNumberIdConfigured,
+                businessAccountIdPresent = whatsapp.BusinessAccountIdConfigured,
+                verifyTokenPresent = whatsapp.VerifyTokenConfigured,
+                publicBaseUrlPresent = whatsapp.PublicBaseUrlConfigured,
+                callbackUrl = whatsapp.WebhookCallbackUrl,
+                whatsapp.CredentialsConfigured,
+                whatsapp.LiveSendingAllowed,
+                lastWebhookStatus = "Available via /webhooks/whatsapp",
+                lastSendStatus = "See /fleet/notifications history",
+                whatsapp.SafetyMessage
+            },
             mobileApi = new { enabled = true, tokenHeader = "X-SmartPort-Mobile-Token", storesSecrets = false },
             dataConnectors = new { mode = _configuration["SmartPortIntegration:Mode"] ?? "SyntheticDemoData", claim = "connector-ready; pilot credentials required for live integration" },
             environment = _environment.EnvironmentName,
             requestId = HttpContext.TraceIdentifier
         });
+    }
+
+    private object BuildGeminiStatus()
+    {
+        var configured = !string.IsNullOrWhiteSpace(_configuration["GEMINI_API_KEY"] ?? _configuration["Gemini:ApiKey"]);
+        var enabled = bool.TryParse(_configuration["Gemini:Enabled"] ?? _configuration["GEMINI_ENABLED"], out var parsed) && parsed;
+        var model = _configuration["Gemini:Model"] ?? _configuration["GEMINI_MODEL"] ?? "gemini-2.5-flash";
+        var mode = _configuration["Gemini:Mode"] ?? _configuration["GEMINI_MODE"] ?? "Hybrid";
+        var status = enabled && configured ? "Live Ready" : configured ? "Configured" : enabled ? "Needs API Key" : "Fallback Active";
+        return new { apiKeyPresent = configured, enabled, model, mode, status, lastTestStatus = "See /gemini-agent audit history", lastLatencyMs = (int?)null, outputSource = enabled && configured ? "Gemini / Hybrid" : "Local Fallback" };
     }
 }

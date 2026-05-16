@@ -15,3 +15,8 @@ API checks: mobile demo login, token-protected truck status, invalid token rejec
 ## Live connector setup
 
 See `docs/LIVE_API_SETUP.md` for exact Gemini and WhatsApp Cloud API environment variables, webhook callback setup, curl verify test, and safety rules. Future pilot/live connectors can ingest IPMS/TOS, gate systems, fleet GPS, weighbridge, ERP, WhatsApp Cloud API, driver app, berth schedules, weather/disruption feeds and emissions systems.
+
+
+## Manual final checks
+
+Verify `/demo-access` shows quick-fill codes when `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`, `/gemini-agent` can run the Gemini test/fallback, `/fleet/notifications` shows WhatsApp readiness, and `/fleet/download-app` explains that web driver companion + WhatsApp + mobile API are primary while Android is optional.

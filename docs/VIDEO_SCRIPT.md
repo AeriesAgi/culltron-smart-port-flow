@@ -11,3 +11,6 @@
 **1:50-2:30** Execution loop: generate plan, open truck, send simulated WhatsApp, driver confirmation, audit history.
 
 **2:30-3:00** Enterprise readiness: connector-ready pilot path, limitations and production hardening.
+
+
+**Final CTA:** Show `/demo-access` quick-fill Judge code, then the closed loop: control room → Gemini/fallback agent → execution plan → fleet owner → WhatsApp/web driver companion/mobile API → audit → idling/CO₂ impact.

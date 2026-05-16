@@ -7,6 +7,7 @@
     var intelligence = ViewBag.Intelligence as SmartPort.Web.Controllers.OperationalIntelligenceViewModel ?? new SmartPort.Web.Controllers.OperationalIntelligenceViewModel(80, 72, 84, 76, 79, 82, 3, "Synthetic queue pressure", 48000, 91, 84);
     var history = ViewBag.History as IReadOnlyList<SmartPort.Web.Controllers.GeminiAgentHistoryItem> ?? Array.Empty<SmartPort.Web.Controllers.GeminiAgentHistoryItem>();
     var last = ViewBag.LastHistory as SmartPort.Web.Controllers.GeminiAgentHistoryItem;
+    var geminiStatusLabel = readiness.Enabled && readiness.ApiKeyConfigured ? "Live Ready" : readiness.ApiKeyConfigured ? "Configured" : readiness.Enabled ? "Needs API Key" : "Fallback Active";
     var actions = new[] { "Live Gemini Connector Test", "Gemini Operations Brief", "Fleet Owner Action Plan", "Driver Instruction Brief", "Disruption Recovery Plan", "Emissions/Idling Impact Brief", "Executive Judge Summary", "Risk & Governance Review", "Integration/Pilot Readiness Brief" };
 }
 <section class="sp-page-hero">
@@ -33,7 +34,7 @@
   <article class="sp-card"><h3>API key</h3><p class="sp-kpi">@(readiness.ApiKeyConfigured ? "Yes" : "No")</p><p>Gemini API key configured.</p></article>
   <article class="sp-card"><h3>Enabled</h3><p class="sp-kpi">@(readiness.Enabled ? "Yes" : "No")</p><p>Gemini__Enabled runtime flag.</p></article>
   <article class="sp-card"><h3>Mode/model</h3><p><strong>@readiness.Mode</strong></p><p>@readiness.Model</p></article>
-  <article class="sp-card"><h3>Fallback/latency</h3><p><strong>@readiness.FallbackStatus</strong></p><p>Last: @readiness.LastGenerationStatus · @(readiness.LastLatencyMs?.ToString() ?? "n/a") ms</p></article>
+  <article class="sp-card"><h3>Status/latency</h3><p class="sp-kpi">@geminiStatusLabel</p><p><strong>@readiness.FallbackStatus</strong></p><p>Last test: @readiness.LastGenerationStatus · @(readiness.LastLatencyMs?.ToString() ?? "n/a") ms</p><p>Output source: @(readiness.Enabled && readiness.ApiKeyConfigured ? "Gemini / Hybrid" : "Local Fallback")</p></article>
 </div>
 
 <section class="sp-grid sp-grid--3 sp-mt">

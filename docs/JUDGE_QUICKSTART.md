@@ -15,3 +15,10 @@ Best path: `/demo-access` → Judge Demo → `/demo-tour` → `/gemini-agent` �
 ## Live connector setup
 
 See `docs/LIVE_API_SETUP.md` for exact Gemini and WhatsApp Cloud API environment variables, webhook callback setup, curl verify test, and safety rules. Future pilot/live connectors can ingest IPMS/TOS, gate systems, fleet GPS, weighbridge, ERP, WhatsApp Cloud API, driver app, berth schedules, weather/disruption feeds and emissions systems.
+
+
+## Demo access codes
+
+If codes are visible, use **Judge**: `culltron-judge-2026`. Other role codes are Port Admin `culltron-admin-2026`, Fleet Owner `culltron-fleet-2026`, and Driver `culltron-driver-2026`.
+
+Full low-friction path: `/demo-access` → quick-fill Judge code → `/demo-tour` → `/gemini-agent` → `/agent-governance` → `/ops-ingest` → `/execution/plans` → `/fleet/trucks/SPQ-2026-0042` → simulated WhatsApp → `/driver/demo` → `/fleet/notifications` → `/enterprise-readiness` → `/health/integrations`.
