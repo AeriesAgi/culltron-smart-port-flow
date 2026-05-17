@@ -64,7 +64,7 @@ Mobile API demo flow:
 - `POST /api/mobile/copilot/driver`
 - `POST /api/mobile/copilot/fleet`
 
-The Android workflow is `.github/workflows/build-android-apk.yml`; it uses JDK 17, Android SDK setup, Gradle 8.14.4 and uploads `mobile/SmartPortDriverCompanion/app/build/outputs/apk/debug/*.apk`.
+The Android workflow is `.github/workflows/build-android-apk.yml`; it uses JDK 17, Android SDK setup, Gradle 8.14.4 and uploads the artifact `SmartPortDriverCompanion-debug.apk` from `mobile/SmartPortDriverCompanion/artifacts/SmartPortDriverCompanion-debug.apk`.
 
 ## Docker setup
 
@@ -170,7 +170,7 @@ The primary driver channels are the Android Driver Companion, the web companion,
 
 The app has editable backend URL setup, quick-fill `culltron-driver-2026`, quick-fill `SPQ-2026-0042`, truck status, driver action buttons, notifications, Driver Copilot, and WhatsApp connector-readiness explanation. All Gemini and WhatsApp calls happen on the backend; the device stores no provider secrets.
 
-GitHub Actions builds and uploads the debug APK artifact. If a local Android SDK is available, build with `cd mobile/SmartPortDriverCompanion && gradle assembleDebug` (or `./gradlew assembleDebug` when a wrapper is present) and optionally copy the debug APK to `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk`.
+GitHub Actions builds and uploads the debug APK artifact named `SmartPortDriverCompanion-debug.apk`. If a local Android SDK is available, build with `cd mobile/SmartPortDriverCompanion && gradle assembleDebug` (or `./gradlew assembleDebug` when a wrapper is present) and optionally copy the debug APK to `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk`.
 
 ### WhatsApp connector-ready position
 WhatsApp Cloud API is implemented as a connector-ready sandbox/live-test integration with webhook verification, inbound parser, gated outbound sender, masked contacts, status labels, and safe failure when credentials/approval are missing. Production use requires WhatsApp Business setup, opt-in/templates, and billing. Smart Port does not depend on WhatsApp for the judge demo.

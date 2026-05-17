@@ -95,8 +95,12 @@ class MainActivity : Activity() {
         card("Current Instruction", "${instruction.optString("instruction", "Refresh for latest instruction")}\nReason: ${instruction.optString("reason", "Smart Port operational state")}")
         card("Impact", "Delay risk: ${json.optString("delayRisk")}\nIdling avoided: ${json.optInt("estimatedIdlingMinutesAvoided")} min\nCO₂ avoided: ${json.optDouble("estimatedCo2KgAvoided")} kg\nAI/source: ${json.optString("aiSource", "Backend Gemini/local fallback")}")
         button("Ready") { confirmStatus("DriverReady") }
-        button("Arrived at Staging") { confirmStatus("ArrivedAtStaging") }
+        button("Holding") { confirmStatus("Holding") }
         button("Delayed 20") { confirmStatus("Delayed20") }
+        button("Arrived at Staging") { confirmStatus("ArrivedAtStaging") }
+        button("Proceeding to Gate") { confirmStatus("ProceedingToGate") }
+        button("Arrived at Gate") { confirmStatus("ArrivedAtGate") }
+        button("Completed") { confirmStatus("Completed") }
         button("Report Issue") { confirmStatus("ReportIssue") }
         button("Confirm Instruction") { confirmStatus("ConfirmInstruction") }
         val locationInput = input(manualLocationLabel, "Manual location label if GPS is unavailable")
@@ -111,7 +115,7 @@ class MainActivity : Activity() {
     }
 
     private fun confirmStatus(action: String) = thread {
-        val event = when (action) { "ArrivedAtStaging" -> "DriverArrivedAtStaging"; "Delayed20" -> "DriverDelayed"; "ReportIssue" -> "DriverIssueReported"; "ConfirmInstruction" -> "DriverAcknowledgedInstruction"; else -> action }
+        val event = when (action) { "Holding" -> "DriverConfirmedHolding"; "ArrivedAtStaging" -> "DriverArrivedAtStaging"; "ProceedingToGate" -> "DriverProceedingToGate"; "ArrivedAtGate" -> "DriverArrivedAtGate"; "Completed" -> "DriverCompletedJob"; "Delayed20" -> "DriverDelayed"; "ReportIssue" -> "DriverIssueReported"; "ConfirmInstruction" -> "DriverAcknowledgedInstruction"; else -> action }
         val body = JSONObject().put("reference", currentReference).put("eventType", event).put("sourceLabel", "Android").toString()
         try { postJsonForText("$backend/api/mobile/driver/confirm-status", body); runOnUiThread { toast("Action sent: $action"); fetchStatus() } } catch (ex: Exception) { runOnUiThread { toast("Action failed: ${ex.message}") } }
     }
@@ -119,7 +123,8 @@ class MainActivity : Activity() {
     private fun shareCurrentLocationOrManualCheckIn() {
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 42)
-            toast("Location permission requested. Tap check-in again, or use the manual label.")
+            toast("Location permission requested; sending manual check-in label now.")
+            locationCheckIn(null)
             return
         }
         val manager = getSystemService(LOCATION_SERVICE) as LocationManager

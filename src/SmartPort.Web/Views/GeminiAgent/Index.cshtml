@@ -32,14 +32,28 @@
 </section>
 
 <div class="sp-grid sp-grid--4">
-  <article class="sp-card"><h3>API key</h3><p class="sp-kpi">@(readiness.ApiKeyConfigured ? "Yes" : "No")</p><p>Gemini API key configured.</p></article>
-  <article class="sp-card"><h3>Enabled</h3><p class="sp-kpi">@(readiness.Enabled ? "Yes" : "No")</p><p>Gemini__Enabled runtime flag.</p></article>
-  <article class="sp-card"><h3>Mode/model</h3><p><strong>@readiness.Mode</strong></p><p>@readiness.Model</p></article>
+  <article class="sp-card"><h3>Gemini key present</h3><p class="sp-kpi">@(readiness.ApiKeyConfigured ? "Yes" : "No")</p><p>Yes/no only; key value is never displayed.</p></article>
+  <article class="sp-card"><h3>Enabled</h3><p class="sp-kpi">@(readiness.Enabled ? "Yes" : "No")</p><p>Gemini__Enabled / GEMINI_ENABLED runtime flag.</p></article>
+  <article class="sp-card"><h3>Mode & model plan</h3><p><strong>@readiness.Mode</strong></p><p>@readiness.Model</p></article>
   <article class="sp-card"><h3>Status/latency</h3><p class="sp-kpi">@geminiStatusLabel</p><p><strong>@readiness.FallbackStatus</strong></p><p>Last result: @readiness.LastGenerationStatus · @(readiness.LastLatencyMs?.ToString() ?? "n/a") ms</p><p>Output source: @(readiness.Enabled && readiness.ApiKeyConfigured ? "Gemini on demand / fallback guarded" : "Local deterministic fallback")</p></article>
 </div>
+<section class="sp-card sp-mt">
+  <h2>Safe Gemini diagnostics</h2>
+  <p class="sp-muted">This panel is read-only and does not call Gemini. It exposes operational diagnostics without secrets.</p>
+  <div class="sp-grid sp-grid--4">
+    <p><strong>Model attempted</strong><br />@(string.IsNullOrWhiteSpace(status.LastModelAttempted) ? "No call attempted since startup" : status.LastModelAttempted)</p>
+    <p><strong>Model used</strong><br />@(string.IsNullOrWhiteSpace(status.LastModelUsed) ? "No call used since startup" : status.LastModelUsed)</p>
+    <p><strong>Fallback reason</strong><br />@readiness.FallbackStatus</p>
+    <p><strong>Quota/model error</strong><br />@(status.QuotaLimited ? "quota-limited" : status.LastResult.Contains("unsupported", StringComparison.OrdinalIgnoreCase) || status.LastResult.Contains("unavailable", StringComparison.OrdinalIgnoreCase) ? status.LastResult : "none recorded")</p>
+    <p><strong>Calls since startup/session</strong><br />@status.CallsSinceStart</p>
+    <p><strong>Last call action</strong><br />@(string.IsNullOrWhiteSpace(status.LastActionType) ? "No explicit action yet" : status.LastActionType)</p>
+    <p><strong>Last call result</strong><br />@(string.IsNullOrWhiteSpace(status.LastResult) ? "No result yet" : status.LastResult)</p>
+    <p><strong>Local fallback active</strong><br />@(status.FallbackActive || !status.GeminiEnabled || !status.GeminiConfigured ? "Yes" : "No")</p>
+  </div>
+</section>
 
 <section class="sp-grid sp-grid--3 sp-mt">
-  <article class="sp-card"><h2>Operational inputs</h2><ul class="sp-list"><li>Active truck queue count: <strong>@Model.TotalTrucks</strong></li><li>Gate pressure: <strong>@Model.TrucksWaiting waiting / @Model.TrucksHolding holding</strong></li><li>Berth/yard readiness: <strong>@Model.BerthReadiness.Count berth zones / @Model.StagingAreas.Count staging areas</strong></li><li>Active incidents/disruptions: <strong>@Model.DelayedOrRescheduledTrucks</strong></li><li>Driver confirmations: <strong>@Model.TrucksProceeding proceeding</strong></li><li>WhatsApp/mobile notification state: <strong>@Model.LatestNotifications.Count recent events</strong></li><li>Emissions/idling estimate: <strong>@Model.TotalIdlingMinutesAvoided min / @Model.TotalCo2KgAvoided kg CO₂</strong></li><li>Execution plans: <strong>@(Model.LatestExecutionPlan?.PlanId[..8] ?? "generate to create")</strong></li><li>Data source mode: <strong>synthetic demo, live connector-ready</strong></li></ul></article>
+  <article class="sp-card"><h2>Operational inputs</h2><ul class="sp-list"><li>Active truck queue count: <strong>@Model.TotalTrucks</strong></li><li>Gate pressure: <strong>@Model.TrucksWaiting waiting / @Model.TrucksHolding holding</strong></li><li>Berth/yard readiness: <strong>@Model.BerthReadiness.Count berth zones / @Model.StagingAreas.Count staging areas</strong></li><li>Active incidents/disruptions: <strong>@Model.DelayedOrRescheduledTrucks</strong></li><li>Driver confirmations: <strong>@Model.TrucksProceeding proceeding</strong></li><li>Driver notification timeline: <strong>@Model.LatestNotifications.Count recent events</strong></li><li>Emissions/idling estimate: <strong>@Model.TotalIdlingMinutesAvoided min / @Model.TotalCo2KgAvoided kg CO₂</strong></li><li>Execution plans: <strong>@(Model.LatestExecutionPlan?.PlanId[..8] ?? "generate to create")</strong></li><li>Data source mode: <strong>synthetic demo, live connector-ready</strong></li></ul></article>
   <article class="sp-card"><h2>Operational Intelligence Score</h2><p class="sp-kpi">@intelligence.OverallScore/100</p><ul class="sp-list"><li>Congestion risk: @intelligence.CongestionRisk</li><li>Execution readiness: @intelligence.ExecutionReadiness</li><li>Emissions impact: @intelligence.EmissionsImpact</li><li>Driver response state: @intelligence.DriverResponseState</li><li>Integration confidence: @intelligence.IntegrationConfidence</li><li>Data quality score: @intelligence.DataQualityScore</li><li>Connector readiness score: @intelligence.ConnectorReadinessScore</li></ul></article>
   <article class="sp-card"><h2>Business impact</h2><p><strong>Bottleneck reason:</strong> @intelligence.BottleneckReason</p><p><strong>ETA risk:</strong> @(Model.HighRiskTrucks.Count) high-risk trucks need action.</p><p><strong>Yard/gate pressure:</strong> Controlled release recommended.</p><p><strong>Trucks needing action:</strong> @intelligence.TrucksNeedingAction</p><p><strong>Execution plan ROI:</strong> R @intelligence.ExecutionPlanRoiRand.ToString("N0") synthetic demo value protected through less idling and fewer misses.</p></article>
 </section>

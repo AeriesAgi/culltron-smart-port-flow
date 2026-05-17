@@ -41,6 +41,19 @@ services:
       SMARTPORT_DEMO_ACCESS_CODE: "culltron-demo-2026"
       SMARTPORT_SHOW_DEMO_CREDENTIALS: "true"
       SMARTPORT_WHATSAPP_VERIFY_TOKEN: "demo-verify-token"
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      Gemini__Enabled: ${Gemini__Enabled:-false}
+      Gemini__Mode: ${Gemini__Mode:-Hybrid}
+      Gemini__Model: ${Gemini__Model:-gemini-2.5-flash}
+      Gemini__PrimaryModel: ${Gemini__Model:-gemini-2.5-flash}
+      Gemini__PremiumModel: ${Gemini__PremiumModel:-gemini-2.5-flash}
+      Gemini__RoutineModel: ${Gemini__RoutineModel:-gemini-3.1-flash-lite}
+      Gemini__FallbackModels: ${Gemini__FallbackModels:-gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.0-flash-lite,gemini-2.0-flash}
+      Gemini__AutoRunOnAgentPage: ${Gemini__AutoRunOnAgentPage:-false}
+      Gemini__AutoRunOnDemoTour: ${Gemini__AutoRunOnDemoTour:-false}
+      GEMINI_ENABLED: ${GEMINI_ENABLED:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
+      GEMINI_MODE: ${GEMINI_MODE:-}
     ports:
       - "8080:8080"
 

@@ -35,12 +35,15 @@ jobs:
       - name: Build debug APK
         run: gradle assembleDebug
 
-      - name: List APK outputs
-        run: ls -lah app/build/outputs/apk/debug/
+      - name: Prepare named APK artifact
+        run: |
+          mkdir -p artifacts
+          cp app/build/outputs/apk/debug/app-debug.apk artifacts/SmartPortDriverCompanion-debug.apk
+          ls -lah artifacts/
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SmartPortDriverCompanion-debug-apk
-          path: mobile/SmartPortDriverCompanion/app/build/outputs/apk/debug/*.apk
+          name: SmartPortDriverCompanion-debug.apk
+          path: mobile/SmartPortDriverCompanion/artifacts/SmartPortDriverCompanion-debug.apk
           if-no-files-found: error
