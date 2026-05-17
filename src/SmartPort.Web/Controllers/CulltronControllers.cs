@@ -225,7 +225,7 @@ public class FleetController : Controller
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> SaveDriver(SaveDriverContactRequestDto request)
     {
-        try { await _queue.SaveDriverContactAsync(request); TempData["Success"] = "Driver WhatsApp contact saved."; }
+        try { await _queue.SaveDriverContactAsync(request); TempData["Success"] = "Driver contact and companion-app readiness saved."; }
         catch (ArgumentException ex) { TempData["Warning"] = ex.Message; }
         return RedirectToAction(nameof(Drivers));
     }
@@ -312,8 +312,8 @@ public class FleetController : Controller
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> RequestLocation(string reference)
     {
-        var result = await _actions.ExecuteAsync(new OperationalActionRequest(reference, OperationalActionType.RequestLocation, "Fleet operations console", DataProvenanceType.ManualOperatorInput, NotificationChannel.WhatsApp));
-        TempData[result.Success ? "Success" : "Warning"] = $"{result.Message} Audit: {result.AuditTimestampUtc:u}.";
+        var result = await _actions.ExecuteAsync(new OperationalActionRequest(reference, OperationalActionType.RequestLocation, "Fleet operations console", DataProvenanceType.ManualOperatorInput, NotificationChannel.InApp));
+        TempData[result.Success ? "Success" : "Warning"] = $"App check-in request recorded. {result.Message} Audit: {result.AuditTimestampUtc:u}.";
         return Redirect($"/fleet/trucks/{reference}");
     }
 

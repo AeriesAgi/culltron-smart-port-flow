@@ -112,7 +112,7 @@ public class HealthController : Controller
             localFallbackActive = status.FallbackActive || !status.GeminiEnabled || !status.GeminiConfigured,
             fallbackActive = status.FallbackActive,
             quotaLimited = status.QuotaLimited,
-            outputSource = status.FallbackActive ? "Local deterministic fallback or Gemini fallback" : "Gemini on-demand / no health-call usage"
+            outputSource = status.FallbackActive ? "Deterministic fallback or Gemini fallback" : "Gemini on-demand / no health-call usage"
         };
     }
 }

@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "Gemini Operations Agent";
     var status = ViewBag.Status as AgentModeStatus ?? new AgentModeStatus();
-    var readiness = ViewBag.Readiness as SmartPort.Web.Controllers.GeminiReadinessViewModel ?? new SmartPort.Web.Controllers.GeminiReadinessViewModel(false, false, "Hybrid demo", "gemini-2.5-flash", "Local deterministic fallback active", "No generation yet", null);
+    var readiness = ViewBag.Readiness as SmartPort.Web.Controllers.GeminiReadinessViewModel ?? new SmartPort.Web.Controllers.GeminiReadinessViewModel(false, false, "Hybrid demo", "gemini-2.5-flash", "Deterministic fallback active", "No generation yet", null);
     var intelligence = ViewBag.Intelligence as SmartPort.Web.Controllers.OperationalIntelligenceViewModel ?? new SmartPort.Web.Controllers.OperationalIntelligenceViewModel(80, 72, 84, 76, 79, 82, 3, "Synthetic queue pressure", 48000, 91, 84);
     var history = ViewBag.History as IReadOnlyList<SmartPort.Web.Controllers.GeminiAgentHistoryItem> ?? Array.Empty<SmartPort.Web.Controllers.GeminiAgentHistoryItem>();
     var last = ViewBag.LastHistory as SmartPort.Web.Controllers.GeminiAgentHistoryItem;
@@ -15,10 +15,10 @@
     <span class="sp-badge">Enterprise AI operations agent · synthetic demo data · connector-ready pilots</span>
     <h1>Gemini Operations Agent Console</h1>
     <p>Smart Port turns port signals into execution plans, fleet actions, driver companion updates, mobile API calls, audit records and emissions/idling impact. Gemini is the on-demand AI agent layer; deterministic fallback always works.</p>
-    <p class="sp-alert sp-alert--info">Gemini is an on-demand AI agent layer. It activates on operational events and user-triggered actions. Page loads and health checks do not consume Gemini quota. Premium judge actions use Gemini 2.5 Flash when available. Routine operational actions use configured lightweight Gemini models where available. If one model is rate-limited, Smart Port attempts configured fallback text models before using deterministic local fallback.</p>
+    <p class="sp-alert sp-alert--info">Gemini is an on-demand AI agent layer. It activates on operational events and user-triggered actions. Page loads and health checks do not consume Gemini quota. Premium judge actions use Gemini 2.5 Flash when available. Routine operational actions use configured lightweight Gemini models where available. If one model is rate-limited, Smart Port attempts configured fallback text models before using deterministic fallback.</p>
     @if (!readiness.ApiKeyConfigured || !readiness.Enabled)
     {
-      <p class="sp-alert sp-alert--info">Local deterministic fallback active — Gemini can be enabled through GEMINI_API_KEY and Gemini__Enabled=true.</p>
+      <p class="sp-alert sp-alert--info">Deterministic fallback active — add GEMINI_API_KEY to use Gemini on demand. Gemini is enabled by default and can be explicitly disabled with Gemini__Enabled=false.</p>
     }
   </div>
   <form method="post" action="/gemini-agent/generate">
@@ -35,7 +35,7 @@
   <article class="sp-card"><h3>Gemini key present</h3><p class="sp-kpi">@(readiness.ApiKeyConfigured ? "Yes" : "No")</p><p>Yes/no only; key value is never displayed.</p></article>
   <article class="sp-card"><h3>Enabled</h3><p class="sp-kpi">@(readiness.Enabled ? "Yes" : "No")</p><p>Gemini__Enabled / GEMINI_ENABLED runtime flag.</p></article>
   <article class="sp-card"><h3>Mode & model plan</h3><p><strong>@readiness.Mode</strong></p><p>@readiness.Model</p></article>
-  <article class="sp-card"><h3>Status/latency</h3><p class="sp-kpi">@geminiStatusLabel</p><p><strong>@readiness.FallbackStatus</strong></p><p>Last result: @readiness.LastGenerationStatus · @(readiness.LastLatencyMs?.ToString() ?? "n/a") ms</p><p>Output source: @(readiness.Enabled && readiness.ApiKeyConfigured ? "Gemini on demand / fallback guarded" : "Local deterministic fallback")</p></article>
+  <article class="sp-card"><h3>Status/latency</h3><p class="sp-kpi">@geminiStatusLabel</p><p><strong>@readiness.FallbackStatus</strong></p><p>Last result: @readiness.LastGenerationStatus · @(readiness.LastLatencyMs?.ToString() ?? "n/a") ms</p><p>Output source: @(readiness.Enabled && readiness.ApiKeyConfigured ? "Gemini on demand / fallback guarded" : "Deterministic fallback")</p></article>
 </div>
 <section class="sp-card sp-mt">
   <h2>Safe Gemini diagnostics</h2>
@@ -48,7 +48,7 @@
     <p><strong>Calls since startup/session</strong><br />@status.CallsSinceStart</p>
     <p><strong>Last call action</strong><br />@(string.IsNullOrWhiteSpace(status.LastActionType) ? "No explicit action yet" : status.LastActionType)</p>
     <p><strong>Last call result</strong><br />@(string.IsNullOrWhiteSpace(status.LastResult) ? "No result yet" : status.LastResult)</p>
-    <p><strong>Local fallback active</strong><br />@(status.FallbackActive || !status.GeminiEnabled || !status.GeminiConfigured ? "Yes" : "No")</p>
+    <p><strong>Deterministic fallback active</strong><br />@(status.FallbackActive || !status.GeminiEnabled || !status.GeminiConfigured ? "Yes" : "No")</p>
   </div>
 </section>
 

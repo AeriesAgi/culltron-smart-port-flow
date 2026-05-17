@@ -45,7 +45,7 @@ public class DriverController : Controller
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> DriverAction(string reference, string commandText)
     {
-        var result = await _commands.HandleCommandAsync(new DriverCommandRequestDto { Reference = reference, CommandText = commandText, Actor = "Driver web portal", Source = DataProvenanceType.AndroidDriverApp });
+        var result = await _commands.HandleCommandAsync(new DriverCommandRequestDto { Reference = reference, CommandText = commandText, Actor = "Driver web portal", Source = DataProvenanceType.WebDriverCompanion });
         TempData[result.Success ? "Success" : "Warning"] = result.ReplyMessage;
         return Redirect($"/driver/status/{reference}");
     }
@@ -158,7 +158,8 @@ public class MobileApiController : ControllerBase
         var s when s.Contains("web") => DataProvenanceType.WebDriverCompanion,
         var s when s.Contains("mobile api") || s == "api" => DataProvenanceType.MobileApi,
         var s when s.Contains("whatsapp") => DataProvenanceType.WhatsAppDriverCheckIn,
-        _ => DataProvenanceType.AndroidDriverApp
+        var s when s.Contains("android") || s.Contains("driver companion") => DataProvenanceType.AndroidDriverApp,
+        _ => DataProvenanceType.MobileApi
     };
 
     private static string SourceActor(DataProvenanceType source) => source switch
@@ -233,7 +234,7 @@ public class MobileApiController : ControllerBase
     }
 
     [HttpGet("/api/mobile/driver/demo")]
-    public async Task<IActionResult> Demo() { if (!EnsureMobileToken()) return MobileUnauthorized(); return Ok(new { references = await _queue.GetDemoReferencesAsync(), backend = "Smart Port Fleet & Driver Queue Companion" }); }
+    public async Task<IActionResult> Demo() { if (!EnsureMobileToken()) return MobileUnauthorized(); return Ok(new { references = await _queue.GetDemoReferencesAsync(), backend = "Smart Port Fleet & Driver Companion" }); }
 
     [HttpPost("/api/mobile/device/register")]
     public async Task<IActionResult> Register([FromBody] MobileDeviceRegistrationDto request) { if (!EnsureMobileToken()) return MobileUnauthorized(); await _devices.RegisterAsync(request); return Ok(new { status = "registered", mode = "placeholder" }); }

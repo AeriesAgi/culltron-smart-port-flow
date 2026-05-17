@@ -108,7 +108,7 @@ public class GeminiAgentController : Controller
         var status = _narrative.GetStatus();
         var last = SnapshotHistory().FirstOrDefault();
         var modelPlan = $"Premium {status.PremiumModel} · Routine {status.RoutineModel} · Fallbacks {status.FallbackModels}";
-        var fallback = !status.GeminiConfigured ? "key missing; local deterministic fallback active" : !status.GeminiEnabled ? "disabled; local deterministic fallback active" : status.QuotaLimited ? "quota-limited; local deterministic fallback active" : status.FallbackActive ? (string.IsNullOrWhiteSpace(status.LastResult) ? "fallback active" : $"{status.LastResult}; fallback active") : "On-demand only; no page-load Gemini calls";
+        var fallback = !status.GeminiConfigured ? "key missing; deterministic fallback active" : !status.GeminiEnabled ? "disabled; deterministic fallback active" : status.QuotaLimited ? "quota-limited; deterministic fallback active" : status.FallbackActive ? (string.IsNullOrWhiteSpace(status.LastResult) ? "fallback active" : $"{status.LastResult}; fallback active") : "On-demand only; no page-load Gemini calls";
         return new GeminiReadinessViewModel(status.GeminiConfigured, status.GeminiEnabled, status.CurrentModeLabel, modelPlan, fallback, status.LastResult.Length > 0 ? status.LastResult : last?.BriefType ?? "No generation yet", status.LastLatencyMs ?? last?.LatencyMs);
     }
 

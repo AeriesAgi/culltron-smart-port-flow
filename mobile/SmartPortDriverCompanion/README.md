@@ -1,6 +1,6 @@
 # Smart Port Driver Companion Android App
 
-Native Kotlin companion client for **Culltron Smart Port Flow**. The Android app delegates queue intelligence, Copilot, WhatsApp coordination and state transitions to the ASP.NET backend.
+Native Kotlin companion client for **Culltron Smart Port Flow**. The Android app delegates queue intelligence, Copilot, app check-ins, optional connector coordination and state transitions to the ASP.NET backend.
 
 ## Build options
 
@@ -76,7 +76,7 @@ Gemini is openly used as the on-demand AI agent layer. It activates only when a 
 
 Default server-side configuration:
 - `GEMINI_API_KEY`
-- `Gemini__Enabled=false` by default unless explicitly enabled
+- `Gemini__Enabled=true` by default; without `GEMINI_API_KEY` Smart Port uses deterministic fallback, and operators can set `Gemini__Enabled=false` to disable calls
 - `Gemini__Mode=Hybrid`
 - `Gemini__PremiumModel=gemini-2.5-flash`
 - `Gemini__RoutineModel=gemini-3.1-flash-lite`
@@ -95,7 +95,7 @@ Task categories:
 - Routine operational AI uses `gemini-3.1-flash-lite` first for driver instruction phrasing, routine fleet briefs, mobile Driver Copilot, Ops Ingest summarization, delay explanations, queue-action explanations, and notification suggestions.
 - Secondary Gemini fallback uses `gemini-2.5-flash-lite`, then configured fallback text models.
 - Optional Gemma text fallbacks are disabled unless explicitly configured and proven compatible with the same backend API path.
-- Local deterministic fallback is always available and produces polished driver instructions, fleet plans, executive summaries, governance/risk reviews, disruption recovery, emissions/idling impact, and Copilot responses.
+- Deterministic fallback is always available and produces polished driver instructions, fleet plans, executive summaries, governance/risk reviews, disruption recovery, emissions/idling impact, and Copilot responses.
 
 The backend skips unsupported/model-not-found responses, marks quota-limited models for cooldown, avoids retry loops, records safe diagnostics (counts, action type, route/source, model, latency, quota/fallback state), and never logs or displays API keys, bearer tokens, prompts containing secrets, WhatsApp tokens, phone numbers, or provider credentials.
 

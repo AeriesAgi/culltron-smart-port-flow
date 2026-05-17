@@ -136,7 +136,7 @@ Gemini is openly used as the on-demand AI agent layer. It activates only when a 
 
 Default server-side configuration:
 - `GEMINI_API_KEY`
-- `Gemini__Enabled=false` by default unless explicitly enabled
+- `Gemini__Enabled=true` by default; without `GEMINI_API_KEY` Smart Port uses deterministic fallback, and operators can set `Gemini__Enabled=false` to disable calls
 - `Gemini__Mode=Hybrid`
 - `Gemini__PremiumModel=gemini-2.5-flash`
 - `Gemini__RoutineModel=gemini-3.1-flash-lite`
@@ -155,7 +155,7 @@ Task categories:
 - Routine operational AI uses `gemini-3.1-flash-lite` first for driver instruction phrasing, routine fleet briefs, mobile Driver Copilot, Ops Ingest summarization, delay explanations, queue-action explanations, and notification suggestions.
 - Secondary Gemini fallback uses `gemini-2.5-flash-lite`, then configured fallback text models.
 - Optional Gemma text fallbacks are disabled unless explicitly configured and proven compatible with the same backend API path.
-- Local deterministic fallback is always available and produces polished driver instructions, fleet plans, executive summaries, governance/risk reviews, disruption recovery, emissions/idling impact, and Copilot responses.
+- Deterministic fallback is always available and produces polished driver instructions, fleet plans, executive summaries, governance/risk reviews, disruption recovery, emissions/idling impact, and Copilot responses.
 
 The backend skips unsupported/model-not-found responses, marks quota-limited models for cooldown, avoids retry loops, records safe diagnostics (counts, action type, route/source, model, latency, quota/fallback state), and never logs or displays API keys, bearer tokens, prompts containing secrets, WhatsApp tokens, phone numbers, or provider credentials.
 
@@ -188,3 +188,9 @@ Control room / Port Admin → Gemini Operations Agent → execution plan → fle
 - Gemini is embedded as an on-demand enterprise operations agent and can summarize tracked driver risk, stale check-ins and action recommendations.
 - WhatsApp is optional connector-ready only; Smart Port does not depend on WhatsApp production approval.
 - Synthetic data is used for judging; live connectors can replace it in a supervised pilot.
+
+## Final polish pass: app-first tracking and APK path
+
+The current completion pass positions the Driver Companion App as the primary mobile operations channel. Driver GPS/manual check-ins flow through the web companion, Android app or mobile API into `/fleet/tracker`, truck detail timelines, ETA/queue state, impact metrics and audit history. WhatsApp remains optional connector-ready support only.
+
+For the Android APK path, use `cd mobile/SmartPortDriverCompanion && ./gradlew assembleDebug` or run `.github/workflows/build-android-apk.yml`. Publish the resulting APK to `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk` to enable the direct `/fleet/download-app` download button. See `docs/FINAL_WINNER_POLISH.md` for the recommended judge demo path and production caveats.

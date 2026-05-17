@@ -46,7 +46,7 @@ class MainActivity : Activity() {
     private fun showLogin() {
         baseLayout()
         titleText("Smart Port Driver Companion")
-        label("Real Android companion for the Smart Port backend. The APK calls mobile APIs; it stores no Gemini keys, WhatsApp tokens, or provider secrets.", 15)
+        label("Premium Android companion for Smart Port operations. The APK calls token-secured mobile APIs for status, Copilot, alerts and GPS/manual check-ins; it stores no Gemini keys or provider secrets.", 15)
         val backendInput = input(backend, "Backend URL, e.g. Codespaces/DigitalOcean HTTPS URL")
         val refInput = input(currentReference, "Truck/job reference")
         val codeInput = input(demoCode, "Demo driver code")
@@ -62,7 +62,7 @@ class MainActivity : Activity() {
         button("Refresh status with saved token") {
             backend = backendInput.text.toString().trim().trimEnd('/'); currentReference = refInput.text.toString().trim(); persist(); fetchStatus()
         }
-        whatsAppInfoCard()
+        connectorInfoCard()
     }
 
     private fun demoLogin() = thread {
@@ -93,7 +93,7 @@ class MainActivity : Activity() {
         card("Truck Status", "Reference: $currentReference\nStatus: ${json.optString("currentStatus")}\nQueue #: ${json.optInt("queueNumber")}\nGate: ${json.optString("assignedGate")}\nStaging: ${json.optString("berthYardStagingZone")}\nCall-forward/ETA: ${json.optString("etaCallForwardTime")}\nLast check-in: $checkInText\nLast updated: ${json.optString("lastUpdated", "backend timestamp")}")
         val instruction = json.optJSONObject("currentInstruction") ?: JSONObject()
         card("Current Instruction", "${instruction.optString("instruction", "Refresh for latest instruction")}\nReason: ${instruction.optString("reason", "Smart Port operational state")}")
-        card("Impact", "Delay risk: ${json.optString("delayRisk")}\nIdling avoided: ${json.optInt("estimatedIdlingMinutesAvoided")} min\nCO₂ avoided: ${json.optDouble("estimatedCo2KgAvoided")} kg\nAI/source: ${json.optString("aiSource", "Backend Gemini/local fallback")}")
+        card("Impact", "Delay risk: ${json.optString("delayRisk")}\nIdling avoided: ${json.optInt("estimatedIdlingMinutesAvoided")} min\nCO₂ avoided: ${json.optDouble("estimatedCo2KgAvoided")} kg\nAI/source: ${json.optString("aiSource", "Backend Gemini/deterministic fallback")}")
         button("Ready") { confirmStatus("DriverReady") }
         button("Holding") { confirmStatus("Holding") }
         button("Delayed 20") { confirmStatus("Delayed20") }
@@ -109,9 +109,9 @@ class MainActivity : Activity() {
         val questionInput = input("What should I do now?", "Driver Copilot question")
         button("Ask Driver Copilot") { askCopilot(questionInput.text.toString()) }
         LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; root.addView(this); listOf("Why am I delayed?", "Where do I go?", "What is my ETA?").forEach { q -> addView(actionButton(q) { askCopilot(q) }) } }
-        button("Notifications") { fetchNotifications() }
+        button("Alerts & audit history") { fetchNotifications() }
         button("Backend setup") { showLogin() }
-        whatsAppInfoCard()
+        connectorInfoCard()
     }
 
     private fun confirmStatus(action: String) = thread {
@@ -156,14 +156,14 @@ class MainActivity : Activity() {
     }
 
     private fun showNotifications(text: String) {
-        baseLayout(); titleText("Notifications")
+        baseLayout(); titleText("Alerts & audit history")
         val arr = org.json.JSONArray(text)
         if (arr.length() == 0) label("No notifications yet.", 16)
         for (i in 0 until arr.length()) { val n = arr.getJSONObject(i); card("${n.optString("channel")} · ${n.optString("status")}", "${n.optString("message")}\n${n.optString("timestampUtc")}\nSource: ${n.optString("source")}\nExternal id: ${n.optString("externalMessageId")}\nContact: ${n.optString("maskedContact")}") }
         button("Back to status") { fetchStatus() }
     }
 
-    private fun whatsAppInfoCard() = card("WhatsApp connector-ready", "WhatsApp Cloud API is optional sandbox/live-test connector readiness. Production use requires WhatsApp Business setup, opt-in/templates, and billing. This driver app works through Smart Port web/mobile APIs without WhatsApp production approval.")
+    private fun connectorInfoCard() = card("Connector-ready, app-first", "Driver Companion App and Smart Port mobile APIs are the primary operational channel. WhatsApp Cloud API is optional sandbox/live-test connector readiness for future pilots; production use requires WhatsApp Business setup, opt-in/templates and billing.")
 
     private fun getJson(url: String) = JSONObject(getText(url))
     private fun getText(url: String): String = (URL(url).openConnection() as HttpURLConnection).run { if (mobileToken.isNotBlank()) setRequestProperty("X-SmartPort-Mobile-Token", mobileToken); connectTimeout = 8000; readTimeout = 12000; if (responseCode == 401) throw Exception("401 Demo access required"); if (responseCode >= 400) throw Exception("HTTP $responseCode"); inputStream.bufferedReader().readText() }
