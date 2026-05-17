@@ -51,6 +51,11 @@ public class HomeController : Controller
     [HttpGet("/demo")]
     public IActionResult Demo() => View();
 
+    // GET /Home/Mobile or /mobile-app — public install route
+    [HttpGet("/Home/Mobile")]
+    [HttpGet("/mobile-app")]
+    public IActionResult Mobile() => Redirect("/fleet/download-app");
+
     // GET /error
     [HttpGet("/error")]
     public IActionResult Error()

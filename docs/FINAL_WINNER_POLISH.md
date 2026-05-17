@@ -5,7 +5,7 @@ Smart Port is now framed as an app-first operational AI product rather than a me
 ## Product story
 
 - Smart Port operational AI converts synthetic port, berth, gate and fleet signals into human-approved execution plans.
-- The Driver Companion App, web companion and mobile API are the primary driver channel.
+- The Driver Companion App, driver app shell and mobile API are the primary driver channel.
 - Driver check-ins update fleet/control-room tracking with last location, ETA, queue state, status, impact and audit history.
 - WhatsApp Cloud API is optional connector-ready support for sandbox/live-test and future production pilots only.
 
@@ -25,7 +25,7 @@ Smart Port is now framed as an app-first operational AI product rather than a me
 - GitHub Actions workflow: `.github/workflows/build-android-apk.yml`.
 - CI artifact: `mobile/SmartPortDriverCompanion/artifacts/SmartPortDriverCompanion-debug.apk`.
 - Web download path: `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk`.
-- If no APK binary is published, `/fleet/download-app` still presents the build path and offers the web companion as a no-install judge demo.
+- If no APK binary is published, `/fleet/download-app` still presents the build path and offers the driver app shell as a no-install judge demo.
 
 ## Demo path
 
@@ -34,7 +34,7 @@ Smart Port is now framed as an app-first operational AI product rather than a me
 3. `/gemini-agent` → generate an operations brief.
 4. `/execution/plans` → inspect execution plans.
 5. `/fleet/trucks/SPQ-2026-0042` → request app check-in and ask Copilot.
-6. `/driver/demo` → submit GPS/manual check-in and driver action.
+6. `/driver-app` → submit GPS/manual check-in and driver action.
 7. `/fleet/tracker` → verify location, ETA, status and audit trail updated.
 8. `/fleet/download-app` → show APK/mobile API install centre.
 9. `/enterprise-readiness` and `/health/integrations` → close with pilot readiness.

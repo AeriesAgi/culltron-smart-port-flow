@@ -22,6 +22,11 @@ public class GeminiSettings
     public string PrimaryModel { get; set; } = "gemini-2.5-flash";
     public string PremiumModel { get; set; } = "gemini-2.5-flash";
     public string RoutineModel { get; set; } = "gemini-3.1-flash-lite";
+    public string LiteModel { get; set; } = "gemini-3.1-flash-lite";
+    public string DeepReasoningModel { get; set; } = string.Empty;
+    public bool UseMapsGrounding { get; set; } = false;
+    public bool UseEmbeddings { get; set; } = false;
+    public bool UseLiveApi { get; set; } = false;
     public string FallbackModels { get; set; } = "gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.0-flash-lite,gemini-2.0-flash";
     public string ExperimentalFallbackModels { get; set; } = string.Empty;
     public bool AllowExperimentalModels { get; set; } = false;
@@ -123,6 +128,11 @@ public class AgentModeStatus
     public string PrimaryModel { get; set; } = "gemini-2.5-flash";
     public string PremiumModel { get; set; } = "gemini-2.5-flash";
     public string RoutineModel { get; set; } = "gemini-3.1-flash-lite";
+    public string LiteModel { get; set; } = "gemini-3.1-flash-lite";
+    public string DeepReasoningModel { get; set; } = string.Empty;
+    public bool UseMapsGrounding { get; set; } = false;
+    public bool UseEmbeddings { get; set; } = false;
+    public bool UseLiveApi { get; set; } = false;
     public string FallbackModels { get; set; } = string.Empty;
     public int CallsSinceStart { get; set; }
     public IReadOnlyDictionary<string, int> CallsByActionType { get; set; } = new Dictionary<string, int>();

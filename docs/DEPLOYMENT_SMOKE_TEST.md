@@ -7,7 +7,7 @@ chmod +x scripts/smoke-test.sh
 ./scripts/smoke-test.sh http://localhost:8080
 ```
 
-Manual pages: `/`, `/platform`, `/demo-access`, `/demo-tour`, `/dashboard`, `/gemini-agent`, `/agent-governance`, `/enterprise-readiness`, `/execution/plans`, `/fleet`, `/fleet/trucks/SPQ-2026-0042`, `/driver/demo`, `/fleet/notifications`, `/fleet/download-app`, `/health`, `/health/readiness`, `/health/integrations`.
+Manual pages: `/`, `/platform`, `/demo-access`, `/demo-tour`, `/dashboard`, `/gemini-agent`, `/agent-governance`, `/enterprise-readiness`, `/execution/plans`, `/fleet`, `/fleet/trucks/SPQ-2026-0042`, `/driver-app`, `/fleet/notifications`, `/fleet/download-app`, `/health`, `/health/readiness`, `/health/integrations`.
 
 API checks: mobile demo login, token-protected truck status, invalid token rejection and WhatsApp webhook verify token success/failure.
 
@@ -29,17 +29,17 @@ Smart Port is designed so the only remaining production step is adding approved 
 When the app runs in Development or `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`, `/demo-access` shows quick-fill role cards:
 - Port Admin: `culltron-admin-2026` → `/dashboard`
 - Fleet Owner: `culltron-fleet-2026` → `/fleet`
-- Driver: `culltron-driver-2026` → `/driver/demo`
+- Driver: `culltron-driver-2026` → `/driver-app`
 - Judge: `culltron-judge-2026` → `/demo-tour`
 
-Recommended judging path: `/demo-access` → Judge quick-fill → `/demo-tour` → `/gemini-agent` → `/agent-governance` → `/ops-ingest` → `/execution/plans` → `/fleet/trucks/SPQ-2026-0042` → `/driver/demo` → `/fleet/download-app` → `/fleet/notifications` → `/enterprise-readiness` → `/health/integrations`.
+Recommended judging path: `/demo-access` → Judge quick-fill → `/demo-tour` → `/gemini-agent` → `/agent-governance` → `/ops-ingest` → `/execution/plans` → `/fleet/trucks/SPQ-2026-0042` → `/driver-app` → `/fleet/download-app` → `/fleet/notifications` → `/enterprise-readiness` → `/health/integrations`.
 
 ### Gemini award centerpiece and quota-safe model strategy
 Gemini is openly used as the on-demand AI agent layer. It activates only when a user submits an explicit Gemini/AI/Copilot/Ops Ingest/driver command action, not on normal page loads, health checks, dashboards, enterprise readiness, Android app launch, mobile login/status refresh, seed data, smoke tests, or background timers.
 
 Default server-side configuration:
 - `GEMINI_API_KEY`
-- `Gemini__Enabled=false` by default unless explicitly enabled
+- `Gemini__Enabled=true` by default; without `GEMINI_API_KEY` deterministic fallback is used
 - `Gemini__Mode=Hybrid`
 - `Gemini__PremiumModel=gemini-2.5-flash`
 - `Gemini__RoutineModel=gemini-3.1-flash-lite`

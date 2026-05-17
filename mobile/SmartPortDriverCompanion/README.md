@@ -66,10 +66,10 @@ Smart Port is designed so the only remaining production step is adding approved 
 When the app runs in Development or `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`, `/demo-access` shows quick-fill role cards:
 - Port Admin: `culltron-admin-2026` → `/dashboard`
 - Fleet Owner: `culltron-fleet-2026` → `/fleet`
-- Driver: `culltron-driver-2026` → `/driver/demo`
+- Driver: `culltron-driver-2026` → `/driver-app`
 - Judge: `culltron-judge-2026` → `/demo-tour`
 
-Recommended judging path: `/demo-access` → Judge quick-fill → `/demo-tour` → `/gemini-agent` → `/agent-governance` → `/ops-ingest` → `/execution/plans` → `/fleet/trucks/SPQ-2026-0042` → `/driver/demo` → `/fleet/download-app` → `/fleet/notifications` → `/enterprise-readiness` → `/health/integrations`.
+Recommended judging path: `/demo-access` → Judge quick-fill → `/demo-tour` → `/gemini-agent` → `/agent-governance` → `/ops-ingest` → `/execution/plans` → `/fleet/trucks/SPQ-2026-0042` → `/driver-app` → `/fleet/download-app` → `/fleet/notifications` → `/enterprise-readiness` → `/health/integrations`.
 
 ### Gemini award centerpiece and quota-safe model strategy
 Gemini is openly used as the on-demand AI agent layer. It activates only when a user submits an explicit Gemini/AI/Copilot/Ops Ingest/driver command action, not on normal page loads, health checks, dashboards, enterprise readiness, Android app launch, mobile login/status refresh, seed data, smoke tests, or background timers.
@@ -99,8 +99,8 @@ Task categories:
 
 The backend skips unsupported/model-not-found responses, marks quota-limited models for cooldown, avoids retry loops, records safe diagnostics (counts, action type, route/source, model, latency, quota/fallback state), and never logs or displays API keys, bearer tokens, prompts containing secrets, WhatsApp tokens, phone numbers, or provider credentials.
 
-### Driver Companion APK, web companion, and mobile API
-The primary driver channels are the Android Driver Companion, the web companion, and token-secured mobile APIs. The Android app lives in `mobile/SmartPortDriverCompanion`, uses Java/Kotlin 17, and calls:
+### Driver Companion APK, driver app shell, and mobile API
+The primary driver channels are the Android Driver Companion, the driver app shell, and token-secured mobile APIs. The Android app lives in `mobile/SmartPortDriverCompanion`, uses Java/Kotlin 17, and calls:
 - `POST /api/mobile/auth/demo-login`
 - `GET /api/mobile/truck/status/{reference}`
 - `GET /api/mobile/notifications/{reference}`

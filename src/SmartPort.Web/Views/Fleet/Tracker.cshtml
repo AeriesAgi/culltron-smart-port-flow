@@ -11,8 +11,8 @@
   <div>
     <span class="sp-badge sp-badge--green">App-based driver tracking · no background surveillance</span>
     <h1>Live Fleet Tracker</h1>
-    <p>Fleet owners and Port Admins monitor driver check-ins from the Driver Companion App, web companion and mobile API. Each update refreshes last known location, queue status, ETA/call-forward, idling impact and audit history.</p>
-    <div class="sp-actions"><a class="sp-btn sp-btn--primary" href="/fleet/download-app">Install Driver Companion</a><a class="sp-btn sp-btn--outline" href="/driver/demo">Open Web Companion</a><a class="sp-btn sp-btn--outline" href="/execution/plans">Execution Plans</a></div>
+    <p>Fleet owners and Port Admins monitor driver check-ins from the Driver Companion App, driver app shell and mobile API. Each update refreshes last known location, queue status, ETA/call-forward, idling impact and audit history.</p>
+    <div class="sp-actions"><a class="sp-btn sp-btn--primary" href="/fleet/download-app">Install Driver Companion</a><a class="sp-btn sp-btn--outline" href="/driver-app">Open Driver App</a><a class="sp-btn sp-btn--outline" href="/execution/plans">Execution Plans</a></div>
   </div>
   <div class="sp-radar-card"><span>TRACKING FEED</span><strong>@fresh fresh check-ins</strong><small>@active active trucks · @delayed need attention</small><div class="sp-radar-ring"></div></div>
 </section>
@@ -23,6 +23,27 @@
   <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@checkedIn</div><div class="sp-kpi-card__label">Known location labels</div><div class="sp-kpi-card__sub">User-triggered check-ins</div></div></div>
   <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@fresh</div><div class="sp-kpi-card__label">Fresh check-ins</div><div class="sp-kpi-card__sub">Within 45 minutes</div></div></div>
 </div>
+
+<section class="sp-card sp-mt sp-map-panel">
+  <div class="sp-card__header"><div><h2>Fleet GPS / check-in map</h2><p>Map-style operational view rendered from Driver Companion check-ins. No external map credentials required for the demo.</p></div><span class="sp-badge sp-badge--ai">Click-to-check-in only</span></div>
+  <div class="sp-map-grid">
+    <div class="sp-dark-map">
+      @foreach (var t in Model.Where(t => t.LastLocationCheckIn != null || !string.IsNullOrWhiteSpace(t.LastKnownLocationLabel)).Take(8))
+      {
+          var left = 12 + (t.QueueNumber * 11 % 72);
+          var top = 18 + (t.QueueNumber * 17 % 58);
+          <a class="sp-map-pin sp-map-pin--@(t.DelayRisk is QueueDelayRisk.High or QueueDelayRisk.Critical ? "hot" : "ok")" style="left:@left%;top:@top%" href="/fleet/trucks/@t.BookingReference" title="@t.TruckRegistration · @t.CurrentStatus"><span>@t.QueueNumber</span></a>
+      }
+      <div class="sp-map-route sp-map-route--one"></div><div class="sp-map-route sp-map-route--two"></div><div class="sp-map-control">＋<br/>−<br/>◎</div>
+    </div>
+    <div class="sp-map-list">
+      @foreach (var t in Model.OrderByDescending(t => t.LastLocationCheckIn?.Timestamp ?? DateTime.MinValue).Take(5))
+      {
+        <article><strong>@t.TruckRegistration</strong><span>@t.CurrentStatus · @t.AssignedGate</span><small>@(t.LastLocationCheckIn == null ? "No coordinates yet" : $"{t.LastLocationCheckIn.Latitude}, {t.LastLocationCheckIn.Longitude} · {t.LastLocationCheckIn.Timestamp.ToLocalTime():g}")</small>@if(t.LastLocationCheckIn != null){<a href="https://www.google.com/maps?q=@t.LastLocationCheckIn.Latitude,@t.LastLocationCheckIn.Longitude" target="_blank" rel="noopener">Open in maps</a>}</article>
+      }
+    </div>
+  </div>
+</section>
 
 <article class="sp-card sp-mt">
   <div class="sp-card__header"><div><h2>Control-room driver monitor</h2><p>Queue, ETA, idling and CO₂ impact recalculate after check-ins and driver actions.</p></div><a class="sp-btn sp-btn--primary" href="/Copilot?prompt=Which%20tracked%20drivers%20need%20attention%3F">Ask Copilot</a></div>

@@ -25,7 +25,7 @@
     var isFleetOwner = User.IsInRole(Roles.FleetOwner) || User.IsInRole(Roles.LogisticsPartner);
     var isDriver = User.IsInRole(Roles.Driver);
     var isJudge = User.IsInRole(Roles.JudgeDemo);
-    var dashboardHref = isDriver ? "/driver/demo" : isFleetOwner ? "/fleet" : isJudge ? "/demo-tour" : "/dashboard";
+    var dashboardHref = isDriver ? "/driver-app" : isFleetOwner ? "/fleet" : isJudge ? "/demo-tour" : "/dashboard";
     var path = Context.Request.Path.Value ?? string.Empty;
     var showCommand = isOpsStaff || isFleetOwner || isDriver || isJudge;
     var showOperations = isOpsStaff || isFleetOwner || isDriver || isJudge;
@@ -97,9 +97,9 @@
                 }
                 @if (isOpsStaff || isFleetOwner || isDriver || isJudge)
                 {
-                    <a href="/driver" class="sp-nav__item @(path.Equals("/driver", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">📱</span><span>Driver Companion</span></a>
+                    <a href="/driver-app" class="sp-nav__item @(path.StartsWith("/driver-app", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">📱</span><span>Driver App Shell</span></a>
                     <a href="/fleet/download-app" class="sp-nav__item @(path.StartsWith("/fleet/download-app", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">🤖</span><span>Install Driver App</span></a>
-                    <a href="/driver/demo" class="sp-nav__item @(path.StartsWith("/driver/demo", StringComparison.OrdinalIgnoreCase) || path.StartsWith("/driver/status", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">✅</span><span>Driver Live Status</span></a>
+                    <a href="/driver/status/SPQ-2026-0042" class="sp-nav__item @(path.StartsWith("/driver/status", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">✅</span><span>Legacy Driver Status</span></a>
                 }
                 @if (isOpsStaff)
                 {

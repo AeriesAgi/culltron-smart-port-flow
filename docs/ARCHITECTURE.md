@@ -43,7 +43,7 @@ The system is a working deployed demo/prototype and pilot-ready architecture. It
 - **PostgreSQL:** stores demo entities and synthetic operational data for repeatable judging and local runs.
 - **Docker Compose:** runs the web application and database for local/demo environments.
 - **Gemini service:** enhances user-triggered Copilot/report responses when `GEMINI_API_KEY`, `Gemini__Enabled=true`, `Gemini__Mode=Hybrid`, and `Gemini__Model=gemini-2.5-flash` are configured outside Git.
-- **Local fallback service:** keeps the system usable when Gemini is unavailable or not configured.
+- **Deterministic fallback service:** keeps the system usable when Gemini is unavailable or not configured.
 - **Human approval and audit-friendly decision support:** recommendations are not automatically executed.
 
 
@@ -65,7 +65,7 @@ The architecture intentionally supports this safety boundary:
 2. Services gather synthetic/demo operational summaries.
 3. Baseline logic produces analysis and recommendations.
 4. Gemini may enhance text if enabled and available.
-5. Local fallback responds if Gemini is unavailable.
+5. Deterministic fallback responds if Gemini is unavailable.
 6. Users review recommendations before any real-world action.
 
 ## Deployment Boundary

@@ -7,9 +7,9 @@
   <div>
     <span class="sp-badge sp-badge--ai">Primary mobile operations channel</span>
     <h1>Driver Companion App install centre</h1>
-    <p>The Android APK, web companion and token-secured mobile API turn each driver into an explicit check-in unit for fleet owners and the control room. It is app-first: status, ETA, allowed actions, Copilot, GPS/manual check-ins, alerts and audit history all flow back to Smart Port.</p>
+    <p>The Android APK, driver app shell and token-secured mobile API turn each driver into an explicit check-in unit for fleet owners and the control room. It is app-first: status, ETA, allowed actions, Copilot, GPS/manual check-ins, alerts and audit history all flow back to Smart Port.</p>
     <div class="sp-actions">
-      <a href="/driver/demo" class="sp-btn sp-btn--primary">Open Web Companion</a>
+      <a href="/driver-app" class="sp-btn sp-btn--primary">Open Web Companion</a>
       <a href="/fleet/tracker" class="sp-btn sp-btn--outline">View Live Fleet Tracker</a>
       <a href="#api-proof" class="sp-btn sp-btn--outline">Mobile API Proof Path</a>
     </div>
@@ -25,7 +25,7 @@
 
 <div class="sp-grid sp-grid--4 sp-mt">
   <article class="sp-card sp-metric-tile"><span>01</span><h2>Native APK</h2><p>Kotlin Android source in <code>mobile/SmartPortDriverCompanion</code> signs in with the demo code and calls backend mobile APIs.</p></article>
-  <article class="sp-card sp-metric-tile"><span>02</span><h2>Web companion</h2><p><a href="/driver/demo">/driver/demo</a> mirrors the APK for judges: driver status, confirmations, Copilot and check-ins without install friction.</p></article>
+  <article class="sp-card sp-metric-tile"><span>02</span><h2>Web companion</h2><p><a href="/driver-app">/driver-app</a> mirrors the APK for judges: driver status, confirmations, Copilot and check-ins without install friction.</p></article>
   <article class="sp-card sp-metric-tile"><span>03</span><h2>Tracking feed</h2><p>Every check-in updates last location, ETA, queue state, timeline, notifications and audit trail in the fleet tracker.</p></article>
   <article class="sp-card sp-metric-tile"><span>04</span><h2>Optional connectors</h2><p>WhatsApp Cloud API remains sandbox/live-test connector readiness for future pilots; it is not the core driver channel.</p></article>
 </div>
@@ -53,7 +53,7 @@
     }
     else
     {
-      <p class="sp-alert sp-alert--info">No APK binary is currently published in <code>wwwroot/downloads</code>, but the Android project and CI artifact path are present. Judges can use the web companion immediately while CI/local Android SDK builds the APK.</p>
+      <p class="sp-alert sp-alert--info">No APK binary is currently published in <code>wwwroot/downloads</code>, but the Android project and CI artifact path are present. Judges can use the driver app shell immediately while CI/local Android SDK builds the APK.</p>
     }
     <dl class="driver-dl">
       <dt>Project</dt><dd><code>mobile/SmartPortDriverCompanion</code></dd>
@@ -66,5 +66,5 @@
 
 <div class="sp-grid sp-grid--2 sp-mt" id="api-proof">
   <article class="sp-card"><h2>Mobile API proof path</h2><ol class="sp-steps"><li><code>POST /api/mobile/auth/demo-login</code></li><li><code>GET /api/mobile/truck/status/SPQ-2026-0042</code></li><li><code>GET /api/mobile/notifications/SPQ-2026-0042</code></li><li><code>POST /api/mobile/driver/confirm-status</code></li><li><code>POST /api/mobile/driver/location-checkin</code></li><li><code>POST /api/mobile/copilot/driver</code></li></ol></article>
-  <article class="sp-card"><h2>Judge quick-fill</h2><p>Use these references in the APK, web companion or API smoke tests:</p><div class="ack-grid">@foreach(var r in refs){<code class="sp-chip">@r</code>}</div><p><a class="sp-btn sp-btn--outline" href="/health/integrations">Open integration health</a></p></article>
+  <article class="sp-card"><h2>Judge quick-fill</h2><p>Use these references in the APK, driver app shell or API smoke tests:</p><div class="ack-grid">@foreach(var r in refs){<code class="sp-chip">@r</code>}</div><p><a class="sp-btn sp-btn--outline" href="/health/integrations">Open integration health</a></p></article>
 </div>
