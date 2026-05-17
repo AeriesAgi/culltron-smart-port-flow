@@ -1,6 +1,70 @@
-@{ ViewData["Title"] = "Driver Companion App"; var refs = ViewBag.DemoReferences as IReadOnlyList<string> ?? Array.Empty<string>(); var apkExists = ViewBag.ApkExists as bool? ?? false; }
-<div class="sp-toolbar"><div><span class="sp-badge sp-badge--ai">Primary driver channel · Android APK/web/mobile API</span><h1>Smart Port Driver Companion App</h1><p>The Driver Companion APK, web companion, and token-secured mobile API are the reliable driver communication loop. WhatsApp Cloud API remains connector-ready for sandbox/live-test messaging, but it is not required for judging.</p></div><div class="sp-toolbar__actions"><a href="/driver/demo" class="sp-btn sp-btn--primary">Open Web Driver Companion</a><a href="/fleet/tracker" class="sp-btn sp-btn--outline">Open Fleet Tracker</a><a href="/driver/status/SPQ-2026-0042" class="sp-btn sp-btn--outline">Open Driver Status Page</a></div></div>
-<div class="sp-grid sp-grid--4"><article class="sp-card"><h2>1. Android APK</h2><p>Native Kotlin source at <code>mobile/SmartPortDriverCompanion</code> logs in through <code>/api/mobile/auth/demo-login</code> and calls backend mobile APIs.</p></article><article class="sp-card"><h2>2. Web companion</h2><p>Use <a href="/driver/demo">/driver/demo</a> for status, confirmations, Copilot prompts and location check-ins without APK installation.</p></article><article class="sp-card"><h2>3. Mobile API proof</h2><p>Token header <code>X-SmartPort-Mobile-Token</code> protects truck status, notifications, confirmations, Copilot and location check-ins.</p></article><article class="sp-card"><h2>4. Optional Connector</h2><p>Optional connector-ready WhatsApp Cloud API integration for future pilots/live-test messaging. Connector-ready sandbox/live-test integration only. Production requires WhatsApp Business setup, opt-in/templates, and billing.</p></article></div>
-<div class="sp-grid sp-grid--2"><article class="sp-card sp-premium-panel"><h2>Companion capabilities</h2><ul class="sp-checklist"><li>Backend setup/login with editable URL</li><li>Demo code quick-fill: <code>culltron-driver-2026</code></li><li>Demo reference quick-fill: <code>SPQ-2026-0042</code></li><li>Shows truck registration, driver, fleet operator, booking/reference, instruction, gate, staging zone, queue number, status, ETA, delay risk, idling and CO₂ impact</li><li>Posts Ready, Arrived at Staging, Delayed 20, Report Issue, Confirm Instruction and Location Check-in actions</li><li>Fetches notification history and backend Driver Copilot responses</li><li>Feeds fleet/control-room tracking dashboards through user-triggered check-ins</li><li>Stores no Gemini API key, WhatsApp token, phone number or provider credential on device</li></ul></article><article class="sp-card"><h2>Backend URL instructions</h2><dl class="driver-dl"><dt>Android emulator local Docker</dt><dd><code>http://10.0.2.2:8080</code></dd><dt>Codespaces / DigitalOcean / live</dt><dd>Paste the deployed HTTPS app URL into the APK login screen.</dd><dt>Driver code/reference</dt><dd><code>culltron-driver-2026</code> · <code>SPQ-2026-0042</code></dd></dl></article></div>
-<article class="sp-card sp-download-panel"><div><span class="sp-badge sp-badge--green">@(apkExists ? "APK ready" : "APK workflow ready")</span><h2>APK availability</h2>@if(apkExists){<p>Debug APK is available for demo installation.</p><a class="sp-btn sp-btn--primary" href="/downloads/SmartPortDriverCompanion.apk">Download SmartPortDriverCompanion.apk</a>}else{<p class="sp-alert sp-alert--info">Android companion source and APK workflow are ready. Core driver demo works through web companion and mobile API.</p><p class="sp-muted">CI uploads the debug APK artifact <code>SmartPortDriverCompanion-debug.apk</code> from <code>mobile/SmartPortDriverCompanion/artifacts/SmartPortDriverCompanion-debug.apk</code> through <code>.github/workflows/build-android-apk.yml</code>. If a local Android SDK is available, run <code>cd mobile/SmartPortDriverCompanion && ./gradlew assembleDebug</code> or <code>gradle assembleDebug</code>, then copy the APK to <code>src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk</code>.</p>}</div></article>
-<div class="sp-grid sp-grid--2"><article class="sp-card"><h2>Mobile API proof path</h2><ol class="sp-steps"><li><code>POST /api/mobile/auth/demo-login</code></li><li><code>GET /api/mobile/truck/status/SPQ-2026-0042</code></li><li><code>GET /api/mobile/notifications/SPQ-2026-0042</code></li><li><code>POST /api/mobile/driver/confirm-status</code></li><li><code>POST /api/mobile/driver/location-checkin</code></li><li><code>POST /api/mobile/copilot/driver</code></li></ol></article><article class="sp-card"><h2>Demo references</h2><p>Use one of these references in the web companion, Android app or mobile API smoke tests:</p><div class="ack-grid">@foreach(var r in refs){<code class="sp-chip">@r</code>}</div><p><a class="sp-btn sp-btn--outline" href="/health/integrations">Open integration health</a></p></article></div>
+@{
+    ViewData["Title"] = "Install Driver Companion";
+    var refs = ViewBag.DemoReferences as IReadOnlyList<string> ?? Array.Empty<string>();
+    var apkExists = ViewBag.ApkExists as bool? ?? false;
+}
+<section class="sp-command-hero sp-command-hero--app">
+  <div>
+    <span class="sp-badge sp-badge--ai">Primary mobile operations channel</span>
+    <h1>Driver Companion App install centre</h1>
+    <p>The Android APK, web companion and token-secured mobile API turn each driver into an explicit check-in unit for fleet owners and the control room. It is app-first: status, ETA, allowed actions, Copilot, GPS/manual check-ins, alerts and audit history all flow back to Smart Port.</p>
+    <div class="sp-actions">
+      <a href="/driver/demo" class="sp-btn sp-btn--primary">Open Web Companion</a>
+      <a href="/fleet/tracker" class="sp-btn sp-btn--outline">View Live Fleet Tracker</a>
+      <a href="#api-proof" class="sp-btn sp-btn--outline">Mobile API Proof Path</a>
+    </div>
+  </div>
+  <div class="sp-device-preview">
+    <span>SMART PORT DRIVER</span>
+    <strong>Proceed to Gate 4</strong>
+    <small>Queue #1 · ETA 14:40 · Check-in fresh</small>
+    <div class="sp-device-radar"><i></i><i></i><i></i></div>
+    <em>GPS/manual check-in → fleet tracker → audit trail</em>
+  </div>
+</section>
+
+<div class="sp-grid sp-grid--4 sp-mt">
+  <article class="sp-card sp-metric-tile"><span>01</span><h2>Native APK</h2><p>Kotlin Android source in <code>mobile/SmartPortDriverCompanion</code> signs in with the demo code and calls backend mobile APIs.</p></article>
+  <article class="sp-card sp-metric-tile"><span>02</span><h2>Web companion</h2><p><a href="/driver/demo">/driver/demo</a> mirrors the APK for judges: driver status, confirmations, Copilot and check-ins without install friction.</p></article>
+  <article class="sp-card sp-metric-tile"><span>03</span><h2>Tracking feed</h2><p>Every check-in updates last location, ETA, queue state, timeline, notifications and audit trail in the fleet tracker.</p></article>
+  <article class="sp-card sp-metric-tile"><span>04</span><h2>Optional connectors</h2><p>WhatsApp Cloud API remains sandbox/live-test connector readiness for future pilots; it is not the core driver channel.</p></article>
+</div>
+
+<div class="sp-grid sp-grid--2 sp-mt">
+  <article class="sp-card sp-premium-panel">
+    <h2>What the Driver Companion proves</h2>
+    <ul class="sp-checklist">
+      <li>Backend URL setup for emulator, forwarded demos and deployed HTTPS.</li>
+      <li>Token login through <code>/api/mobile/auth/demo-login</code> with no provider secrets on device.</li>
+      <li>Live job card: truck, driver, fleet, booking, container, gate, staging zone, queue, status, ETA and instruction.</li>
+      <li>User-triggered GPS/manual location check-in that becomes the fleet tracking signal.</li>
+      <li>Allowed driver actions: ready, holding, delayed, staging, gate, completed, issue and confirm instruction.</li>
+      <li>Backend Copilot answers with source/model/fallback transparency.</li>
+      <li>Notification history and audit trail visible to both driver and fleet owner.</li>
+    </ul>
+  </article>
+  <article class="sp-card sp-download-panel">
+    <span class="sp-badge sp-badge--green">@(apkExists ? "APK ready for download" : "Build path ready")</span>
+    <h2>APK download</h2>
+    @if (apkExists)
+    {
+      <p>Debug APK is available for demo installation from the web app.</p>
+      <a class="sp-btn sp-btn--primary" href="/downloads/SmartPortDriverCompanion.apk">Download SmartPortDriverCompanion.apk</a>
+    }
+    else
+    {
+      <p class="sp-alert sp-alert--info">No APK binary is currently published in <code>wwwroot/downloads</code>, but the Android project and CI artifact path are present. Judges can use the web companion immediately while CI/local Android SDK builds the APK.</p>
+    }
+    <dl class="driver-dl">
+      <dt>Project</dt><dd><code>mobile/SmartPortDriverCompanion</code></dd>
+      <dt>Build command</dt><dd><code>cd mobile/SmartPortDriverCompanion && ./gradlew assembleDebug</code></dd>
+      <dt>CI artifact</dt><dd><code>artifacts/SmartPortDriverCompanion-debug.apk</code></dd>
+      <dt>Publish path</dt><dd><code>src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk</code></dd>
+    </dl>
+  </article>
+</div>
+
+<div class="sp-grid sp-grid--2 sp-mt" id="api-proof">
+  <article class="sp-card"><h2>Mobile API proof path</h2><ol class="sp-steps"><li><code>POST /api/mobile/auth/demo-login</code></li><li><code>GET /api/mobile/truck/status/SPQ-2026-0042</code></li><li><code>GET /api/mobile/notifications/SPQ-2026-0042</code></li><li><code>POST /api/mobile/driver/confirm-status</code></li><li><code>POST /api/mobile/driver/location-checkin</code></li><li><code>POST /api/mobile/copilot/driver</code></li></ol></article>
+  <article class="sp-card"><h2>Judge quick-fill</h2><p>Use these references in the APK, web companion or API smoke tests:</p><div class="ack-grid">@foreach(var r in refs){<code class="sp-chip">@r</code>}</div><p><a class="sp-btn sp-btn--outline" href="/health/integrations">Open integration health</a></p></article>
+</div>

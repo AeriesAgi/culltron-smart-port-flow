@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+set -eu
+DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if command -v gradle >/dev/null 2>&1; then
+  exec gradle -p "$DIR" "$@"
+fi
+echo "Gradle is not installed and the wrapper JAR is not vendored in this repository." >&2
+echo "Install Gradle 8.14.4 or run the GitHub Actions APK workflow." >&2
+exit 127
