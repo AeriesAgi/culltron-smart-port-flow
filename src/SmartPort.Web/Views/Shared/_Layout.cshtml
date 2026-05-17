@@ -92,13 +92,13 @@
                     <a href="/fleet/tracker" class="sp-nav__item @(path.StartsWith("/fleet/tracker", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">📍</span><span>Fleet / Driver Tracker</span></a>
                     <a href="/execution/plans" class="sp-nav__item @(IsActive("Execution", "/execution"))"><span class="sp-nav__icon">🧭</span><span>Execution Plans</span></a>
                     <a href="/fleet/trucks/SPQ-2026-0042" class="sp-nav__item @(path.StartsWith("/fleet/trucks/SPQ-2026-0042", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">🚛</span><span>@(isFleetOwner ? "My Trucks" : "Fleet Truck Detail")</span></a>
-                    <a href="/fleet/download-app" class="sp-nav__item @(path.StartsWith("/fleet/download-app", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">📱</span><span>Driver Companion App</span></a>
+                    <a href="/fleet/download-app" class="sp-nav__item @(path.StartsWith("/fleet/download-app", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">📱</span><span>Download Driver App</span></a>
                     <a href="/fleet/notifications" class="sp-nav__item @(path.StartsWith("/fleet/notifications", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">💬</span><span>WhatsApp Optional Connector</span></a>
                 }
                 @if (isOpsStaff || isFleetOwner || isDriver || isJudge)
                 {
                     <a href="/driver" class="sp-nav__item @(path.Equals("/driver", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">📱</span><span>Driver Queue Companion</span></a>
-                    <a href="/fleet/download-app" class="sp-nav__item @(path.StartsWith("/fleet/download-app", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">🤖</span><span>Driver Companion App</span></a>
+                    <a href="/fleet/download-app" class="sp-nav__item @(path.StartsWith("/fleet/download-app", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">🤖</span><span>Install Driver Companion</span></a>
                     <a href="/driver/demo" class="sp-nav__item @(path.StartsWith("/driver/demo", StringComparison.OrdinalIgnoreCase) || path.StartsWith("/driver/status", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="sp-nav__icon">✅</span><span>Driver Status Page</span></a>
                 }
                 @if (isOpsStaff)

@@ -76,6 +76,15 @@ public class HealthController : Controller
         });
     }
 
+    private static string ResolveGeminiFallbackReason(AgentModeStatus status)
+    {
+        if (!status.GeminiConfigured) return "key missing; local deterministic fallback active";
+        if (!status.GeminiEnabled) return "disabled; local deterministic fallback active";
+        if (status.QuotaLimited) return "quota-limited; local deterministic fallback active";
+        if (!string.IsNullOrWhiteSpace(status.LastResult) && !status.LastResult.Contains("Gemini available", StringComparison.OrdinalIgnoreCase)) return $"{status.LastResult}; fallback active";
+        return status.FallbackActive ? "fallback active" : "none recorded";
+    }
+
     private object BuildGeminiStatus()
     {
         var status = _narrative.GetStatus();
@@ -88,15 +97,19 @@ public class HealthController : Controller
             routineModel = status.RoutineModel,
             fallbackModels = status.FallbackModels,
             mode = status.CurrentModeLabel,
+            modelAttempted = string.IsNullOrWhiteSpace(status.LastModelAttempted) ? "No call attempted since startup" : status.LastModelAttempted,
+            modelUsed = string.IsNullOrWhiteSpace(status.LastModelUsed) ? "No call used since startup" : status.LastModelUsed,
             status = status.GeminiStatus,
+            fallbackReason = ResolveGeminiFallbackReason(status),
+            quotaOrModelError = status.QuotaLimited ? "quota-limited" : status.LastResult.Contains("unsupported", StringComparison.OrdinalIgnoreCase) || status.LastResult.Contains("unavailable", StringComparison.OrdinalIgnoreCase) ? status.LastResult : "none recorded",
             lastCallUtc = status.LastCallUtc,
-            lastActionType = status.LastActionType,
+            lastActionType = string.IsNullOrWhiteSpace(status.LastActionType) ? "No explicit Gemini action since startup" : status.LastActionType,
             lastRouteSource = status.LastRouteSource,
-            lastModelUsed = status.LastModelUsed,
-            lastResult = status.LastResult,
+            lastResult = string.IsNullOrWhiteSpace(status.LastResult) ? "No result since startup" : status.LastResult,
             lastLatencyMs = status.LastLatencyMs,
             callsSinceStart = status.CallsSinceStart,
             callsByActionType = status.CallsByActionType,
+            localFallbackActive = status.FallbackActive || !status.GeminiEnabled || !status.GeminiConfigured,
             fallbackActive = status.FallbackActive,
             quotaLimited = status.QuotaLimited,
             outputSource = status.FallbackActive ? "Local deterministic fallback or Gemini fallback" : "Gemini on-demand / no health-call usage"

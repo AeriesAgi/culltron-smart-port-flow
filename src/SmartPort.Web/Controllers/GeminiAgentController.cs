@@ -108,7 +108,7 @@ public class GeminiAgentController : Controller
         var status = _narrative.GetStatus();
         var last = SnapshotHistory().FirstOrDefault();
         var modelPlan = $"Premium {status.PremiumModel} · Routine {status.RoutineModel} · Fallbacks {status.FallbackModels}";
-        var fallback = status.QuotaLimited ? "Gemini quota-limited; fallback active" : status.FallbackActive ? "Fallback active" : "On-demand only; no page-load Gemini calls";
+        var fallback = !status.GeminiConfigured ? "key missing; local deterministic fallback active" : !status.GeminiEnabled ? "disabled; local deterministic fallback active" : status.QuotaLimited ? "quota-limited; local deterministic fallback active" : status.FallbackActive ? (string.IsNullOrWhiteSpace(status.LastResult) ? "fallback active" : $"{status.LastResult}; fallback active") : "On-demand only; no page-load Gemini calls";
         return new GeminiReadinessViewModel(status.GeminiConfigured, status.GeminiEnabled, status.CurrentModeLabel, modelPlan, fallback, status.LastResult.Length > 0 ? status.LastResult : last?.BriefType ?? "No generation yet", status.LastLatencyMs ?? last?.LatencyMs);
     }
 
@@ -179,7 +179,7 @@ public class GeminiAgentController : Controller
     };
 
     private static string DeterministicRecommendation(FleetQueueSummaryDto summary)
-        => $"Hold {summary.TrucksHolding} trucks outside the gate, move high-risk trucks to staging, release only approved vehicles to gate, and keep WhatsApp/mobile sends simulated until a human approves the execution plan.";
+        => $"Hold {summary.TrucksHolding} trucks outside the gate, move high-risk trucks to staging, release only approved vehicles to gate, and keep Driver Companion/mobile API sends human-approved; WhatsApp remains optional connector-ready only.";
 }
 
 public sealed record GeminiReadinessViewModel(bool ApiKeyConfigured, bool Enabled, string Mode, string Model, string FallbackStatus, string LastGenerationStatus, int? LastLatencyMs);

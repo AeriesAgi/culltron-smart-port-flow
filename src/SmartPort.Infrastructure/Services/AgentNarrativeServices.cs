@@ -129,6 +129,7 @@ public class AgentModeStatus
     public DateTime? LastCallUtc { get; set; }
     public string LastActionType { get; set; } = string.Empty;
     public string LastRouteSource { get; set; } = string.Empty;
+    public string LastModelAttempted { get; set; } = string.Empty;
     public string LastModelUsed { get; set; } = string.Empty;
     public string LastResult { get; set; } = string.Empty;
     public int? LastLatencyMs { get; set; }
@@ -231,6 +232,7 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
     private static DateTime? LastCallUtc;
     private static string LastActionType = string.Empty;
     private static string LastRouteSource = string.Empty;
+    private static string LastModelAttempted = string.Empty;
     private static string LastModelUsed = string.Empty;
     private static string LastResult = string.Empty;
     private static int? LastLatencyMs;
@@ -260,13 +262,13 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
         if (!enabled || string.IsNullOrWhiteSpace(key))
         {
             var status = string.IsNullOrWhiteSpace(key) ? "Gemini not configured" : "Gemini disabled";
-            RecordDiagnostics(request, "Local deterministic fallback", status, (int)(DateTime.UtcNow - started).TotalMilliseconds, quotaLimited: false, fallbackActive: true);
+            RecordDiagnostics(request, attempted, "Local deterministic fallback", status, (int)(DateTime.UtcNow - started).TotalMilliseconds, quotaLimited: false, fallbackActive: true);
             return Failure(request, status, attempted, null, started);
         }
 
         if (CallsSinceStart >= GetInt("Gemini:MaxCallsPerSession", "Gemini__MaxCallsPerSession", _settings.MaxCallsPerSession))
         {
-            RecordDiagnostics(request, "Local deterministic fallback", "Gemini max calls per session reached", (int)(DateTime.UtcNow - started).TotalMilliseconds, quotaLimited: false, fallbackActive: true);
+            RecordDiagnostics(request, attempted, "Local deterministic fallback", "Gemini max calls per session reached", (int)(DateTime.UtcNow - started).TotalMilliseconds, quotaLimited: false, fallbackActive: true);
             return Failure(request, "Gemini max calls per session reached", attempted, null, started);
         }
 
@@ -316,7 +318,7 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
 
                 var latency = (int)Math.Max(1, (DateTime.UtcNow - started).TotalMilliseconds);
                 var sourceLabel = LabelForModel(request, model);
-                RecordDiagnostics(request, model, "Gemini available", latency, quotaLimited: false, fallbackActive: sourceLabel.Contains("fallback", StringComparison.OrdinalIgnoreCase));
+                RecordDiagnostics(request, attempted, model, "Gemini available", latency, quotaLimited: false, fallbackActive: sourceLabel.Contains("fallback", StringComparison.OrdinalIgnoreCase));
                 return new AgentNarrativeResult
                 {
                     Title = request.ReportType,
@@ -346,7 +348,7 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
 
         var failure = string.IsNullOrWhiteSpace(lastFailure) ? "No supported Gemini text model available" : lastFailure;
         var totalLatency = (int)Math.Max(1, (DateTime.UtcNow - started).TotalMilliseconds);
-        RecordDiagnostics(request, "Local deterministic fallback", failure, totalLatency, LastQuotaLimited, fallbackActive: true);
+        RecordDiagnostics(request, attempted, "Local deterministic fallback", failure, totalLatency, LastQuotaLimited, fallbackActive: true);
         return Failure(request, failure, attempted, null, started);
     }
 
@@ -371,6 +373,7 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
                 LastCallUtc = LastCallUtc,
                 LastActionType = LastActionType,
                 LastRouteSource = LastRouteSource,
+                LastModelAttempted = LastModelAttempted,
                 LastModelUsed = LastModelUsed,
                 LastResult = LastResult,
                 LastLatencyMs = LastLatencyMs,
@@ -387,7 +390,7 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
     private bool IsGeminiEnabled() => GetBool("Gemini:Enabled", "GEMINI_ENABLED", _settings.Enabled);
     private AgentMode GetGeminiMode()
     {
-        var configured = _configuration["Gemini:Mode"] ?? _configuration["GEMINI_MODE"];
+        var configured = !string.IsNullOrWhiteSpace(_configuration["GEMINI_MODE"]) ? _configuration["GEMINI_MODE"] : _configuration["Gemini:Mode"];
         return Enum.TryParse<AgentMode>(configured, true, out var mode) ? mode : _settings.Mode;
     }
 
@@ -425,7 +428,7 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
         }
     }
 
-    private void RecordDiagnostics(AgentNarrativeRequest request, string model, string result, int latencyMs, bool quotaLimited, bool fallbackActive)
+    private void RecordDiagnostics(AgentNarrativeRequest request, string modelAttempted, string model, string result, int latencyMs, bool quotaLimited, bool fallbackActive)
     {
         lock (DiagnosticsLock)
         {
@@ -435,6 +438,7 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
             LastCallUtc = DateTime.UtcNow;
             LastActionType = action;
             LastRouteSource = request.CurrentPage;
+            LastModelAttempted = modelAttempted;
             LastModelUsed = model;
             LastResult = result;
             LastLatencyMs = latencyMs;
@@ -474,15 +478,22 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
         code == HttpStatusCode.NotFound || code == HttpStatusCode.BadRequest ? $"{model} unsupported or unavailable" :
         $"{model} unavailable ({(int)code})";
 
-    private string GetString(string key, string? envKey, string fallback) => _configuration[key] ?? (envKey is null ? null : _configuration[envKey]) ?? fallback;
+    private string GetString(string key, string? envKey, string fallback)
+    {
+        var envValue = envKey is null ? null : _configuration[envKey];
+        var configured = !string.IsNullOrWhiteSpace(envValue) ? envValue : _configuration[key];
+        return string.IsNullOrWhiteSpace(configured) ? fallback : configured;
+    }
     private bool GetBool(string key, string? envKey, bool fallback)
     {
-        var configured = _configuration[key] ?? (envKey is null ? null : _configuration[envKey]);
+        var envValue = envKey is null ? null : _configuration[envKey];
+        var configured = !string.IsNullOrWhiteSpace(envValue) ? envValue : _configuration[key];
         return bool.TryParse(configured, out var value) ? value : fallback;
     }
     private int GetInt(string key, string? envKey, int fallback)
     {
-        var configured = _configuration[key] ?? (envKey is null ? null : _configuration[envKey]);
+        var envValue = envKey is null ? null : _configuration[envKey];
+        var configured = !string.IsNullOrWhiteSpace(envValue) ? envValue : _configuration[key];
         return int.TryParse(configured, out var value) ? value : fallback;
     }
     private static IEnumerable<string> SplitCsv(string value) => (value ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Where(v => !string.IsNullOrWhiteSpace(v));
@@ -623,13 +634,7 @@ public class HybridAgentNarrativeService : IAgentNarrativeService
     public AgentModeStatus GetStatus()
     {
         var geminiStatus = _gemini.GetStatus();
-        return new AgentModeStatus
-        {
-            CurrentMode = geminiStatus.CurrentMode,
-            GeminiConfigured = geminiStatus.GeminiConfigured,
-            GeminiEnabled = geminiStatus.GeminiEnabled,
-            GeminiStatus = geminiStatus.GeminiStatus,
-            LastGeneratedBriefUtc = _lastGeneratedBriefUtc
-        };
+        geminiStatus.LastGeneratedBriefUtc = _lastGeneratedBriefUtc;
+        return geminiStatus;
     }
 }
