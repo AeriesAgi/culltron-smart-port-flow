@@ -78,9 +78,9 @@ public class HealthController : Controller
 
     private static string ResolveGeminiFallbackReason(AgentModeStatus status)
     {
-        if (!status.GeminiConfigured) return "key missing; local deterministic fallback active";
-        if (!status.GeminiEnabled) return "disabled; local deterministic fallback active";
-        if (status.QuotaLimited) return "quota-limited; local deterministic fallback active";
+        if (!status.GeminiConfigured) return "key missing; deterministic fallback active";
+        if (!status.GeminiEnabled) return "disabled; deterministic fallback active";
+        if (status.QuotaLimited) return "quota-limited; deterministic fallback active";
         if (!string.IsNullOrWhiteSpace(status.LastResult) && !status.LastResult.Contains("Gemini available", StringComparison.OrdinalIgnoreCase)) return $"{status.LastResult}; fallback active";
         return status.FallbackActive ? "fallback active" : "none recorded";
     }
@@ -112,7 +112,7 @@ public class HealthController : Controller
             localFallbackActive = status.FallbackActive || !status.GeminiEnabled || !status.GeminiConfigured,
             fallbackActive = status.FallbackActive,
             quotaLimited = status.QuotaLimited,
-            outputSource = status.FallbackActive ? "Local deterministic fallback or Gemini fallback" : "Gemini on-demand / no health-call usage"
+            outputSource = status.FallbackActive ? "Deterministic fallback or Gemini fallback" : "Gemini on-demand / no health-call usage"
         };
     }
 }

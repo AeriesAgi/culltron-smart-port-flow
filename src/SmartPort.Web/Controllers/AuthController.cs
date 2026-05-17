@@ -134,7 +134,7 @@ public class AuthController : Controller
     private static string ResolveLandingFromRoles(IEnumerable<string> roles)
     {
         var roleSet = roles.ToHashSet(StringComparer.OrdinalIgnoreCase);
-        if (roleSet.Contains(Roles.Driver)) return "/driver/demo";
+        if (roleSet.Contains(Roles.Driver)) return "/driver-app";
         if (roleSet.Contains(Roles.FleetOwner) || roleSet.Contains(Roles.LogisticsPartner)) return "/fleet";
         if (roleSet.Contains(Roles.JudgeDemo)) return "/demo-tour";
         if (roleSet.Contains(Roles.Admin) || roleSet.Contains(Roles.PortOperationsManager) || roleSet.Contains(Roles.TerminalStaff)) return "/dashboard";

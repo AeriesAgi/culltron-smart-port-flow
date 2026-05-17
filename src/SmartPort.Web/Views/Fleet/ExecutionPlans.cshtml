@@ -1,4 +1,13 @@
 @using SmartPort.Application.DTOs
 @model IReadOnlyList<ExecutionPlanDto>
 @{ ViewData["Title"] = "Execution Plans"; }
-<form method="post" action="/execution/plans/generate"><button class="sp-btn sp-btn--primary">Generate execution plan</button></form><div class="sp-card">@foreach(var p in Model){<p><a href="/execution/plans/@p.PlanId">@p.ScenarioName</a> · @p.CreatedAt.ToLocalTime().ToString("g") · @p.ExpectedCo2KgAvoided.ToString("N1") kg CO₂</p>}</div>
+<section class="sp-command-hero sp-command-hero--execution">
+  <div><span class="sp-badge sp-badge--ai">Flagship AI execution workflow</span><h1>Execution Plans</h1><p>Convert congestion, staging pressure, driver check-ins and emissions signals into approved, auditable fleet and driver actions.</p><div class="sp-actions"><form method="post" action="/execution/plans/generate"><button class="sp-btn sp-btn--primary">Generate execution plan</button></form><a class="sp-btn sp-btn--outline" href="/gemini-agent">Generate Gemini brief</a><a class="sp-btn sp-btn--outline" href="/fleet/tracker">Live Fleet Tracker</a></div></div>
+  <div class="sp-radar-card"><span>PLAN CONTROL</span><strong>@Model.Count active plans</strong><small>@Model.Count(p=>p.Status is ExecutionPlanStatus.Approved or ExecutionPlanStatus.Dispatching or ExecutionPlanStatus.InProgress) dispatch-ready</small><div class="sp-radar-ring"></div></div>
+</section>
+@if (TempData["Success"] is string ok){<div class="sp-alert sp-alert--success sp-mt">@ok</div>}
+<section class="sp-grid sp-grid--3 sp-mt">
+@foreach(var p in Model){
+  <article class="sp-card sp-plan-card"><span class="sp-badge sp-badge--@(p.Status is ExecutionPlanStatus.Completed ? "green" : p.Status is ExecutionPlanStatus.Exception ? "warning" : "ai")">@p.Status</span><h2><a href="/execution/plans/@p.PlanId">@p.ScenarioName</a></h2><p>@p.DisruptionSummary</p><dl class="driver-dl"><dt>Plan ID</dt><dd>@p.PlanId[..8]</dd><dt>Created</dt><dd>@p.CreatedAt.ToLocalTime().ToString("g")</dd><dt>Impact</dt><dd>@p.ExpectedDelayReductionMinutes min delay / @p.ExpectedCo2KgAvoided.ToString("N1") kg CO₂</dd><dt>Model</dt><dd>@p.ModelSource</dd></dl><a class="sp-btn sp-btn--primary" href="/execution/plans/@p.PlanId">Open command plan</a></article>
+}
+</section>

@@ -17,11 +17,16 @@ public enum AgentMode
 
 public class GeminiSettings
 {
-    public bool Enabled { get; set; } = false;
+    public bool Enabled { get; set; } = true;
     public string Model { get; set; } = "gemini-2.5-flash";
     public string PrimaryModel { get; set; } = "gemini-2.5-flash";
     public string PremiumModel { get; set; } = "gemini-2.5-flash";
     public string RoutineModel { get; set; } = "gemini-3.1-flash-lite";
+    public string LiteModel { get; set; } = "gemini-3.1-flash-lite";
+    public string DeepReasoningModel { get; set; } = string.Empty;
+    public bool UseMapsGrounding { get; set; } = false;
+    public bool UseEmbeddings { get; set; } = false;
+    public bool UseLiveApi { get; set; } = false;
     public string FallbackModels { get; set; } = "gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.0-flash-lite,gemini-2.0-flash";
     public string ExperimentalFallbackModels { get; set; } = string.Empty;
     public bool AllowExperimentalModels { get; set; } = false;
@@ -65,13 +70,13 @@ public class AgentNarrativeResult
     public AgentMode GeneratedBy { get; set; } = AgentMode.Local;
     public bool UsedGemini { get; set; }
     public bool FallbackActive { get; set; }
-    public string Status { get; set; } = "Local fallback";
+    public string Status { get; set; } = "Deterministic fallback";
     public DateTime GeneratedAtUtc { get; set; } = DateTime.UtcNow;
     public string InputContextSummary { get; set; } = string.Empty;
     public string SafetyNote { get; set; } = "Human approval required. Not automatically executed.";
     public string ModelAttempted { get; set; } = string.Empty;
-    public string ModelUsed { get; set; } = "Local deterministic fallback";
-    public string SourceLabel { get; set; } = "Local deterministic fallback";
+    public string ModelUsed { get; set; } = "Deterministic fallback";
+    public string SourceLabel { get; set; } = "Deterministic fallback";
     public string FallbackReason { get; set; } = string.Empty;
     public int? LatencyMs { get; set; }
 }
@@ -123,6 +128,11 @@ public class AgentModeStatus
     public string PrimaryModel { get; set; } = "gemini-2.5-flash";
     public string PremiumModel { get; set; } = "gemini-2.5-flash";
     public string RoutineModel { get; set; } = "gemini-3.1-flash-lite";
+    public string LiteModel { get; set; } = "gemini-3.1-flash-lite";
+    public string DeepReasoningModel { get; set; } = string.Empty;
+    public bool UseMapsGrounding { get; set; } = false;
+    public bool UseEmbeddings { get; set; } = false;
+    public bool UseLiveApi { get; set; } = false;
     public string FallbackModels { get; set; } = string.Empty;
     public int CallsSinceStart { get; set; }
     public IReadOnlyDictionary<string, int> CallsByActionType { get; set; } = new Dictionary<string, int>();
@@ -182,11 +192,11 @@ public class LocalAgentNarrativeService : IAgentNarrativeService
             GeneratedBy = AgentMode.Local,
             UsedGemini = false,
             FallbackActive = request.RequestedMode != AgentMode.Local,
-            Status = request.RequestedMode == AgentMode.Local ? "Local fallback" : "Local fallback",
+            Status = request.RequestedMode == AgentMode.Local ? "Deterministic fallback" : "Deterministic fallback",
             InputContextSummary = BuildContextSummary(ctx, request),
-            ModelAttempted = "Local deterministic fallback",
-            ModelUsed = "Local deterministic fallback",
-            SourceLabel = "Local deterministic fallback"
+            ModelAttempted = "Deterministic fallback",
+            ModelUsed = "Deterministic fallback",
+            SourceLabel = "Deterministic fallback"
         };
         return Task.FromResult(result);
     }
@@ -196,7 +206,7 @@ public class LocalAgentNarrativeService : IAgentNarrativeService
         CurrentMode = AgentMode.Local,
         GeminiConfigured = false,
         GeminiEnabled = false,
-        GeminiStatus = "Local fallback active"
+        GeminiStatus = "Deterministic fallback active"
     };
 
     public static string BuildContextSummary(OperationalContext ctx, AgentNarrativeRequest request) =>
@@ -261,14 +271,14 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
         var attempted = string.Join(" → ", chain);
         if (!enabled || string.IsNullOrWhiteSpace(key))
         {
-            var status = string.IsNullOrWhiteSpace(key) ? "Gemini not configured" : "Gemini disabled";
-            RecordDiagnostics(request, attempted, "Local deterministic fallback", status, (int)(DateTime.UtcNow - started).TotalMilliseconds, quotaLimited: false, fallbackActive: true);
+            var status = string.IsNullOrWhiteSpace(key) ? "Gemini not configured; deterministic fallback used" : "Gemini disabled; deterministic fallback used";
+            RecordDiagnostics(request, attempted, "Deterministic fallback", status, (int)(DateTime.UtcNow - started).TotalMilliseconds, quotaLimited: false, fallbackActive: true);
             return Failure(request, status, attempted, null, started);
         }
 
         if (CallsSinceStart >= GetInt("Gemini:MaxCallsPerSession", "Gemini__MaxCallsPerSession", _settings.MaxCallsPerSession))
         {
-            RecordDiagnostics(request, attempted, "Local deterministic fallback", "Gemini max calls per session reached", (int)(DateTime.UtcNow - started).TotalMilliseconds, quotaLimited: false, fallbackActive: true);
+            RecordDiagnostics(request, attempted, "Deterministic fallback", "Gemini max calls per session reached", (int)(DateTime.UtcNow - started).TotalMilliseconds, quotaLimited: false, fallbackActive: true);
             return Failure(request, "Gemini max calls per session reached", attempted, null, started);
         }
 
@@ -348,7 +358,7 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
 
         var failure = string.IsNullOrWhiteSpace(lastFailure) ? "No supported Gemini text model available" : lastFailure;
         var totalLatency = (int)Math.Max(1, (DateTime.UtcNow - started).TotalMilliseconds);
-        RecordDiagnostics(request, attempted, "Local deterministic fallback", failure, totalLatency, LastQuotaLimited, fallbackActive: true);
+        RecordDiagnostics(request, attempted, "Deterministic fallback", failure, totalLatency, LastQuotaLimited, fallbackActive: true);
         return Failure(request, failure, attempted, null, started);
     }
 
@@ -363,7 +373,7 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
                 CurrentMode = GetGeminiMode(),
                 GeminiConfigured = configured,
                 GeminiEnabled = enabled,
-                GeminiStatus = enabled && configured ? "Configured; on-demand only" : configured ? "Configured but disabled" : "Not configured",
+                GeminiStatus = enabled && configured ? "Configured; on-demand Gemini active" : configured ? "Configured but disabled" : "Not configured; deterministic fallback ready",
                 PrimaryModel = GetString("Gemini:PrimaryModel", "GEMINI_MODEL", GetString("Gemini:Model", "GEMINI_MODEL", _settings.PrimaryModel)),
                 PremiumModel = GetString("Gemini:PremiumModel", null, _settings.PremiumModel),
                 RoutineModel = GetString("Gemini:RoutineModel", null, _settings.RoutineModel),
@@ -455,8 +465,8 @@ public class GeminiAgentNarrativeService : IAgentNarrativeService
         Status = status,
         InputContextSummary = LocalAgentNarrativeService.BuildContextSummary(request.Context, request),
         ModelAttempted = attempted,
-        ModelUsed = modelUsed ?? "Local deterministic fallback",
-        SourceLabel = "Local deterministic fallback",
+        ModelUsed = modelUsed ?? "Deterministic fallback",
+        SourceLabel = "Deterministic fallback",
         FallbackReason = status,
         LatencyMs = (int)Math.Max(1, (DateTime.UtcNow - started).TotalMilliseconds)
     };

@@ -88,7 +88,7 @@ public class DemoAccessController : Controller
     {
         BuildCredential("Port Admin Demo", "SMARTPORT_ADMIN_DEMO_CODE", "culltron-admin-2026", "/dashboard", "Control room, Gemini agent, integrations and reports.", "admin@smartport.culltron.app"),
         BuildCredential("Fleet Owner Demo", "SMARTPORT_FLEET_DEMO_CODE", "culltron-fleet-2026", "/fleet", "Fleet queue, trucks, notifications and execution plans.", "fleet.owner@smartport.culltron.app"),
-        BuildCredential("Driver Demo", "SMARTPORT_DRIVER_DEMO_CODE", "culltron-driver-2026", "/driver/demo", "Mobile-first driver queue status and confirmations.", "driver@smartport.culltron.app"),
+        BuildCredential("Driver Demo", "SMARTPORT_DRIVER_DEMO_CODE", "culltron-driver-2026", "/driver-app", "Mobile-first driver queue status and confirmations.", "driver@smartport.culltron.app"),
         BuildCredential("Judge Demo", "SMARTPORT_JUDGE_DEMO_CODE", "culltron-judge-2026", "/demo-tour", "Guided end-to-end hackathon judging tour.", "judge@smartport.culltron.app"),
         BuildCredential("General Demo", "SMARTPORT_DEMO_ACCESS_CODE", "culltron-demo-2026", "/demo-tour", "General access for the full protected demo.", "judge@smartport.culltron.app")
     };

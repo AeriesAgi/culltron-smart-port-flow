@@ -12,7 +12,7 @@ Culltron Smart Port Flow is an enterprise AI operations agent for smart ports an
 4. Use the provided access code or seeded Identity account if enabled.
 5. Open **Demo Tour**.
 6. Open **Gemini Operations Agent** and generate a brief.
-7. Generate an execution plan, open truck `SPQ-2026-0042`, use the Driver Companion App/web companion to send a status/check-in/location update, then review fleet tracker, truck timeline, audit trail, queue/ETA/idling/CO₂ impact.
+7. Generate an execution plan, open truck `SPQ-2026-0042`, use the Driver Companion App/driver app shell to send a status/check-in/location update, then review fleet tracker, truck timeline, audit trail, queue/ETA/idling/CO₂ impact.
 8. Open **Agent Governance** and **Enterprise Readiness**.
 
 ## Demo credentials
@@ -23,7 +23,7 @@ Seeded users use password `SmartPort@2026!`:
 | --- | --- | --- |
 | Port Admin | `admin@smartport.culltron.app` | `/dashboard` |
 | Fleet Owner | `fleet.owner@smartport.culltron.app` | `/fleet` |
-| Driver | `driver@smartport.culltron.app` | `/driver/demo` |
+| Driver | `driver@smartport.culltron.app` | `/driver-app` |
 | Judge Demo | `judge@smartport.culltron.app` | `/demo-tour` |
 
 Production deployments should not expose role cards/access codes unless `SMARTPORT_SHOW_DEMO_CREDENTIALS=true` is intentionally set.
@@ -116,7 +116,7 @@ When running locally or with `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`, `/demo-acce
 
 ## Driver/mobile companion story
 
-The Driver Companion App is the primary driver communication and tracking channel. The Android app, web companion at `/driver/demo`, and mobile API send driver status, explicit check-ins and optional one-shot location labels/coordinates to Smart Port. Fleet owners and Port Admins track drivers through app-based updates in `/fleet/tracker` and dashboard tracker summaries. No secrets live on the device; all Gemini and connector calls remain backend-side. Location/check-in is user-triggered only, not background tracking. WhatsApp remains optional connector-ready proof for future pilots/live-test messaging.
+The Driver Companion App is the primary driver communication and tracking channel. The Android app, driver app shell at `/driver-app`, and mobile API send driver status, explicit check-ins and optional one-shot location labels/coordinates to Smart Port. Fleet owners and Port Admins track drivers through app-based updates in `/fleet/tracker` and dashboard tracker summaries. No secrets live on the device; all Gemini and connector calls remain backend-side. Location/check-in is user-triggered only, not background tracking. WhatsApp remains optional connector-ready proof for future pilots/live-test messaging.
 
 ## Final enterprise hackathon pass — Gemini, mobile driver loop, and connector readiness
 
@@ -126,17 +126,17 @@ Smart Port is designed so the only remaining production step is adding approved 
 When the app runs in Development or `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`, `/demo-access` shows quick-fill role cards:
 - Port Admin: `culltron-admin-2026` → `/dashboard`
 - Fleet Owner: `culltron-fleet-2026` → `/fleet`
-- Driver: `culltron-driver-2026` → `/driver/demo`
+- Driver: `culltron-driver-2026` → `/driver-app`
 - Judge: `culltron-judge-2026` → `/demo-tour`
 
-Recommended judging path: `/demo-access` → Judge quick-fill → `/demo-tour` → `/gemini-agent` → `/agent-governance` → `/ops-ingest` → `/execution/plans` → `/fleet/trucks/SPQ-2026-0042` → `/driver/demo` → `/fleet/download-app` → `/fleet/notifications` → `/enterprise-readiness` → `/health/integrations`.
+Recommended judging path: `/demo-access` → Judge quick-fill → `/demo-tour` → `/gemini-agent` → `/agent-governance` → `/ops-ingest` → `/execution/plans` → `/fleet/trucks/SPQ-2026-0042` → `/driver-app` → `/fleet/download-app` → `/fleet/notifications` → `/enterprise-readiness` → `/health/integrations`.
 
 ### Gemini award centerpiece and quota-safe model strategy
 Gemini is openly used as the on-demand AI agent layer. It activates only when a user submits an explicit Gemini/AI/Copilot/Ops Ingest/driver command action, not on normal page loads, health checks, dashboards, enterprise readiness, Android app launch, mobile login/status refresh, seed data, smoke tests, or background timers.
 
 Default server-side configuration:
 - `GEMINI_API_KEY`
-- `Gemini__Enabled=false` by default unless explicitly enabled
+- `Gemini__Enabled=true` by default; without `GEMINI_API_KEY` Smart Port uses deterministic fallback, and operators can set `Gemini__Enabled=false` to disable calls
 - `Gemini__Mode=Hybrid`
 - `Gemini__PremiumModel=gemini-2.5-flash`
 - `Gemini__RoutineModel=gemini-3.1-flash-lite`
@@ -155,12 +155,12 @@ Task categories:
 - Routine operational AI uses `gemini-3.1-flash-lite` first for driver instruction phrasing, routine fleet briefs, mobile Driver Copilot, Ops Ingest summarization, delay explanations, queue-action explanations, and notification suggestions.
 - Secondary Gemini fallback uses `gemini-2.5-flash-lite`, then configured fallback text models.
 - Optional Gemma text fallbacks are disabled unless explicitly configured and proven compatible with the same backend API path.
-- Local deterministic fallback is always available and produces polished driver instructions, fleet plans, executive summaries, governance/risk reviews, disruption recovery, emissions/idling impact, and Copilot responses.
+- Deterministic fallback is always available and produces polished driver instructions, fleet plans, executive summaries, governance/risk reviews, disruption recovery, emissions/idling impact, and Copilot responses.
 
 The backend skips unsupported/model-not-found responses, marks quota-limited models for cooldown, avoids retry loops, records safe diagnostics (counts, action type, route/source, model, latency, quota/fallback state), and never logs or displays API keys, bearer tokens, prompts containing secrets, WhatsApp tokens, phone numbers, or provider credentials.
 
-### Driver Companion APK, web companion, and mobile API
-The primary driver channels are the Android Driver Companion, the web companion, and token-secured mobile APIs. The Android app lives in `mobile/SmartPortDriverCompanion`, uses Java/Kotlin 17, and calls:
+### Driver Companion APK, driver app shell, and mobile API
+The primary driver channels are the Android Driver Companion, the driver app shell, and token-secured mobile APIs. The Android app lives in `mobile/SmartPortDriverCompanion`, uses Java/Kotlin 17, and calls:
 - `POST /api/mobile/auth/demo-login`
 - `GET /api/mobile/truck/status/{reference}`
 - `GET /api/mobile/notifications/{reference}`
@@ -188,3 +188,24 @@ Control room / Port Admin → Gemini Operations Agent → execution plan → fle
 - Gemini is embedded as an on-demand enterprise operations agent and can summarize tracked driver risk, stale check-ins and action recommendations.
 - WhatsApp is optional connector-ready only; Smart Port does not depend on WhatsApp production approval.
 - Synthetic data is used for judging; live connectors can replace it in a supervised pilot.
+
+## Final polish pass: app-first tracking and APK path
+
+The current completion pass positions the Driver Companion App as the primary mobile operations channel. Driver GPS/manual check-ins flow through the driver app shell, Android app or mobile API into `/fleet/tracker`, truck detail timelines, ETA/queue state, impact metrics and audit history. WhatsApp remains optional connector-ready support only.
+
+For the Android APK path, use `cd mobile/SmartPortDriverCompanion && ./gradlew assembleDebug` or run `.github/workflows/build-android-apk.yml`. Publish the resulting APK to `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk` to enable the direct `/fleet/download-app` download button. See `docs/FINAL_WINNER_POLISH.md` for the recommended judge demo path and production caveats.
+
+## Enterprise AI submission-ready flow
+
+Final demo route: `/` → `/dashboard` → `/execution` → `/execution/plans/{id}` → `/fleet` → `/fleet/tracker` → `/driver-app` → `/gemini-agent` → `/emissions` → `/enterprise-readiness`.
+
+The winning story is one execution loop: control room detects congestion, Gemini/deterministic fallback creates an execution plan, fleet owners coordinate affected trucks, drivers use the Driver Companion App for actions and GPS/manual check-ins, fleet tracker updates, emissions/idling impact is shown and every decision is audit logged.
+
+DigitalOcean redeploy:
+
+```bash
+docker compose build web
+docker compose up -d db web
+```
+
+Set `ASPNETCORE_URLS=http://+:8080`, a production connection string, demo codes if needed and `GEMINI_API_KEY` only when Gemini should run server-side. Do not hardcode secrets.

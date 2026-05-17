@@ -5,7 +5,7 @@
 }
 <section class="sp-command-hero sp-premium-panel print-friendly-report">
     <div>
-        <div class="sp-agent-badge"><span class="sp-live-dot"></span> Agent Report · @(Model.UsedGemini ? "Gemini enhanced" : "Local fallback")</div>
+        <div class="sp-agent-badge"><span class="sp-live-dot"></span> Agent Report · @(Model.UsedGemini ? "Gemini enhanced" : "Deterministic fallback")</div>
         <h1>@Model.Title</h1>
         <p>@Model.SafetyNote</p>
         <div class="sp-command-actions no-print">

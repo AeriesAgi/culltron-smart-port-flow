@@ -1,12 +1,71 @@
 @using SmartPort.Application.DTOs
 @model IReadOnlyList<FleetTruckDto>
 @{
-    ViewData["Title"] = "Fleet / Driver Tracker";
+    ViewData["Title"] = "Live Fleet Tracker";
     var active = Model.Count(t => t.CurrentStatus != QueueTruckStatus.Completed);
-    var delayed = Model.Count(t => t.DelayRisk is QueueDelayRisk.High or QueueDelayRisk.Critical || t.CurrentStatus is QueueTruckStatus.Delayed or QueueTruckStatus.Rescheduled);
+    var delayed = Model.Count(t => t.DelayRisk is QueueDelayRisk.High or QueueDelayRisk.Critical || t.CurrentStatus is QueueTruckStatus.Delayed or QueueTruckStatus.Rescheduled or QueueTruckStatus.Exception);
     var checkedIn = Model.Count(t => t.LastLocationCheckIn != null || !string.IsNullOrWhiteSpace(t.LastKnownLocationLabel));
+    var fresh = Model.Count(t => t.LastLocationCheckIn?.Timestamp > DateTime.UtcNow.AddMinutes(-45));
 }
-<div class="sp-toolbar"><div><span class="sp-badge sp-badge--green">Driver Companion App primary channel</span><h1>Fleet / Driver Tracker</h1><p>The Driver Companion App acts as the live fleet tracking channel through user-triggered status, check-in, and location updates. No background tracking or external map credentials are required.</p></div><div class="sp-actions"><a class="sp-btn sp-btn--primary" href="/fleet/download-app">Driver Companion App</a><a class="sp-btn sp-btn--outline" href="/driver/demo">Open Web Companion</a></div></div>
-<div class="sp-kpi-grid"><div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@active</div><div class="sp-kpi-card__label">Active trucks tracked</div><div class="sp-kpi-card__sub">App/web/mobile API updates</div></div></div><div class="sp-kpi-card sp-kpi-card--warn"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@delayed</div><div class="sp-kpi-card__label">Delayed / high risk</div><div class="sp-kpi-card__sub">Needs fleet attention</div></div></div><div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@checkedIn</div><div class="sp-kpi-card__label">Latest check-ins</div><div class="sp-kpi-card__sub">User-triggered only</div></div></div></div>
-<article class="sp-card sp-mt"><div class="sp-card__header"><div><h2>Driver tracker table</h2><p>Queue, ETA, idling and CO₂ impact recalculate after check-ins and driver actions.</p></div><a class="sp-btn sp-btn--primary" href="/Copilot?prompt=Which%20tracked%20drivers%20need%20attention%3F">Ask Copilot</a></div><div class="sp-table-wrap"><table class="sp-table"><thead><tr><th>Truck / driver</th><th>Status</th><th>Gate / zone</th><th>Queue & ETA</th><th>Risk</th><th>Last action / check-in</th><th>Location</th><th>Source</th><th></th></tr></thead><tbody>@foreach (var t in Model.OrderByDescending(t => t.DelayRisk).ThenBy(t => t.QueueNumber)){ var last = t.Timeline.OrderByDescending(x=>x.Timestamp).FirstOrDefault(); <tr><td><strong>@t.BookingReference</strong><br/><span>@t.TruckRegistration · @t.DriverName</span><br/><small>@t.FleetOperatorName</small></td><td>@t.CurrentStatus</td><td>@t.AssignedGate<br/><small>@t.BerthYardStagingZone</small></td><td>#@t.QueueNumber<br/><small>@t.EtaCallForwardTime.ToLocalTime().ToString("HH:mm")</small></td><td><span class="sp-badge sp-badge--@(t.DelayRisk is QueueDelayRisk.High or QueueDelayRisk.Critical ? "warning" : "green")">@t.DelayRisk</span></td><td>@(last?.Note ?? "No action yet")<br/><small>@(last?.Timestamp.ToLocalTime().ToString("g") ?? "—")</small></td><td>@t.LastKnownLocationLabel@if(t.LastLocationCheckIn != null){<br/><small>@t.LastLocationCheckIn.Latitude, @t.LastLocationCheckIn.Longitude</small>}</td><td>@(t.LastLocationCheckIn?.Source.ToString() ?? t.Source.ToString())</td><td><a class="sp-btn sp-btn--sm sp-btn--outline" href="/fleet/trucks/@t.BookingReference">Detail</a></td></tr>}</tbody></table></div></article>
-<article class="sp-card sp-mt"><h2>Map connector ready</h2><p>Clean card/table tracking is active now. A future map provider can subscribe to the same Driver Companion App / Mobile API check-ins without adding provider credentials to this demo.</p></article>
+<section class="sp-command-hero sp-command-hero--tracker">
+  <div>
+    <span class="sp-badge sp-badge--green">App-based driver tracking · no background surveillance</span>
+    <h1>Live Fleet Tracker</h1>
+    <p>Fleet owners and Port Admins monitor driver check-ins from the Driver Companion App, driver app shell and mobile API. Each update refreshes last known location, queue status, ETA/call-forward, idling impact and audit history.</p>
+    <div class="sp-actions"><a class="sp-btn sp-btn--primary" href="/fleet/download-app">Install Driver Companion</a><a class="sp-btn sp-btn--outline" href="/driver-app">Open Driver App</a><a class="sp-btn sp-btn--outline" href="/execution/plans">Execution Plans</a></div>
+  </div>
+  <div class="sp-radar-card"><span>TRACKING FEED</span><strong>@fresh fresh check-ins</strong><small>@active active trucks · @delayed need attention</small><div class="sp-radar-ring"></div></div>
+</section>
+
+<div class="sp-kpi-grid sp-mt">
+  <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@active</div><div class="sp-kpi-card__label">Active trucks tracked</div><div class="sp-kpi-card__sub">App / web / mobile API events</div></div></div>
+  <div class="sp-kpi-card sp-kpi-card--warn"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@delayed</div><div class="sp-kpi-card__label">Delayed or high risk</div><div class="sp-kpi-card__sub">Needs fleet action</div></div></div>
+  <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@checkedIn</div><div class="sp-kpi-card__label">Known location labels</div><div class="sp-kpi-card__sub">User-triggered check-ins</div></div></div>
+  <div class="sp-kpi-card"><div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@fresh</div><div class="sp-kpi-card__label">Fresh check-ins</div><div class="sp-kpi-card__sub">Within 45 minutes</div></div></div>
+</div>
+
+<section class="sp-card sp-mt sp-map-panel">
+  <div class="sp-card__header"><div><h2>Fleet GPS / check-in map</h2><p>Map-style operational view rendered from Driver Companion check-ins. No external map credentials required for the demo.</p></div><span class="sp-badge sp-badge--ai">Click-to-check-in only</span></div>
+  <div class="sp-map-grid">
+    <div class="sp-dark-map">
+      @foreach (var t in Model.Where(t => t.LastLocationCheckIn != null || !string.IsNullOrWhiteSpace(t.LastKnownLocationLabel)).Take(8))
+      {
+          var left = 12 + (t.QueueNumber * 11 % 72);
+          var top = 18 + (t.QueueNumber * 17 % 58);
+          <a class="sp-map-pin sp-map-pin--@(t.DelayRisk is QueueDelayRisk.High or QueueDelayRisk.Critical ? "hot" : "ok")" style="left:@left%;top:@top%" href="/fleet/trucks/@t.BookingReference" title="@t.TruckRegistration · @t.CurrentStatus"><span>@t.QueueNumber</span></a>
+      }
+      <div class="sp-map-route sp-map-route--one"></div><div class="sp-map-route sp-map-route--two"></div><div class="sp-map-control">＋<br/>−<br/>◎</div>
+    </div>
+    <div class="sp-map-list">
+      @foreach (var t in Model.OrderByDescending(t => t.LastLocationCheckIn?.Timestamp ?? DateTime.MinValue).Take(5))
+      {
+        <article><strong>@t.TruckRegistration</strong><span>@t.CurrentStatus · @t.AssignedGate</span><small>@(t.LastLocationCheckIn == null ? "No coordinates yet" : $"{t.LastLocationCheckIn.Latitude}, {t.LastLocationCheckIn.Longitude} · {t.LastLocationCheckIn.Timestamp.ToLocalTime():g}")</small>@if(t.LastLocationCheckIn != null){<a href="https://www.google.com/maps?q=@t.LastLocationCheckIn.Latitude,@t.LastLocationCheckIn.Longitude" target="_blank" rel="noopener">Open in maps</a>}</article>
+      }
+    </div>
+  </div>
+</section>
+
+<article class="sp-card sp-mt">
+  <div class="sp-card__header"><div><h2>Control-room driver monitor</h2><p>Queue, ETA, idling and CO₂ impact recalculate after check-ins and driver actions.</p></div><a class="sp-btn sp-btn--primary" href="/Copilot?prompt=Which%20tracked%20drivers%20need%20attention%3F">Ask Copilot</a></div>
+  <div class="sp-table-wrap"><table class="sp-table sp-table--dense"><thead><tr><th>Truck / driver</th><th>Queue state</th><th>ETA / gate</th><th>Tracking state</th><th>Risk & impact</th><th>Latest audit event</th><th></th></tr></thead><tbody>
+  @foreach (var t in Model.OrderByDescending(t => t.DelayRisk).ThenBy(t => t.QueueNumber))
+  {
+      var last = t.Timeline.OrderByDescending(x=>x.Timestamp).FirstOrDefault();
+      var loc = t.LastLocationCheckIn;
+      <tr>
+        <td><strong>@t.BookingReference</strong><br/><span>@t.TruckRegistration · @t.DriverName</span><br/><small>@t.FleetOperatorName</small></td>
+        <td><span class="sp-badge sp-badge--ai">@t.CurrentStatus</span><br/><small>Queue #@t.QueueNumber · @t.DriverAvailabilityStatus</small></td>
+        <td><strong>@t.EtaCallForwardTime.ToLocalTime().ToString("HH:mm")</strong><br/><small>@t.AssignedGate · @t.BerthYardStagingZone</small></td>
+        <td><strong>@(string.IsNullOrWhiteSpace(t.LastKnownLocationLabel) ? "No location yet" : t.LastKnownLocationLabel)</strong>@if(loc != null){<br/><small>@loc.Timestamp.ToLocalTime().ToString("g") · @loc.Latitude, @loc.Longitude · @loc.EtaConfidence.ToString("P0") confidence</small>}else{<br/><small>Request app check-in from truck detail.</small>}</td>
+        <td><span class="sp-badge sp-badge--@(t.DelayRisk is QueueDelayRisk.High or QueueDelayRisk.Critical ? "warning" : "green")">@t.DelayRisk</span><br/><small>@t.EstimatedIdlingMinutesAvoided min · @t.EstimatedCo2KgAvoided.ToString("N1") kg CO₂ avoided</small></td>
+        <td>@(last?.Note ?? "No action yet")<br/><small>@(last?.Timestamp.ToLocalTime().ToString("g") ?? "—") · @(last?.Source.ToString() ?? t.Source.ToString())</small></td>
+        <td><a class="sp-btn sp-btn--sm sp-btn--outline" href="/fleet/trucks/@t.BookingReference">Open console</a></td>
+      </tr>
+  }
+  </tbody></table></div>
+</article>
+
+<section class="sp-grid sp-grid--2 sp-mt">
+  <article class="sp-card"><h2>Audit history flow</h2><ol class="sp-steps"><li>Fleet owner requests app check-in or driver opens companion.</li><li>Driver taps GPS/manual check-in or allowed action.</li><li>Mobile API updates queue state, ETA, instruction, idling/CO₂ estimate.</li><li>Fleet tracker, truck console and driver page show the same audit event.</li></ol></article>
+  <article class="sp-card"><h2>Map connector ready</h2><p>The polished table/radar tracker is active without external map credentials. A production map provider can subscribe to the same app/mobile API check-in stream during a pilot.</p></article>
+</section>

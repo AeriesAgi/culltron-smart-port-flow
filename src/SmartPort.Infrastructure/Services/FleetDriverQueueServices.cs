@@ -152,7 +152,7 @@ public class DemoFleetDriverQueueService : IFleetDriverQueueService
         var truck = await GetTruckAsync(reference); if (truck == null) return null; var updated = CloneTruck(truck); var old = updated.CurrentStatus; var loc = _eta.Estimate(updated.BookingReference, updated.AssignedGate, updated.BerthYardStagingZone, latitude, longitude, label, source);
         updated.LastLocationCheckIn = loc; updated.LastKnownLocationLabel = loc.LocationLabel; updated.EtaCallForwardTime = loc.EstimatedArrivalTime; updated.CurrentStatus = loc.DistanceToAssignedGateKm <= 0.5m ? QueueTruckStatus.ProceedToGate : loc.DistanceToStagingKm <= 0.5m ? QueueTruckStatus.AtStaging : QueueTruckStatus.LocationShared;
         var opt = _optimizer.Optimize(updated); updated.CurrentInstruction = BuildInstruction(updated, opt); updated.LastUpdated = loc.Timestamp; updated.EstimatedIdlingMinutesAvoided = opt.IdlingMinutesAvoided; updated.EstimatedCo2KgAvoided = opt.Co2KgAvoided; updated.DelayRisk = opt.DelayRisk; updated.AllowedNextActions = opt.AllowedNextActions; updated.LatestNotification = $"Driver app check-in received: {loc.LocationLabel}. ETA {loc.EstimatedArrivalTime:HH:mm}.";
-        updated.Timeline.Add(new TruckStatusTimelineDto { Timestamp = loc.Timestamp, Status = updated.CurrentStatus, DriverEventType = DriverEventType.WhatsAppLocationShared, Source = source, Actor = actor, Note = $"Driver checked in from {SourceLabel(source)} at {loc.LocationLabel}, {loc.DistanceToAssignedGateKm:N1} km from gate." });
+        updated.Timeline.Add(new TruckStatusTimelineDto { Timestamp = loc.Timestamp, Status = updated.CurrentStatus, DriverEventType = DriverEventType.MobileApiLocationCheckIn, Source = source, Actor = actor, Note = $"Driver checked in from {SourceLabel(source)} at {loc.LocationLabel}, {loc.DistanceToAssignedGateKm:N1} km from gate." });
         updated.AuditTrail.Add(Audit(actor, "LocationCheckIn", old, updated.CurrentStatus, updated.LatestNotification, source)); updated.NotificationHistory.Add(Notification(updated, source == DataProvenanceType.AndroidDriverApp ? NotificationChannel.AndroidPush : NotificationChannel.InApp, NotificationStatus.SimulatedSent, NotificationEventType.DriverCheckIn, updated.LatestNotification, source));
         StateOverrides[updated.BookingReference] = updated; return updated;
     }
@@ -171,7 +171,7 @@ public class DemoFleetDriverQueueService : IFleetDriverQueueService
     private static WhatsAppMode ParseMode(string? value) => Enum.TryParse<WhatsAppMode>(value, true, out var mode) ? mode : WhatsAppMode.Demo;
     private static string BuildFallbackExplanation(QueueTruckStatus status, QueueDelayRisk risk, int idle, decimal co2) => status switch { QueueTruckStatus.Holding or QueueTruckStatus.HoldPosition => $"Gate congestion is active, so holding prevents spillback and avoids about {idle} idling minutes ({co2:N1} kg CO2).", QueueTruckStatus.ProceedToGate => "Berth readiness and a low gate queue make this the cleanest call-forward window.", QueueTruckStatus.Delayed or QueueTruckStatus.Rescheduled => $"A disruption or berth/yard constraint is active. Rescheduling reduces gate pressure and avoids about {idle} minutes of diesel idling.", _ when risk == QueueDelayRisk.High => "High idling risk detected; Smart Port keeps the vehicle staged until capacity improves.", _ => "Queue, berth, gate and emissions signals are balanced for the current instruction." };
     private static QueueInstructionDto BuildInstruction(FleetTruckDto truck, QueueOptimizationResultDto opt) => new() { Reference = $"QI-{Suffix(truck.BookingReference)}-{DateTime.UtcNow:HHmmss}", Instruction = opt.DriverFriendlyInstruction, Reason = opt.Reason, Explanation = opt.Explanation, Source = DataProvenanceType.DeterministicFallback, GeneratedAt = DateTime.UtcNow };
-    private static OperationalActionType EventToAction(DriverEventType e) => e switch { DriverEventType.DriverConfirmedHolding => OperationalActionType.ConfirmHolding, DriverEventType.DriverArrivedAtStaging => OperationalActionType.ArrivedAtStaging, DriverEventType.DriverProceedingToGate => OperationalActionType.ProceedingToGate, DriverEventType.DriverArrivedAtGate => OperationalActionType.ArrivedAtGate, DriverEventType.DriverCompletedJob => OperationalActionType.CompleteJob, DriverEventType.DriverReady => OperationalActionType.Ready, DriverEventType.DriverBreak => OperationalActionType.Break15, DriverEventType.DriverLunch => OperationalActionType.Lunch30, DriverEventType.DriverDelayed => OperationalActionType.Delayed20, DriverEventType.DriverIssueReported => OperationalActionType.ReportIssue, DriverEventType.WhatsAppLocationRequested => OperationalActionType.RequestLocation, DriverEventType.WhatsAppLocationShared => OperationalActionType.ShareLocation, _ => OperationalActionType.RefreshStatus };
+    private static OperationalActionType EventToAction(DriverEventType e) => e switch { DriverEventType.DriverConfirmedHolding => OperationalActionType.ConfirmHolding, DriverEventType.DriverArrivedAtStaging => OperationalActionType.ArrivedAtStaging, DriverEventType.DriverProceedingToGate => OperationalActionType.ProceedingToGate, DriverEventType.DriverArrivedAtGate => OperationalActionType.ArrivedAtGate, DriverEventType.DriverCompletedJob => OperationalActionType.CompleteJob, DriverEventType.DriverReady => OperationalActionType.Ready, DriverEventType.DriverBreak => OperationalActionType.Break15, DriverEventType.DriverLunch => OperationalActionType.Lunch30, DriverEventType.DriverDelayed => OperationalActionType.Delayed20, DriverEventType.DriverIssueReported => OperationalActionType.ReportIssue, DriverEventType.WhatsAppLocationRequested => OperationalActionType.RequestLocation, DriverEventType.MobileApiLocationCheckIn => OperationalActionType.ShareLocation, _ => OperationalActionType.RefreshStatus };
     private static DriverNotificationDto Notification(FleetTruckDto truck, NotificationChannel channel, NotificationStatus status, NotificationEventType eventType, string message, DataProvenanceType source) => new() { TruckReference = truck.BookingReference, RecipientName = truck.DriverName, RecipientContact = channel == NotificationChannel.WhatsApp ? truck.DriverContact.NormalizedWhatsAppNumber : truck.DriverContact.BackupContact, FleetOperator = truck.FleetOperatorName, Channel = channel, Message = message, Status = status, EventType = eventType, RelatedInstructionReference = truck.CurrentInstruction.Reference, Source = source, Timestamp = DateTime.UtcNow };
     private static OperationalAuditEntryDto Audit(string actor, string eventType, QueueTruckStatus? oldStatus, QueueTruckStatus? newStatus, string reason, DataProvenanceType source) => new() { Actor = actor, EventType = eventType, OldStatus = oldStatus, NewStatus = newStatus, Reason = reason, Source = source, PublicSafeNote = reason };
     private static List<DriverNotificationDto> SeedNotifications(FleetTruckDto truck) => new() { Notification(truck, NotificationChannel.InApp, NotificationStatus.SimulatedSent, NotificationEventType.AiInstructionUpdated, truck.LatestNotification, DataProvenanceType.DeterministicFallback), new() { TruckReference = truck.BookingReference, RecipientName = truck.DriverName, RecipientContact = "DEMO-ONLY-NOT-LIVE", FleetOperator = truck.FleetOperatorName, Channel = NotificationChannel.WhatsApp, Message = truck.LatestNotification, Status = NotificationStatus.SimulatedSent, EventType = NotificationEventType.AiInstructionUpdated, RelatedInstructionReference = truck.CurrentInstruction.Reference, Timestamp = truck.LastUpdated.AddSeconds(15), Source = DataProvenanceType.SyntheticDemoData } };
@@ -179,24 +179,57 @@ public class DemoFleetDriverQueueService : IFleetDriverQueueService
     private static List<GateCapacityDto> BuildGateCapacities(List<FleetTruckDto> trucks) => new() { new() { GateName = "Gate 1", CurrentQueueCount = 3, CapacityPerHour = 18, CongestionLevel = "Low", Status = CapacityStatus.Open, AssignedTrucks = trucks.Where(t => t.AssignedGate == "Gate 1").Select(t => t.TruckRegistration).ToList(), NextAvailableTime = DateTime.UtcNow.AddMinutes(5) }, new() { GateName = "Gate 2", CurrentQueueCount = 7, CapacityPerHour = 16, CongestionLevel = "Moderate", Status = CapacityStatus.Open, AssignedTrucks = trucks.Where(t => t.AssignedGate == "Gate 2").Select(t => t.TruckRegistration).ToList(), NextAvailableTime = DateTime.UtcNow.AddMinutes(12) }, new() { GateName = "Gate 3", CurrentQueueCount = 18, CapacityPerHour = 12, CongestionLevel = "High", Status = CapacityStatus.Congested, AssignedTrucks = trucks.Where(t => t.AssignedGate == "Gate 3").Select(t => t.TruckRegistration).ToList(), NextAvailableTime = DateTime.UtcNow.AddMinutes(28) } };
     private static List<StagingAreaDto> BuildStagingAreas() => new() { new() { AreaName = "Staging Area A", Capacity = 12, CurrentTrucks = 8, DistanceToAssignedGateKm = 1.2m, Status = CapacityStatus.Available }, new() { AreaName = "Staging Area B", Capacity = 10, CurrentTrucks = 9, DistanceToAssignedGateKm = 1.6m, Status = CapacityStatus.NearFull }, new() { AreaName = "Off-site Holding", Capacity = 50, CurrentTrucks = 17, DistanceToAssignedGateKm = 7.4m, Status = CapacityStatus.Available } };
     private static List<BerthReadinessStatusDto> BuildBerthReadiness(List<FleetTruckDto> trucks) => new() { new() { BerthName = "Berth 204", ReadinessStatus = "Clearing imports", CurrentOperation = "Discharge", NextAvailableTime = DateTime.UtcNow.AddMinutes(28), DelayRisk = QueueDelayRisk.High, LinkedTruckReferences = trucks.Take(3).Select(t => t.BookingReference).ToList() }, new() { BerthName = "Reefer Berth R2", ReadinessStatus = "Ready", CurrentOperation = "Reefer loading", NextAvailableTime = DateTime.UtcNow.AddMinutes(8), DelayRisk = QueueDelayRisk.Medium, LinkedTruckReferences = trucks.Where(t => t.FleetOperatorId == "kzn-cold-chain").Select(t => t.BookingReference).ToList() } };
-    internal static ExecutionPlanDto BuildExecutionPlan(List<FleetTruckDto> trucks, string scenario) { var actions = trucks.Select(t => new ExecutionPlanTruckActionDto { TruckReference = t.BookingReference, TruckRegistration = t.TruckRegistration, DriverName = t.DriverName, ActionType = t.CurrentStatus switch { QueueTruckStatus.ProceedToGate => ExecutionTruckActionType.ProceedToGate, QueueTruckStatus.Delayed or QueueTruckStatus.Rescheduled => ExecutionTruckActionType.DelayArrival, QueueTruckStatus.Waiting => ExecutionTruckActionType.MoveToStaging, _ => ExecutionTruckActionType.HoldPosition }, Reason = t.CurrentInstruction.Reason, EtaCallForwardTime = t.EtaCallForwardTime, NotificationText = t.LatestNotification, AllowedNextActions = t.AllowedNextActions, IdlingMinutesAvoided = t.EstimatedIdlingMinutesAvoided, Co2KgAvoided = t.EstimatedCo2KgAvoided }).ToList(); return new ExecutionPlanDto { ScenarioName = scenario, TruckActions = actions, ExpectedIdlingMinutesAvoided = actions.Sum(a => a.IdlingMinutesAvoided), ExpectedCo2KgAvoided = actions.Sum(a => a.Co2KgAvoided), ExpectedDelayReductionMinutes = 42, ConfidenceScore = .84m, Explanation = "Deterministic execution plan balances gate pressure, berth readiness, staging capacity, driver confirmations and emissions impact.", AuditEntries = new() { Audit("Smart Port", "ExecutionPlanGenerated", null, null, "Multi-truck execution plan generated from demo control-room state.", DataProvenanceType.DeterministicFallback) } }; }
-}
-
-public class OperationalStateMachineService : IOperationalStateMachineService
-{
-    private readonly IFleetDriverQueueService? _queue;
-    public OperationalStateMachineService() { }
-    public OperationalStateMachineService(IFleetDriverQueueService queue) => _queue = queue;
-    public bool CanTransition(QueueTruckStatus currentStatus, OperationalActionType requestedAction, out QueueTruckStatus newStatus, out string message)
+    internal static ExecutionPlanDto BuildExecutionPlan(List<FleetTruckDto> trucks, string scenario)
     {
-        newStatus = requestedAction switch { OperationalActionType.ShareLocation => QueueTruckStatus.LocationShared, OperationalActionType.ConfirmHolding => QueueTruckStatus.Holding, OperationalActionType.ArrivedAtStaging or OperationalActionType.MoveToStaging => QueueTruckStatus.AtStaging, OperationalActionType.ProceedingToGate or OperationalActionType.ReleaseToGate => QueueTruckStatus.ProceedToGate, OperationalActionType.ArrivedAtGate => QueueTruckStatus.AtGate, OperationalActionType.CompleteJob => QueueTruckStatus.Completed, OperationalActionType.Delayed20 => QueueTruckStatus.Delayed, OperationalActionType.Reschedule => QueueTruckStatus.Rescheduled, OperationalActionType.MarkException or OperationalActionType.ReportIssue => QueueTruckStatus.Exception, OperationalActionType.RequestLocation => QueueTruckStatus.LocationRequested, OperationalActionType.Ready => currentStatus is QueueTruckStatus.Delayed or QueueTruckStatus.Rescheduled ? QueueTruckStatus.Waiting : currentStatus, _ => currentStatus };
-        var allowed = GetAllowedActions(currentStatus); var ok = allowed.Contains(requestedAction) || requestedAction is OperationalActionType.RefreshStatus or OperationalActionType.CheckEta or OperationalActionType.RequestLocation or OperationalActionType.ShareLocation or OperationalActionType.MoveToStaging or OperationalActionType.ReleaseToGate or OperationalActionType.Reschedule or OperationalActionType.ReportIssue or OperationalActionType.MarkException or OperationalActionType.Delayed20;
-        message = ok ? $"Transition accepted: {currentStatus} -> {newStatus}." : $"Invalid transition: action {requestedAction} is not allowed from {currentStatus}."; return ok;
+        var actions = trucks.Select(t => new ExecutionPlanTruckActionDto
+        {
+            TruckReference = t.BookingReference,
+            TruckRegistration = t.TruckRegistration,
+            DriverName = t.DriverName,
+            ActionType = t.CurrentStatus switch
+            {
+                QueueTruckStatus.ProceedToGate => ExecutionTruckActionType.ProceedToGate,
+                QueueTruckStatus.Delayed or QueueTruckStatus.Rescheduled => ExecutionTruckActionType.DelayArrival,
+                QueueTruckStatus.Waiting => ExecutionTruckActionType.MoveToStaging,
+                _ => ExecutionTruckActionType.HoldPosition
+            },
+            Reason = t.CurrentInstruction.Reason,
+            EtaCallForwardTime = t.EtaCallForwardTime,
+            NotificationText = t.LatestNotification,
+            AllowedNextActions = t.AllowedNextActions,
+            IdlingMinutesAvoided = t.EstimatedIdlingMinutesAvoided,
+            Co2KgAvoided = t.EstimatedCo2KgAvoided
+        }).ToList();
+
+        return new ExecutionPlanDto
+        {
+            ScenarioName = scenario,
+            Status = ExecutionPlanStatus.Draft,
+            PortStage = "Gate metering / staging coordination",
+            DisruptionSummary = "Gate congestion, staging capacity and berth readiness variance require controlled truck sequencing.",
+            AffectedFleetOperator = "All demo fleets",
+            ModelSource = "Deterministic fallback · Gemini-ready",
+            TruckActions = actions,
+            ExpectedIdlingMinutesAvoided = actions.Sum(a => a.IdlingMinutesAvoided),
+            ExpectedCo2KgAvoided = actions.Sum(a => a.Co2KgAvoided),
+            EstimatedDieselLitresSaved = Math.Round(actions.Sum(a => a.IdlingMinutesAvoided) / 60m * 3.0m, 1),
+            ExpectedDelayReductionMinutes = 42,
+            ConfidenceScore = .84m,
+            Explanation = "Execution plan balances gate pressure, berth readiness, staging capacity, driver confirmations, app check-ins and emissions impact. Gemini can enrich the narrative when configured; deterministic planning remains available.",
+            FleetOwnerInstructions = new()
+            {
+                "Prioritise trucks with fresh app check-ins and high delay risk.",
+                "Request driver check-ins for stale locations before gate release.",
+                "Dispatch staging moves in sequence and keep exceptions auditable."
+            },
+            DriverInstructionSet = actions.Take(5).Select(a => $"{a.TruckRegistration}: {a.NotificationText}").ToList(),
+            AuditEntries = new()
+            {
+                Audit("Smart Port", "ExecutionPlanGenerated", null, null, "Multi-truck execution plan generated from demo control-room state.", DataProvenanceType.DeterministicFallback)
+            }
+        };
     }
-    public async Task<StateTransitionResultDto> ApplyTransitionAsync(string jobReference, OperationalActionType action, string actor, DataProvenanceType source) { if (_queue == null) return new() { Success = false, Message = "Queue service unavailable." }; var truck = await _queue.GetTruckAsync(jobReference); if (truck == null) return new() { Success = false, Message = "Truck/reference not found." }; var old = truck.CurrentStatus; if (!CanTransition(old, action, out var ns, out var msg)) return new() { Success = false, Message = msg, OldStatus = old, NewStatus = old, AllowedNextActions = GetAllowedActions(old).ToList() }; var updated = await _queue.RecordDriverEventAsync(jobReference, ActionToEvent(action), source, msg, actor); return new() { Success = true, Message = msg, OldStatus = old, NewStatus = ns, Truck = updated, AllowedNextActions = GetAllowedActions(ns).ToList() }; }
-    public async Task<IReadOnlyList<OperationalActionType>> GetAllowedNextActionsAsync(string jobReference) => _queue != null && (await _queue.GetTruckAsync(jobReference)) is { } t ? GetAllowedActions(t.CurrentStatus).ToList() : Array.Empty<OperationalActionType>();
-    public static IEnumerable<OperationalActionType> GetAllowedActions(QueueTruckStatus status) => status switch { QueueTruckStatus.Waiting => new[] { OperationalActionType.CheckEta, OperationalActionType.ConfirmHolding, OperationalActionType.Break15, OperationalActionType.Delayed20, OperationalActionType.ShareLocation, OperationalActionType.ReportIssue }, QueueTruckStatus.Holding or QueueTruckStatus.HoldPosition => new[] { OperationalActionType.Ready, OperationalActionType.ArrivedAtStaging, OperationalActionType.Delayed20, OperationalActionType.ReportIssue }, QueueTruckStatus.AtStaging or QueueTruckStatus.AtStagingHolding => new[] { OperationalActionType.ProceedingToGate, OperationalActionType.Break15, OperationalActionType.ReportIssue }, QueueTruckStatus.ProceedToGate => new[] { OperationalActionType.ArrivedAtGate, OperationalActionType.ReportIssue }, QueueTruckStatus.AtGate => new[] { OperationalActionType.CompleteJob, OperationalActionType.ReportIssue }, QueueTruckStatus.Completed => new[] { OperationalActionType.RefreshStatus }, QueueTruckStatus.Delayed => new[] { OperationalActionType.Ready, OperationalActionType.Reschedule, OperationalActionType.ReportIssue }, QueueTruckStatus.Rescheduled => new[] { OperationalActionType.Ready, OperationalActionType.ShareLocation }, _ => new[] { OperationalActionType.CheckEta, OperationalActionType.RequestLocation, OperationalActionType.ShareLocation, OperationalActionType.ReportIssue } };
-    private static DriverEventType ActionToEvent(OperationalActionType action) => action switch { OperationalActionType.ConfirmHolding => DriverEventType.DriverConfirmedHolding, OperationalActionType.ArrivedAtStaging => DriverEventType.DriverArrivedAtStaging, OperationalActionType.ProceedingToGate => DriverEventType.DriverProceedingToGate, OperationalActionType.ArrivedAtGate => DriverEventType.DriverArrivedAtGate, OperationalActionType.CompleteJob => DriverEventType.DriverCompletedJob, OperationalActionType.Break15 => DriverEventType.DriverBreak, OperationalActionType.Lunch30 => DriverEventType.DriverLunch, OperationalActionType.Delayed20 => DriverEventType.DriverDelayed, OperationalActionType.Ready => DriverEventType.DriverReady, OperationalActionType.ReportIssue or OperationalActionType.MarkException => DriverEventType.DriverIssueReported, _ => DriverEventType.DriverAcknowledgedInstruction };
+
 }
 
 public class QueueOptimizationService : IQueueOptimizationService
@@ -216,11 +249,65 @@ public class LocationEtaService : ILocationEtaService { public LocationCheckInDt
 
 public class ExecutionPlanService : IExecutionPlanService
 {
-    private readonly IFleetDriverQueueService _queue; private static readonly ConcurrentDictionary<string, ExecutionPlanDto> Plans = new(); public ExecutionPlanService(IFleetDriverQueueService queue) => _queue = queue;
-    public async Task<ExecutionPlanDto> GeneratePlanAsync(string scenarioName = "Demo gate congestion execution plan", string? fleetOperatorId = null) { var plan = DemoFleetDriverQueueService.BuildExecutionPlan((await _queue.GetTrucksAsync(fleetOperatorId)).ToList(), scenarioName); Plans[plan.PlanId] = plan; return plan; }
+    private readonly IFleetDriverQueueService _queue;
+    private static readonly ConcurrentDictionary<string, ExecutionPlanDto> Plans = new();
+    public ExecutionPlanService(IFleetDriverQueueService queue) => _queue = queue;
+
+    public async Task<ExecutionPlanDto> GeneratePlanAsync(string scenarioName = "Demo gate congestion execution plan", string? fleetOperatorId = null)
+    {
+        var plan = DemoFleetDriverQueueService.BuildExecutionPlan((await _queue.GetTrucksAsync(fleetOperatorId)).ToList(), scenarioName);
+        Plans[plan.PlanId] = plan;
+        return plan;
+    }
+
     public Task<ExecutionPlanDto?> GetPlanAsync(string id) { Plans.TryGetValue(id, out var p); return Task.FromResult(p); }
     public Task<IReadOnlyList<ExecutionPlanDto>> GetPlansAsync() => Task.FromResult<IReadOnlyList<ExecutionPlanDto>>(Plans.Values.OrderByDescending(p => p.CreatedAt).ToList());
+
+    public Task<ExecutionPlanDto?> UpdateStatusAsync(string id, ExecutionPlanStatus status, string actor, string note)
+    {
+        if (!Plans.TryGetValue(id, out var plan)) return Task.FromResult<ExecutionPlanDto?>(null);
+        var oldStatus = plan.Status;
+        plan.Status = status;
+        plan.AuditEntries.Add(new OperationalAuditEntryDto
+        {
+            Actor = actor,
+            EventType = $"ExecutionPlan{status}",
+            Reason = note,
+            PublicSafeNote = note,
+            Source = DataProvenanceType.ManualOperatorInput,
+            Timestamp = DateTime.UtcNow
+        });
+        plan.Explanation = $"{note} Previous status: {oldStatus}. Current status: {status}.";
+        Plans[id] = plan;
+        return Task.FromResult<ExecutionPlanDto?>(plan);
+    }
+
+    public Task<ExecutionPlanDto?> RecordTruckActionAsync(string id, string truckReference, ExecutionTruckActionType actionType, string actor, string note)
+    {
+        if (!Plans.TryGetValue(id, out var plan)) return Task.FromResult<ExecutionPlanDto?>(null);
+        var action = plan.TruckActions.FirstOrDefault(a => string.Equals(a.TruckReference, truckReference, StringComparison.OrdinalIgnoreCase));
+        if (action != null)
+        {
+            action.ActionType = actionType;
+            action.Reason = note;
+            action.NotificationText = $"Smart Port execution update: {note}";
+            action.EtaCallForwardTime = DateTime.UtcNow.AddMinutes(actionType == ExecutionTruckActionType.ProceedToGate ? 12 : 24);
+        }
+        plan.Status = plan.Status == ExecutionPlanStatus.Draft ? ExecutionPlanStatus.InProgress : plan.Status;
+        plan.AuditEntries.Add(new OperationalAuditEntryDto
+        {
+            Actor = actor,
+            EventType = $"TruckAction:{actionType}",
+            Reason = note,
+            PublicSafeNote = $"{truckReference}: {note}",
+            Source = DataProvenanceType.ManualOperatorInput,
+            Timestamp = DateTime.UtcNow
+        });
+        Plans[id] = plan;
+        return Task.FromResult<ExecutionPlanDto?>(plan);
+    }
 }
+
 
 public class DriverStatusCommandService : IDriverStatusCommandService
 {
@@ -230,8 +317,8 @@ public class DriverStatusCommandService : IDriverStatusCommandService
         var truck = await _queue.GetTruckAsync(request.Reference); if (truck == null) return new() { Success = false, ReplyMessage = "Truck/reference not found.", Source = "Fallback" };
         var cmd = (request.CommandText ?? string.Empty).Trim().ToUpperInvariant(); if (string.IsNullOrEmpty(cmd)) cmd = "STATUS";
         if (cmd is "STATUS" or "ETA" or "HOW LONG" or "WHAT NOW" or "WHERE MUST I GO" or "HELP") return new() { Success = true, Truck = truck, ReplyMessage = BuildStatusReply(truck, cmd), Source = "Fallback" };
-        var eventType = cmd switch { "READY" => DriverEventType.DriverReady, "BREAK 15" => DriverEventType.DriverBreak, "LUNCH 30" => DriverEventType.DriverLunch, "DELAYED 20" => DriverEventType.DriverDelayed, "AT STAGING" or "ARRIVED_STAGING" => DriverEventType.DriverArrivedAtStaging, "HOLDING" => DriverEventType.DriverConfirmedHolding, "PROCEEDING" or "PROCEEDING_GATE" => DriverEventType.DriverProceedingToGate, "AT GATE" or "ARRIVED_GATE" => DriverEventType.DriverArrivedAtGate, "COMPLETED" => DriverEventType.DriverCompletedJob, "ISSUE" => DriverEventType.DriverIssueReported, "LOCATION_SHARED" => DriverEventType.WhatsAppLocationShared, _ => DriverEventType.DriverAcknowledgedInstruction };
-        var updated = eventType == DriverEventType.WhatsAppLocationShared ? await _queue.RecordLocationCheckInAsync(truck.BookingReference, null, null, "WhatsApp command location shared", request.Source, request.Actor) : await _queue.RecordDriverEventAsync(truck.BookingReference, eventType, request.Source, $"Driver command received: {cmd}", request.Actor);
+        var eventType = cmd switch { "READY" => DriverEventType.DriverReady, "BREAK 15" => DriverEventType.DriverBreak, "LUNCH 30" => DriverEventType.DriverLunch, "DELAYED 20" => DriverEventType.DriverDelayed, "AT STAGING" or "ARRIVED_STAGING" => DriverEventType.DriverArrivedAtStaging, "HOLDING" => DriverEventType.DriverConfirmedHolding, "PROCEEDING" or "PROCEEDING_GATE" => DriverEventType.DriverProceedingToGate, "AT GATE" or "ARRIVED_GATE" => DriverEventType.DriverArrivedAtGate, "COMPLETED" => DriverEventType.DriverCompletedJob, "ISSUE" => DriverEventType.DriverIssueReported, "LOCATION_SHARED" => DriverEventType.MobileApiLocationCheckIn, _ => DriverEventType.DriverAcknowledgedInstruction };
+        var updated = eventType == DriverEventType.MobileApiLocationCheckIn ? await _queue.RecordLocationCheckInAsync(truck.BookingReference, null, null, "Driver app command location shared", request.Source, request.Actor) : await _queue.RecordDriverEventAsync(truck.BookingReference, eventType, request.Source, $"Driver command received: {cmd}", request.Actor);
         return new() { Success = updated != null, Truck = updated, ReplyMessage = updated == null ? "Unable to update state." : BuildStatusReply(updated, cmd), Source = "Fallback" };
     }
     private static string BuildStatusReply(FleetTruckDto t, string cmd) => cmd switch { "ETA" or "HOW LONG" => $"Estimated call-forward is {t.EtaCallForwardTime:HH:mm}, about {Math.Max(1, (int)Math.Round((t.EtaCallForwardTime - DateTime.UtcNow).TotalMinutes))} minutes from now. Current instruction: {t.CurrentInstruction.Instruction}", "BREAK 15" => "Update received. You are marked unavailable for 15 minutes. Smart Port will adjust your call-forward timing and notify you when to proceed.", "LUNCH 30" => "Update received. You are marked unavailable for 30 minutes. Smart Port will adjust your call-forward timing and notify you when to proceed.", "READY" => $"Confirmed. You are available again. Current instruction: {t.CurrentInstruction.Instruction}", "ARRIVED_GATE" or "AT GATE" => $"Confirmed. Truck {t.TruckRegistration} is now marked At Gate. Fleet dashboard and queue plan updated.", "ISSUE" => "Please describe the issue. Smart Port will flag this for fleet owner/control room review.", "WHERE MUST I GO" => $"Go to {t.BerthYardStagingZone} / {t.AssignedGate} as instructed. Current status: {t.CurrentStatus}.", "HELP" => "Supported Smart Port commands: STATUS, ETA, HOW LONG, WHAT NOW, READY, BREAK 15, LUNCH 30, DELAYED 20, HOLDING, ARRIVED_STAGING, PROCEEDING_GATE, ARRIVED_GATE, COMPLETED, ISSUE.", _ => $"Truck {t.TruckRegistration}: {t.CurrentInstruction.Instruction} Estimated gate call-forward: {t.EtaCallForwardTime:HH:mm}. Queue position: {t.QueueNumber}. Ref: {t.BookingReference}." };
@@ -239,7 +326,7 @@ public class DriverStatusCommandService : IDriverStatusCommandService
 
 public class NotificationTemplateService : INotificationTemplateService
 {
-    public string BuildMessage(FleetTruckDto truck, NotificationEventType eventType, NotificationChannel channel) => eventType switch { NotificationEventType.WhatsAppLocationCheckIn => $"Smart Port Update: Please share your current WhatsApp location so we can update your gate ETA. Ref: {truck.BookingReference}.", NotificationEventType.ProceedToGate => $"Smart Port Update: Truck {truck.TruckRegistration} may proceed to {truck.AssignedGate}. Have reference {truck.BookingReference} ready.", _ => $"Smart Port Update: Truck {truck.TruckRegistration}: {truck.CurrentInstruction.Instruction} Estimated call-forward: {truck.EtaCallForwardTime:HH:mm}. Ref: {truck.BookingReference}." };
+    public string BuildMessage(FleetTruckDto truck, NotificationEventType eventType, NotificationChannel channel) => eventType switch { NotificationEventType.DriverCheckIn => $"Smart Port Update: please open the Driver Companion App and tap Share current location / Check in so Smart Port can refresh your queue ETA. Ref: {truck.BookingReference}.", NotificationEventType.WhatsAppLocationCheckIn => $"Smart Port Update: optional WhatsApp location request for connector live-test only. Ref: {truck.BookingReference}.", NotificationEventType.ProceedToGate => $"Smart Port Update: Truck {truck.TruckRegistration} may proceed to {truck.AssignedGate}. Have reference {truck.BookingReference} ready.", _ => $"Smart Port Update: Truck {truck.TruckRegistration}: {truck.CurrentInstruction.Instruction} Estimated call-forward: {truck.EtaCallForwardTime:HH:mm}. Ref: {truck.BookingReference}." };
 }
 
 public class DriverNotificationService : INotificationService
@@ -439,7 +526,7 @@ public class OperationalActionService : IOperationalActionService
         if (truck == null) return new(false, "Truck/reference not found.", request.Source.ToString(), request.Reference, DateTime.UtcNow, NextRecommendedAction: "Verify the booking reference and retry.");
         if (request.NotificationChannel.HasValue)
         {
-            var notification = await _notifications.SendAsync(truck.BookingReference, request.NotificationChannel.Value, request.ActionType == OperationalActionType.RequestLocation ? NotificationEventType.WhatsAppLocationCheckIn : NotificationEventType.AiInstructionUpdated);
+            var notification = await _notifications.SendAsync(truck.BookingReference, request.NotificationChannel.Value, request.ActionType == OperationalActionType.RequestLocation ? NotificationEventType.DriverCheckIn : NotificationEventType.AiInstructionUpdated);
             return new(notification.Status is not NotificationStatus.Failed and not NotificationStatus.BlockedSafety and not NotificationStatus.ConnectorNotConfigured, $"{request.NotificationChannel} notification recorded with status {notification.Status}.", request.NotificationChannel == NotificationChannel.WhatsApp && notification.Status == NotificationStatus.Sent ? "Live" : notification.Status == NotificationStatus.LiveTestSent ? "LiveTest" : "Demo", truck.BookingReference, notification.Timestamp, notification.RelatedInstructionReference, notification.ExternalMessageId, truck.CurrentInstruction.Instruction);
         }
         var command = string.IsNullOrWhiteSpace(request.CommandText) ? ActionToCommand(request.ActionType) : request.CommandText!;

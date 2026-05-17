@@ -26,7 +26,7 @@ public interface IOperationalStateMachineService
 }
 
 public interface IQueueOptimizationService { QueueOptimizationResultDto Optimize(FleetTruckDto truck, FleetQueueSummaryDto? context = null); }
-public interface IExecutionPlanService { Task<ExecutionPlanDto> GeneratePlanAsync(string scenarioName = "Demo gate congestion execution plan", string? fleetOperatorId = null); Task<ExecutionPlanDto?> GetPlanAsync(string id); Task<IReadOnlyList<ExecutionPlanDto>> GetPlansAsync(); }
+public interface IExecutionPlanService { Task<ExecutionPlanDto> GeneratePlanAsync(string scenarioName = "Demo gate congestion execution plan", string? fleetOperatorId = null); Task<ExecutionPlanDto?> GetPlanAsync(string id); Task<IReadOnlyList<ExecutionPlanDto>> GetPlansAsync(); Task<ExecutionPlanDto?> UpdateStatusAsync(string id, ExecutionPlanStatus status, string actor, string note); Task<ExecutionPlanDto?> RecordTruckActionAsync(string id, string truckReference, ExecutionTruckActionType actionType, string actor, string note); }
 public interface IDriverStatusCommandService { Task<DriverCommandResultDto> HandleCommandAsync(DriverCommandRequestDto request); }
 public interface ILocationEtaService { LocationCheckInDto Estimate(string reference, string assignedGate, string stagingArea, decimal? latitude, decimal? longitude, string? label, DataProvenanceType source); }
 public interface INotificationTemplateService { string BuildMessage(FleetTruckDto truck, NotificationEventType eventType, NotificationChannel channel); }

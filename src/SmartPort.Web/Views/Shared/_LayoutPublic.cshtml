@@ -14,7 +14,7 @@
     var isSignedIn = User.Identity?.IsAuthenticated == true || Context.Request.Cookies.ContainsKey("SmartPort.DemoAccess");
     var publicDashboardHref = "/demo-access";
     var publicDashboardText = "Go to Demo Access";
-    if (User.IsInRole(Roles.Driver)) { publicDashboardHref = "/driver/demo"; publicDashboardText = "Open Driver Demo"; }
+    if (User.IsInRole(Roles.Driver)) { publicDashboardHref = "/driver-app"; publicDashboardText = "Open Driver Demo"; }
     else if (User.IsInRole(Roles.FleetOwner) || User.IsInRole(Roles.LogisticsPartner)) { publicDashboardHref = "/fleet"; publicDashboardText = "Open Fleet Dashboard"; }
     else if (User.IsInRole(Roles.JudgeDemo)) { publicDashboardHref = "/demo-tour"; publicDashboardText = "Resume Judge Tour"; }
     else if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.PortOperationsManager) || User.IsInRole(Roles.TerminalStaff)) { publicDashboardHref = "/dashboard"; publicDashboardText = "Open Dashboard"; }
@@ -44,7 +44,7 @@
             }
             else
             {
-                <a href="/fleet/download-app" class="sp-btn sp-btn--outline">Download Driver App</a>
+                <a href="/fleet/download-app" class="sp-btn sp-btn--outline">Install Driver App</a>
                 <a href="/demo-access" class="sp-btn sp-btn--primary">Request Demo</a>
             }
         </div>

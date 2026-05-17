@@ -33,7 +33,7 @@ jobs:
           gradle-version: '8.14.4'
 
       - name: Build debug APK
-        run: gradle assembleDebug
+        run: ./gradlew assembleDebug
 
       - name: Prepare named APK artifact
         run: |

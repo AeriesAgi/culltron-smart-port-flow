@@ -29,7 +29,7 @@ public class DriverController : Controller
     public async Task<IActionResult> Demo()
     {
         var reference = (await _queue.GetDemoReferencesAsync()).First();
-        return Redirect($"/driver/status/{reference}");
+        return Redirect($"/driver-app/{reference}");
     }
 
     [HttpGet("/driver/status/{reference}")]
@@ -45,7 +45,7 @@ public class DriverController : Controller
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> DriverAction(string reference, string commandText)
     {
-        var result = await _commands.HandleCommandAsync(new DriverCommandRequestDto { Reference = reference, CommandText = commandText, Actor = "Driver web portal", Source = DataProvenanceType.AndroidDriverApp });
+        var result = await _commands.HandleCommandAsync(new DriverCommandRequestDto { Reference = reference, CommandText = commandText, Actor = "Driver web portal", Source = DataProvenanceType.WebDriverCompanion });
         TempData[result.Success ? "Success" : "Warning"] = result.ReplyMessage;
         return Redirect($"/driver/status/{reference}");
     }
@@ -114,8 +114,9 @@ public class MobileApiController : ControllerBase
     private readonly IMobileDeviceRegistrationService _devices;
     private readonly IDriverStatusCommandService _commands;
     private readonly ISmartPortCopilotChatService _copilot;
-    public MobileApiController(IConfiguration configuration, IWebHostEnvironment environment, IFleetDriverQueueService queue, INotificationService notifications, IMobileDeviceRegistrationService devices, IDriverStatusCommandService commands, ISmartPortCopilotChatService copilot)
-    { _configuration = configuration; _environment = environment; _queue = queue; _notifications = notifications; _devices = devices; _commands = commands; _copilot = copilot; }
+    private readonly IExecutionPlanService _plans;
+    public MobileApiController(IConfiguration configuration, IWebHostEnvironment environment, IFleetDriverQueueService queue, INotificationService notifications, IMobileDeviceRegistrationService devices, IDriverStatusCommandService commands, ISmartPortCopilotChatService copilot, IExecutionPlanService plans)
+    { _configuration = configuration; _environment = environment; _queue = queue; _notifications = notifications; _devices = devices; _commands = commands; _copilot = copilot; _plans = plans; }
 
     [HttpPost("/api/mobile/auth/demo-login")]
     public async Task<IActionResult> DemoLogin([FromBody] MobileDemoLoginRequest request)
@@ -158,7 +159,8 @@ public class MobileApiController : ControllerBase
         var s when s.Contains("web") => DataProvenanceType.WebDriverCompanion,
         var s when s.Contains("mobile api") || s == "api" => DataProvenanceType.MobileApi,
         var s when s.Contains("whatsapp") => DataProvenanceType.WhatsAppDriverCheckIn,
-        _ => DataProvenanceType.AndroidDriverApp
+        var s when s.Contains("android") || s.Contains("driver companion") => DataProvenanceType.AndroidDriverApp,
+        _ => DataProvenanceType.MobileApi
     };
 
     private static string SourceActor(DataProvenanceType source) => source switch
@@ -170,6 +172,7 @@ public class MobileApiController : ControllerBase
     };
 
     [HttpGet("/api/mobile/truck/status/{reference}")]
+    [HttpGet("/api/mobile/driver/status/{reference}")]
     public async Task<IActionResult> TruckStatus(string reference)
     {
         if (!EnsureMobileToken()) return MobileUnauthorized();
@@ -183,6 +186,7 @@ public class MobileApiController : ControllerBase
     public async Task<IActionResult> TruckCheck([FromBody] DriverCheckRequestDto request) { if (!EnsureMobileToken()) return MobileUnauthorized(); return await TruckStatus(request.Reference); }
 
     [HttpGet("/api/mobile/notifications/{reference}")]
+    [HttpGet("/api/mobile/driver/notifications/{reference}")]
     public async Task<IActionResult> Notifications(string reference) { if (!EnsureMobileToken()) return MobileUnauthorized(); return Ok(await _notifications.GetHistoryAsync(reference)); }
 
     [HttpPost("/api/mobile/driver/acknowledge")]
@@ -214,6 +218,55 @@ public class MobileApiController : ControllerBase
     [HttpPost("/api/mobile/driver/command")]
     public async Task<IActionResult> DriverCommand([FromBody] DriverCommandRequestDto request) { if (!EnsureMobileToken()) return MobileUnauthorized(); return Ok(await _commands.HandleCommandAsync(request)); }
 
+
+    [HttpPost("/api/mobile/driver/report-incident")]
+    public async Task<IActionResult> ReportIncident([FromBody] DriverEventRequestDto request)
+    {
+        if (!EnsureMobileToken()) return MobileUnauthorized();
+        var truck = await _queue.RecordDriverEventAsync(request.Reference, DriverEventType.DriverIssueReported, ResolveDriverSource(request.SourceLabel), request.Action ?? "Driver reported incident from mobile app", SourceActor(ResolveDriverSource(request.SourceLabel)));
+        return truck == null ? NotFound(new { message = "Truck/reference not found" }) : Ok(new { status = "incident-recorded", truck, audit = truck.AuditTrail.OrderByDescending(a => a.Timestamp).FirstOrDefault() });
+    }
+
+    [HttpGet("/api/mobile/fleet/summary")]
+    public async Task<IActionResult> FleetSummary() { if (!EnsureMobileToken()) return MobileUnauthorized(); return Ok(await _queue.GetFleetSummaryAsync()); }
+
+    [HttpGet("/api/mobile/fleet/trucks")]
+    [HttpGet("/api/mobile/fleet/tracker")]
+    public async Task<IActionResult> FleetTracker()
+    {
+        if (!EnsureMobileToken()) return MobileUnauthorized();
+        var trucks = await _queue.GetTrucksAsync();
+        return Ok(trucks.Select(t => new { t.BookingReference, t.TruckRegistration, t.DriverName, t.FleetOperatorName, t.JobReference, t.ContainerReference, t.CurrentStatus, t.QueueNumber, t.AssignedGate, t.BerthYardStagingZone, t.EtaCallForwardTime, t.DelayRisk, t.LastKnownLocationLabel, t.LastLocationCheckIn, t.CurrentInstruction, t.EstimatedIdlingMinutesAvoided, t.EstimatedCo2KgAvoided }));
+    }
+
+    [HttpPost("/api/mobile/fleet/request-location")]
+    public async Task<IActionResult> FleetRequestLocation([FromBody] DriverEventRequestDto request)
+    {
+        if (!EnsureMobileToken()) return MobileUnauthorized();
+        var truck = await _queue.RecordDriverEventAsync(request.Reference, DriverEventType.DriverAcknowledgedInstruction, DataProvenanceType.MobileApi, "Fleet requested a fresh Driver Companion location check-in.", "Fleet mobile API");
+        return truck == null ? NotFound(new { message = "Truck/reference not found" }) : Ok(truck);
+    }
+
+    [HttpPost("/api/mobile/fleet/send-instruction")]
+    public async Task<IActionResult> FleetSendInstruction([FromBody] FleetInstructionRequestDto request)
+    {
+        if (!EnsureMobileToken()) return MobileUnauthorized();
+        var truck = await _queue.RecordDriverEventAsync(request.Reference, DriverEventType.DriverAcknowledgedInstruction, DataProvenanceType.MobileApi, request.Instruction, "Fleet mobile API");
+        return truck == null ? NotFound(new { message = "Truck/reference not found" }) : Ok(truck);
+    }
+
+    [HttpGet("/api/mobile/execution/plans")]
+    public async Task<IActionResult> ExecutionPlans() { if (!EnsureMobileToken()) return MobileUnauthorized(); return Ok(await _plans.GetPlansAsync()); }
+
+    [HttpPost("/api/mobile/execution/approve")]
+    public async Task<IActionResult> ExecutionApprove([FromBody] ExecutionPlanActionRequestDto request) { if (!EnsureMobileToken()) return MobileUnauthorized(); return Ok(await _plans.UpdateStatusAsync(request.PlanId, ExecutionPlanStatus.Approved, "Mobile API", "Execution plan approved from mobile API.")); }
+
+    [HttpPost("/api/mobile/execution/dispatch")]
+    public async Task<IActionResult> ExecutionDispatch([FromBody] ExecutionPlanActionRequestDto request) { if (!EnsureMobileToken()) return MobileUnauthorized(); return Ok(await _plans.UpdateStatusAsync(request.PlanId, ExecutionPlanStatus.Dispatching, "Mobile API", "Execution plan dispatched from mobile API.")); }
+
+    [HttpPost("/api/mobile/execution/complete")]
+    public async Task<IActionResult> ExecutionComplete([FromBody] ExecutionPlanActionRequestDto request) { if (!EnsureMobileToken()) return MobileUnauthorized(); return Ok(await _plans.UpdateStatusAsync(request.PlanId, ExecutionPlanStatus.Completed, "Mobile API", "Execution plan completed from mobile API.")); }
+
     [HttpPost("/api/mobile/copilot/driver")]
     public async Task<IActionResult> DriverCopilot([FromBody] CopilotQuestionRequestDto request)
     {
@@ -233,7 +286,7 @@ public class MobileApiController : ControllerBase
     }
 
     [HttpGet("/api/mobile/driver/demo")]
-    public async Task<IActionResult> Demo() { if (!EnsureMobileToken()) return MobileUnauthorized(); return Ok(new { references = await _queue.GetDemoReferencesAsync(), backend = "Smart Port Fleet & Driver Queue Companion" }); }
+    public async Task<IActionResult> Demo() { if (!EnsureMobileToken()) return MobileUnauthorized(); return Ok(new { references = await _queue.GetDemoReferencesAsync(), backend = "Smart Port Fleet & Driver Companion" }); }
 
     [HttpPost("/api/mobile/device/register")]
     public async Task<IActionResult> Register([FromBody] MobileDeviceRegistrationDto request) { if (!EnsureMobileToken()) return MobileUnauthorized(); await _devices.RegisterAsync(request); return Ok(new { status = "registered", mode = "placeholder" }); }
