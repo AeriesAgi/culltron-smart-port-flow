@@ -1,0 +1,45 @@
+@{
+    Layout = null;
+    var refs = ViewBag.DemoReferences as IReadOnlyList<string> ?? Array.Empty<string>();
+    var firstRef = refs.FirstOrDefault() ?? "SPQ-2026-0042";
+    var demoCode = ViewBag.DemoCode as string ?? "smartport2026";
+}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Smart Port Driver Login</title>
+  <link rel="stylesheet" href="/css/app.css" />
+  <style>
+    body{margin:0;background:#020617;color:#fff;font-family:Inter,system-ui,sans-serif}.driver-login-shell{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 70% 0,rgba(34,211,238,.22),transparent 34%),linear-gradient(180deg,#06111f,#020617)}.driver-login-card{width:min(520px,100%);border:1px solid rgba(125,211,252,.28);border-radius:30px;padding:24px;background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(8,47,73,.72));box-shadow:0 28px 90px rgba(0,0,0,.38)}.driver-login-card h1{font-size:clamp(2.2rem,9vw,4rem);line-height:.95;margin:.6rem 0;letter-spacing:-.06em}.driver-login-card p{color:#c7e8f7;line-height:1.65}.driver-login-form{display:grid;gap:12px;margin-top:18px}.driver-login-form input,.driver-login-form select{width:100%;box-sizing:border-box;border-radius:16px;border:1px solid rgba(125,211,252,.30);background:rgba(2,6,23,.72);color:#fff;padding:13px}.driver-login-actions{display:flex;gap:10px;flex-wrap:wrap}.driver-login-safe{border:1px solid rgba(34,211,238,.20);border-radius:18px;padding:12px;background:rgba(2,6,23,.46);font-size:.92rem;color:#bae6fd}.app-badge{display:inline-flex;border:1px solid rgba(34,211,238,.32);border-radius:999px;padding:.35rem .7rem;color:#67e8f9;background:rgba(8,47,73,.5);font-weight:900;letter-spacing:.06em;text-transform:uppercase;font-size:.72rem}
+  </style>
+</head>
+<body>
+<main class="driver-login-shell">
+  <section class="driver-login-card">
+    <span class="app-badge">Driver Companion boundary</span>
+    <h1>Smart Port Driver</h1>
+    <p>Driver Companion uses demo driver access. Location is sent only when you tap <strong>Check In</strong>. No dashboard sidebar, admin menu, or public website shell is shown inside the driver app.</p>
+    @if (TempData["Warning"] is string warn){<div class="sp-alert sp-alert--warning">@warn</div>}
+    @if (TempData["Success"] is string ok){<div class="sp-alert sp-alert--success">@ok</div>}
+    <form class="driver-login-form" method="post" action="/driver-app/login">
+      <label for="accessCode">Driver demo code</label>
+      <input id="accessCode" name="accessCode" value="@demoCode" autocomplete="one-time-code" />
+      <label for="reference">Truck/job</label>
+      <select id="reference" name="reference">
+        @foreach (var r in refs.DefaultIfEmpty(firstRef))
+        {
+          <option value="@r">@r</option>
+        }
+      </select>
+      <div class="driver-login-actions">
+        <button class="sp-btn sp-btn--primary" type="submit">Continue to Driver App</button>
+        <button class="sp-btn sp-btn--outline" type="button" onclick="document.getElementById('accessCode').value='@demoCode';document.getElementById('reference').value='@firstRef';">Quick demo login</button>
+      </div>
+    </form>
+    <div class="driver-login-safe">APK/WebView target: <code>https://smartport.culltron.app/driver-app/login</code>. Server-side Gemini and connector secrets are never stored on the driver device.</div>
+  </section>
+</main>
+</body>
+</html>

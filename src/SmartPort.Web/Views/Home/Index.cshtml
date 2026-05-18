@@ -1,15 +1,38 @@
 @{ Layout = "_LayoutPublic"; ViewData["Title"] = "Smart Port AI Operations Platform"; }
 <section class="spx-hero spx-hero--cinematic">
   <div class="container spx-hero__grid">
-    <div><span class="spx-kicker">Prototype · pilot-ready architecture · synthetic demo data</span><h1>Agentic AI for port logistics, queue execution, fleet coordination, and emissions-aware operations.</h1><p class="spx-lead">Smart Port connects the control room, fleet owners, and drivers through AI-assisted execution plans, app-based check-ins, fleet tracking, audit trails, and Gemini-powered operational reasoning.</p><div class="spx-actions"><a class="sp-btn sp-btn--primary sp-btn--lg" href="/demo-access">Demo Access</a><a class="sp-btn sp-btn--outline sp-btn--lg" href="/demo-tour">Start Judge Tour</a><a class="sp-btn sp-btn--outline sp-btn--lg" href="/enterprise-readiness">View Enterprise Readiness</a><a class="sp-btn sp-btn--outline sp-btn--lg" href="/fleet/download-app">Driver App</a></div><p class="spx-note">Synthetic operational scenario for judging. Pilot connectors can ingest IPMS/TOS, berth schedules, gate systems, fleet GPS, Driver Companion App data, optional WhatsApp Cloud API, ERP, weather/disruption feeds, and emissions data. No live customer integration is claimed.</p></div>
+    <div>
+      <span class="spx-kicker">Enterprise AI · port logistics · synthetic demo data</span>
+      <h1>Agentic AI for port logistics, queue execution, fleet coordination, and emissions-aware operations.</h1>
+      <p class="spx-lead">Smart Port connects control-room decisions, fleet owners, and drivers through AI-assisted execution plans, app-based check-ins, fleet tracking, audit trails, and Gemini-powered operational reasoning.</p>
+      <div class="spx-actions"><a class="sp-btn sp-btn--primary sp-btn--lg" href="/demo-access">Enter Demo</a><a class="sp-btn sp-btn--outline sp-btn--lg" href="/dashboard">Open Control Room</a><a class="sp-btn sp-btn--outline sp-btn--lg" href="/driver-app">View Driver App</a><a class="sp-btn sp-btn--outline sp-btn--lg" href="/fleet/tracker">View Fleet Tracker</a></div>
+      <p class="spx-note">Gemini calls are action-triggered only; dashboard rendering uses deterministic calculations and cached demo state. Location is click-to-check-in only, not background tracking.</p>
+    </div>
     <img src="/images/smart-port-hero.svg" alt="Smart Port AI control room original illustration" />
   </div>
 </section>
-<section class="container spx-section"><span class="spx-kicker">From signal to execution</span><h2>Complete operational loop</h2><div class="spx-module-grid">@foreach (var item in new[] { "Public story", "Identity demo login", "Port Admin command centre", "Gemini Operations Agent", "Execution plan", "Fleet owner action", "Driver Companion App tracking", "Mobile API status", "Driver confirmation", "Updated queue state", "Audit trail", "Emissions report" }) { <article class="spx-module-card"><strong>@item</strong><p>Connected in the demo as a human-approved workflow step.</p></article> }</div></section>
-<section class="container spx-section spx-visual-grid"><img src="/images/control-room-panel.svg" alt="AI control room visual"/><div><span class="spx-kicker">Operational AI module</span><h2>Not just a chatbot</h2><p>The Gemini Operations Agent combines structured truck queue, gate pressure, berth readiness, driver confirmation, app check-in state and idling estimates, then compares deterministic fallback with Gemini-enhanced explanation.</p><div class="spx-actions"><a class="sp-btn sp-btn--primary" href="/gemini-agent">Open AI Agent</a><a class="sp-btn sp-btn--outline" href="/driver-app">Open Driver App</a></div></div></section>
-<section class="container spx-section"><div class="spx-module-grid spx-module-grid--features">
-<article class="spx-module-card"><img src="/images/fleet-driver-loop.svg" alt="Fleet driver loop"/><h3>Fleet Owner</h3><p>Request app check-in, track drivers, move to staging, release to gate, reschedule, mark exception, or ask Gemini.</p></article>
-<article class="spx-module-card"><img src="/images/mobile-driver-companion.svg" alt="Android companion"/><h3>Driver Companion</h3><p>Installable Android Driver Companion + web companion for truck status, instructions, location check-ins, driver actions and Copilot support. Mobile API is primary; WhatsApp is optional connector-ready only.</p></article>
-<article class="spx-module-card"><img src="/images/gemini-agent-flow.svg" alt="Gemini agent flow"/><h3>Audit & Governance</h3><p>Every recommendation is framed as human-approved, reversible and visible in demo history.</p></article>
-</div></section>
-<section class="container spx-section spx-pilot"><span class="spx-kicker">Honest pilot integration path</span><h2>Connector-ready, not pretending to be live</h2><p>Smart Port is designed to connect to approved port, fleet, GPS/telematics, optional WhatsApp and energy data sources in a pilot. This submission uses synthetic demo data, explicit disclaimers and safe fallback behavior.</p><a class="sp-btn sp-btn--outline" href="/enterprise-readiness">Enterprise readiness checklist</a></section>
+<section class="container spx-section">
+  <span class="spx-kicker">Complete operational loop</span>
+  <h2>Video-ready proof points from public story to audited execution</h2>
+  <div class="spx-module-grid spx-module-grid--features">
+  @foreach (var item in new[] {
+    ("Public story", "Product landing explains the pilot-ready operating loop for control rooms, fleets and drivers."),
+    ("Demo login", "Role-based access separates judge, admin, fleet owner and driver demo paths."),
+    ("Port Admin command centre", "Control-room dashboard manages queue state, incidents, driver check-ins and execution plans."),
+    ("Gemini Operations Agent", "On-demand AI brief uses deterministic fallback and never runs on page load."),
+    ("Execution plan", "Disruption context becomes truck, fleet-owner and driver actions with impact estimates."),
+    ("Fleet owner action", "Fleet can request check-ins, send instructions, update status and review history."),
+    ("Driver Companion tracking", "Driver check-ins update tracker state, queue ETA and audit trail."),
+    ("Mobile API status", "Backend endpoints support APK, web companion and demo mobile workflows."),
+    ("Driver confirmation", "Driver actions feed back into queue state and fleet/control-room timelines."),
+    ("Updated queue state", "Dashboard reflects operational state changes after explicit actions."),
+    ("Audit trail", "Every action is timestamped, sourced and visible for review."),
+    ("Emissions report", "Idling and CO₂ impact stay linked to execution decisions.")
+  }) { <article class="spx-module-card"><strong>@item.Item1</strong><p>@item.Item2</p></article> }
+  </div>
+</section>
+<section class="container spx-section spx-visual-grid">
+  <img src="/images/control-room-panel.svg" alt="AI control room visual"/>
+  <div><span class="spx-kicker">Gemini + deterministic fallback</span><h2>Useful AI without quota burn</h2><p>Smart Port never calls Gemini just to load a page. Operators, fleet owners, drivers and judges trigger AI through deliberate actions such as Generate operations brief, Ask Copilot, Explain execution plan, Analyze check-in or optional TTS/semantic retrieval.</p><div class="spx-actions"><a class="sp-btn sp-btn--primary" href="/gemini-agent">Enterprise AI</a><a class="sp-btn sp-btn--outline" href="/execution">Execution Plans</a></div></div>
+</section>
+<section class="container spx-section spx-pilot"><span class="spx-kicker">Honest pilot integration path</span><h2>Connector-ready, not pretending to be live</h2><p>Smart Port uses synthetic demo data in this submission. It does not claim official port partnership, production WhatsApp approval, background tracking, or guaranteed preview Gemini features. TTS, embeddings, maps grounding and live connectors activate only when configured and quota allows.</p><a class="sp-btn sp-btn--outline" href="/enterprise-readiness">Enterprise readiness checklist</a></section>

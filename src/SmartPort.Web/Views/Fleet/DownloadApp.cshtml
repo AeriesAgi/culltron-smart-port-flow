@@ -49,17 +49,17 @@
     @if (apkExists)
     {
       <p>Debug APK is available for demo installation from the web app.</p>
-      <a class="sp-btn sp-btn--primary" href="/downloads/SmartPortDriverCompanion.apk">Download SmartPortDriverCompanion.apk</a>
+      <a class="sp-btn sp-btn--primary" href="/downloads/SmartPortDriverCompanion-debug.apk">Download Android APK</a>
     }
     else
     {
-      <p class="sp-alert sp-alert--info">No APK binary is currently published in <code>wwwroot/downloads</code>, but the Android project and CI artifact path are present. Judges can use the driver app shell immediately while CI/local Android SDK builds the APK.</p>
+      <p class="sp-alert sp-alert--info">APK artifact pending at <code>/downloads/SmartPortDriverCompanion-debug.apk</code>. Judges can use the driver app shell immediately while GitHub Actions or a local Android SDK rebuilds and copies the stable APK filename.</p>
     }
     <dl class="driver-dl">
       <dt>Project</dt><dd><code>mobile/SmartPortDriverCompanion</code></dd>
       <dt>Build command</dt><dd><code>cd mobile/SmartPortDriverCompanion && ./gradlew assembleDebug</code></dd>
       <dt>CI artifact</dt><dd><code>artifacts/SmartPortDriverCompanion-debug.apk</code></dd>
-      <dt>Publish path</dt><dd><code>src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk</code></dd>
+      <dt>Publish path</dt><dd><code>src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion-debug.apk</code></dd>
     </dl>
   </article>
 </div>

@@ -72,6 +72,7 @@ public class AuthController : Controller
         await _signInManager.SignOutAsync();
         Response.Cookies.Delete(DemoAccessController.CookieName);
         Response.Cookies.Delete(DemoAccessController.RoleCookieName);
+        Response.Cookies.Delete("SmartPort.DriverAppAccess");
         _logger.LogInformation("User logged out.");
         return RedirectToAction("Index", "Home");
     }

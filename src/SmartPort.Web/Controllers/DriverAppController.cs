@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartPort.Application.DTOs;
 using SmartPort.Application.Interfaces;
+using SmartPort.Infrastructure.Services;
 
 namespace SmartPort.Web.Controllers;
 
@@ -11,10 +12,40 @@ public class DriverAppController : Controller
     private readonly IFleetDriverQueueService _queue;
     private readonly INotificationService _notifications;
     private readonly ISmartPortCopilotChatService _copilot;
-    public DriverAppController(IFleetDriverQueueService queue, INotificationService notifications, ISmartPortCopilotChatService copilot) { _queue = queue; _notifications = notifications; _copilot = copilot; }
+    private readonly IConfiguration _configuration;
+    public DriverAppController(IFleetDriverQueueService queue, INotificationService notifications, ISmartPortCopilotChatService copilot, IConfiguration configuration) { _queue = queue; _notifications = notifications; _copilot = copilot; _configuration = configuration; }
+
+
+    [HttpGet("/driver-app/login")]
+    public async Task<IActionResult> Login()
+    {
+        ViewBag.DemoReferences = await _queue.GetDemoReferencesAsync();
+        ViewBag.DemoCode = "smartport2026";
+        return View("~/Views/DriverApp/Login.cshtml");
+    }
+
+    [HttpPost("/driver-app/login")]
+    [IgnoreAntiforgeryToken]
+    public IActionResult LoginSubmit(string accessCode, string reference = "SPQ-2026-0042")
+    {
+        var allowed = new[] { _configuration["SMARTPORT_DRIVER_DEMO_CODE"], _configuration["SMARTPORT_DEMO_ACCESS_CODE"], "smartport2026" }
+            .Where(code => !string.IsNullOrWhiteSpace(code))
+            .Any(code => string.Equals(code, accessCode?.Trim(), StringComparison.Ordinal));
+        if (!allowed)
+        {
+            TempData["Warning"] = "Driver demo code was not accepted. Use the judging demo code or the private driver code.";
+            return Redirect("/driver-app/login");
+        }
+
+        Response.Cookies.Append("SmartPort.DriverAppAccess", "granted", new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.Lax, IsEssential = true, Expires = DateTimeOffset.UtcNow.AddHours(8) });
+        TempData["Success"] = "Driver demo access granted. Location is sent only when you tap Check In.";
+        return Redirect(string.IsNullOrWhiteSpace(reference) ? "/driver-app" : $"/driver-app/{Uri.EscapeDataString(reference)}");
+    }
+
+    [HttpGet("/app/driver")]
+    public IActionResult DriverAlias() => Redirect("/driver-app");
 
     [HttpGet("/driver-app")]
-    [HttpGet("/app/driver")]
     [HttpGet("/driver-app/{reference}")]
     public async Task<IActionResult> Index(string? reference)
     {

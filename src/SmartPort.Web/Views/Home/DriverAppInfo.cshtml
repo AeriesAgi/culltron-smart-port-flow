@@ -1,0 +1,39 @@
+@{
+    Layout = "_LayoutPublic";
+    ViewData["Title"] = "Install Driver App";
+    var apkExists = ViewBag.ApkExists as bool? ?? false;
+}
+<section class="spx-page-hero">
+  <div class="container spx-page-hero__grid">
+    <div>
+      <span class="spx-kicker">Driver Companion App</span>
+      <h1>Install Smart Port Driver Companion</h1>
+      <p class="spx-lead">The driver app opens at the driver login boundary, not the website or dashboard. Drivers see their job, queue status, actions, explicit check-in and Copilot only.</p>
+      <div class="spx-actions">
+        @if (apkExists)
+        {
+          <a class="sp-btn sp-btn--primary sp-btn--lg" href="/downloads/SmartPortDriverCompanion-debug.apk" download>Download Android APK</a>
+        }
+        else
+        {
+          <span class="sp-btn sp-btn--primary sp-btn--lg sp-btn--disabled" aria-disabled="true">APK artifact pending</span>
+        }
+        <a class="sp-btn sp-btn--outline sp-btn--lg" href="/driver-app/login">Open Driver Login</a>
+      </div>
+      @if (!apkExists)
+      {
+        <p class="spx-note">APK artifact pending. Run the Android workflow or local Gradle build to publish <code>/downloads/SmartPortDriverCompanion-debug.apk</code>. No fake APK binary is generated.</p>
+      }
+    </div>
+    <div class="spx-install-panel">
+      <strong>APK target</strong>
+      <code>https://smartport.culltron.app/driver-app/login</code>
+      <strong>Download path</strong>
+      <code>/downloads/SmartPortDriverCompanion-debug.apk</code>
+      <strong>Driver privacy</strong>
+      <span>Location is sent only when the driver taps Check In.</span>
+      <strong>Fallback</strong>
+      <span>Web Driver Companion remains available at <a href="/driver-app/login">/driver-app/login</a>.</span>
+    </div>
+  </div>
+</section>

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
@@ -189,16 +190,43 @@ app.Use(async (context, next) =>
     await next();
 });
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+var staticFileContentTypes = new FileExtensionContentTypeProvider();
+staticFileContentTypes.Mappings[".apk"] = "application/vnd.android.package-archive";
+app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = staticFileContentTypes });
 app.UseRouting();
 app.UseAuthentication();
 
 app.Use(async (context, next) =>
 {
-    var hasIdentitySession = context.User?.Identity?.IsAuthenticated == true;
-    if (RequiresDemoAccess(context.Request.Path) && !hasIdentitySession && !context.Request.Cookies.ContainsKey("SmartPort.DemoAccess"))
+    var path = context.Request.Path;
+    var pathValue = path.Value ?? string.Empty;
+    var demoRole = context.Request.Cookies.TryGetValue("SmartPort.DemoRole", out var roleValue) ? roleValue : string.Empty;
+    var isAuthenticated = context.User?.Identity?.IsAuthenticated == true;
+    var isDriverDemo = string.Equals(demoRole, "Driver Demo", StringComparison.OrdinalIgnoreCase) || context.User?.IsInRole(Roles.Driver) == true;
+    var isFleetDemo = string.Equals(demoRole, "Fleet Owner Demo", StringComparison.OrdinalIgnoreCase) || context.User?.IsInRole(Roles.FleetOwner) == true || context.User?.IsInRole(Roles.LogisticsPartner) == true;
+
+    if (isDriverDemo && IsDriverForbiddenPath(path))
     {
-        if (context.Request.Path.Value?.StartsWith("/api", StringComparison.OrdinalIgnoreCase) == true)
+        context.Response.Redirect("/driver-app");
+        return;
+    }
+
+    if (!isDriverDemo && isFleetDemo && IsFleetForbiddenPath(path))
+    {
+        context.Response.Redirect("/fleet");
+        return;
+    }
+
+    var hasDriverAppSession = context.Request.Cookies.ContainsKey("SmartPort.DriverAppAccess");
+    if (pathValue.StartsWith("/driver-app", StringComparison.OrdinalIgnoreCase) && !pathValue.StartsWith("/driver-app/login", StringComparison.OrdinalIgnoreCase) && !isAuthenticated && !context.Request.Cookies.ContainsKey("SmartPort.DemoAccess") && !hasDriverAppSession)
+    {
+        context.Response.Redirect("/driver-app/login");
+        return;
+    }
+
+    if (RequiresDemoAccess(path) && !isAuthenticated && !context.Request.Cookies.ContainsKey("SmartPort.DemoAccess") && !hasDriverAppSession)
+    {
+        if (pathValue.StartsWith("/api", StringComparison.OrdinalIgnoreCase))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             context.Response.ContentType = "application/json";
@@ -271,12 +299,36 @@ static IWhatsAppConnectorService BuildWhatsAppConnector(IServiceProvider sp)
     return sender is IWhatsAppConnectorService connector ? connector : sp.GetRequiredService<SimulatedWhatsAppNotificationSender>();
 }
 
+static bool IsDriverForbiddenPath(PathString path)
+{
+    if (!path.HasValue) return false;
+    var value = path.Value!;
+    if (value.StartsWith("/driver-app", StringComparison.OrdinalIgnoreCase)
+        || value.StartsWith("/driver/status", StringComparison.OrdinalIgnoreCase)
+        || value.StartsWith("/api/mobile", StringComparison.OrdinalIgnoreCase)
+        || value.StartsWith("/demo-access", StringComparison.OrdinalIgnoreCase)
+        || value.StartsWith("/downloads", StringComparison.OrdinalIgnoreCase)
+        || value.Equals("/", StringComparison.OrdinalIgnoreCase)) return false;
+
+    string[] driverBlockedPrefixes = { "/dashboard", "/fleet", "/execution", "/gemini-agent", "/Copilot", "/agent-governance", "/ops-ingest", "/simulator", "/Disruptions", "/Reports", "/Admin", "/Vessels", "/Containers", "/Gates" };
+    return driverBlockedPrefixes.Any(prefix => value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+}
+
+static bool IsFleetForbiddenPath(PathString path)
+{
+    if (!path.HasValue) return false;
+    var value = path.Value!;
+    string[] fleetBlockedPrefixes = { "/dashboard", "/agent-governance", "/ops-ingest", "/simulator", "/Admin", "/Vessels", "/Containers", "/Gates", "/Disruptions" };
+    return fleetBlockedPrefixes.Any(prefix => value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+}
+
 static bool RequiresDemoAccess(PathString path)
 {
     if (!path.HasValue) return false;
     var value = path.Value!;
     if (value.Equals("/webhooks/whatsapp", StringComparison.OrdinalIgnoreCase)) return false;
     if (value.StartsWith("/demo-access", StringComparison.OrdinalIgnoreCase) || value.StartsWith("/signin", StringComparison.OrdinalIgnoreCase)) return false;
+    if (value.StartsWith("/driver-app/login", StringComparison.OrdinalIgnoreCase) || value.StartsWith("/driver-app-info", StringComparison.OrdinalIgnoreCase) || value.StartsWith("/download-app", StringComparison.OrdinalIgnoreCase)) return false;
 
     string[] protectedPrefixes =
     {
