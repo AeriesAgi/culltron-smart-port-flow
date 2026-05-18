@@ -24,7 +24,7 @@ Smart Port is now framed as an app-first operational AI product rather than a me
 - Local build command: `cd mobile/SmartPortDriverCompanion && ./gradlew assembleDebug`.
 - GitHub Actions workflow: `.github/workflows/build-android-apk.yml`.
 - CI artifact: `mobile/SmartPortDriverCompanion/artifacts/SmartPortDriverCompanion-debug.apk`.
-- Web download path: `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk`.
+- Web download path: `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion-debug.apk`.
 - If no APK binary is published, `/fleet/download-app` still presents the build path and offers the driver app shell as a no-install judge demo.
 
 ## Demo path

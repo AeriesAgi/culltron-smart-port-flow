@@ -35,11 +35,12 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleDebug
 
-      - name: Prepare named APK artifact
+      - name: Prepare named APK artifact and web download copy
         run: |
-          mkdir -p artifacts
+          mkdir -p artifacts ../../src/SmartPort.Web/wwwroot/downloads
           cp app/build/outputs/apk/debug/app-debug.apk artifacts/SmartPortDriverCompanion-debug.apk
-          ls -lah artifacts/
+          cp artifacts/SmartPortDriverCompanion-debug.apk ../../src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion-debug.apk
+          ls -lah artifacts/ ../../src/SmartPort.Web/wwwroot/downloads/
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

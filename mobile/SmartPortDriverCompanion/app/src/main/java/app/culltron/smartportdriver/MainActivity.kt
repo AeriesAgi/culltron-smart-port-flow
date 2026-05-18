@@ -17,10 +17,10 @@ import java.net.URLEncoder
 import kotlin.concurrent.thread
 
 class MainActivity : Activity() {
-    private var backend = "http://10.0.2.2:8080"
+    private var backend = "https://smartport.culltron.app"
     private lateinit var root: LinearLayout
     private var currentReference = "SPQ-2026-0042"
-    private var demoCode = "culltron-driver-2026"
+    private var demoCode = "smartport2026"
     private var mobileToken = ""
     private var manualLocationLabel = "Driver Companion check-in"
 
@@ -51,8 +51,9 @@ class MainActivity : Activity() {
         val refInput = input(currentReference, "Truck/job reference")
         val codeInput = input(demoCode, "Demo driver code")
         codeInput.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+        button("Quick-fill live Smart Port") { backendInput.setText("https://smartport.culltron.app") }
         button("Quick-fill Android emulator localhost") { backendInput.setText("http://10.0.2.2:8080") }
-        button("Quick-fill demo driver") { refInput.setText("SPQ-2026-0042"); codeInput.setText("culltron-driver-2026") }
+        button("Quick-fill demo driver") { refInput.setText("SPQ-2026-0042"); codeInput.setText("smartport2026") }
         button("Login to backend") {
             backend = backendInput.text.toString().trim().trimEnd('/')
             currentReference = refInput.text.toString().trim().ifBlank { "SPQ-2026-0042" }

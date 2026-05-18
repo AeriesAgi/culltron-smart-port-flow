@@ -232,6 +232,124 @@ public class DemoFleetDriverQueueService : IFleetDriverQueueService
 
 }
 
+
+public class OperationalStateMachineService : IOperationalStateMachineService
+{
+    private readonly IFleetDriverQueueService? _queue;
+
+    public OperationalStateMachineService() { }
+    public OperationalStateMachineService(IFleetDriverQueueService queue) => _queue = queue;
+
+    public static IReadOnlyList<OperationalActionType> GetAllowedActions(QueueTruckStatus status) => status switch
+    {
+        QueueTruckStatus.Scheduled => new[] { OperationalActionType.Ready, OperationalActionType.RequestLocation, OperationalActionType.Reschedule, OperationalActionType.RefreshStatus },
+        QueueTruckStatus.EnRoute or QueueTruckStatus.Waiting or QueueTruckStatus.LocationRequested or QueueTruckStatus.LocationShared => new[] { OperationalActionType.ShareLocation, OperationalActionType.ConfirmHolding, OperationalActionType.MoveToStaging, OperationalActionType.Delayed20, OperationalActionType.ReportIssue, OperationalActionType.RefreshStatus },
+        QueueTruckStatus.HoldPosition or QueueTruckStatus.Holding => new[] { OperationalActionType.ArrivedAtStaging, OperationalActionType.MoveToStaging, OperationalActionType.ReleaseToGate, OperationalActionType.Delayed20, OperationalActionType.MarkException, OperationalActionType.RefreshStatus },
+        QueueTruckStatus.AtStaging or QueueTruckStatus.AtStagingHolding => new[] { OperationalActionType.ReleaseToGate, OperationalActionType.ProceedingToGate, OperationalActionType.Delayed20, OperationalActionType.MarkException, OperationalActionType.RefreshStatus },
+        QueueTruckStatus.ProceedToGate => new[] { OperationalActionType.ArrivedAtGate, OperationalActionType.ReportIssue, OperationalActionType.RefreshStatus },
+        QueueTruckStatus.AtGate or QueueTruckStatus.InYard or QueueTruckStatus.LoadingUnloading => new[] { OperationalActionType.CompleteJob, OperationalActionType.MarkException, OperationalActionType.RefreshStatus },
+        QueueTruckStatus.Delayed or QueueTruckStatus.Rescheduled => new[] { OperationalActionType.Ready, OperationalActionType.RequestLocation, OperationalActionType.Reschedule, OperationalActionType.ReportIssue, OperationalActionType.RefreshStatus },
+        QueueTruckStatus.Exception => new[] { OperationalActionType.Reschedule, OperationalActionType.RequestLocation, OperationalActionType.RefreshStatus },
+        QueueTruckStatus.Completed => new[] { OperationalActionType.RefreshStatus },
+        _ => new[] { OperationalActionType.RefreshStatus }
+    };
+
+    public bool CanTransition(QueueTruckStatus currentStatus, OperationalActionType requestedAction, out QueueTruckStatus newStatus, out string message)
+    {
+        newStatus = currentStatus;
+        message = "Status refreshed. No queue state change was required.";
+
+        if (requestedAction == OperationalActionType.RefreshStatus || requestedAction == OperationalActionType.CheckEta)
+            return true;
+
+        newStatus = requestedAction switch
+        {
+            OperationalActionType.RequestLocation => QueueTruckStatus.LocationRequested,
+            OperationalActionType.ShareLocation => QueueTruckStatus.LocationShared,
+            OperationalActionType.ConfirmHolding => QueueTruckStatus.Holding,
+            OperationalActionType.ArrivedAtStaging or OperationalActionType.MoveToStaging => QueueTruckStatus.AtStaging,
+            OperationalActionType.ProceedingToGate or OperationalActionType.ReleaseToGate => QueueTruckStatus.ProceedToGate,
+            OperationalActionType.ArrivedAtGate => QueueTruckStatus.AtGate,
+            OperationalActionType.CompleteJob => QueueTruckStatus.Completed,
+            OperationalActionType.Ready => currentStatus is QueueTruckStatus.Scheduled or QueueTruckStatus.Delayed or QueueTruckStatus.Rescheduled ? QueueTruckStatus.Waiting : currentStatus,
+            OperationalActionType.Break15 or OperationalActionType.Lunch30 or OperationalActionType.Delayed20 => QueueTruckStatus.Delayed,
+            OperationalActionType.Reschedule => QueueTruckStatus.Rescheduled,
+            OperationalActionType.MarkException or OperationalActionType.ReportIssue => QueueTruckStatus.Exception,
+            _ => currentStatus
+        };
+
+        if (currentStatus == QueueTruckStatus.Completed && requestedAction != OperationalActionType.RefreshStatus)
+        {
+            newStatus = currentStatus;
+            message = "Completed jobs are locked for audit; refresh status instead of changing the queue state.";
+            return false;
+        }
+
+        if (!GetAllowedActions(currentStatus).Contains(requestedAction) && requestedAction is not (OperationalActionType.Ready or OperationalActionType.RequestLocation or OperationalActionType.ReportIssue))
+        {
+            message = $"Action {requestedAction} is not allowed from {currentStatus}. Use one of: {string.Join(", ", GetAllowedActions(currentStatus))}.";
+            return false;
+        }
+
+        message = newStatus == currentStatus
+            ? $"Action {requestedAction} accepted; status remains {currentStatus}."
+            : $"Action {requestedAction} moved truck from {currentStatus} to {newStatus}.";
+        return true;
+    }
+
+    public async Task<StateTransitionResultDto> ApplyTransitionAsync(string jobReference, OperationalActionType action, string actor, DataProvenanceType source)
+    {
+        if (_queue == null)
+        {
+            return new StateTransitionResultDto { Success = false, Message = "Queue service is not available for this transition request." };
+        }
+
+        var truck = await _queue.GetTruckAsync(jobReference);
+        if (truck == null)
+        {
+            return new StateTransitionResultDto { Success = false, Message = "Truck/reference not found." };
+        }
+
+        var oldStatus = truck.CurrentStatus;
+        if (!CanTransition(oldStatus, action, out var newStatus, out var message))
+        {
+            return new StateTransitionResultDto { Success = false, Message = message, OldStatus = oldStatus, NewStatus = oldStatus, Truck = truck, AllowedNextActions = GetAllowedActions(oldStatus) };
+        }
+
+        var eventType = action switch
+        {
+            OperationalActionType.ShareLocation => DriverEventType.MobileApiLocationCheckIn,
+            OperationalActionType.ConfirmHolding => DriverEventType.DriverConfirmedHolding,
+            OperationalActionType.ArrivedAtStaging or OperationalActionType.MoveToStaging => DriverEventType.DriverArrivedAtStaging,
+            OperationalActionType.ProceedingToGate or OperationalActionType.ReleaseToGate => DriverEventType.DriverProceedingToGate,
+            OperationalActionType.ArrivedAtGate => DriverEventType.DriverArrivedAtGate,
+            OperationalActionType.CompleteJob => DriverEventType.DriverCompletedJob,
+            OperationalActionType.Delayed20 => DriverEventType.DriverDelayed,
+            OperationalActionType.MarkException or OperationalActionType.ReportIssue => DriverEventType.DriverIssueReported,
+            OperationalActionType.Ready => DriverEventType.DriverReady,
+            _ => DriverEventType.DriverAcknowledgedInstruction
+        };
+
+        var updated = await _queue.RecordDriverEventAsync(truck.BookingReference, eventType, source, message, actor) ?? truck;
+        return new StateTransitionResultDto
+        {
+            Success = true,
+            Message = message,
+            OldStatus = oldStatus,
+            NewStatus = updated.CurrentStatus == oldStatus ? newStatus : updated.CurrentStatus,
+            Truck = updated,
+            AllowedNextActions = GetAllowedActions(updated.CurrentStatus)
+        };
+    }
+
+    public async Task<IReadOnlyList<OperationalActionType>> GetAllowedNextActionsAsync(string jobReference)
+    {
+        if (_queue == null) return Array.Empty<OperationalActionType>();
+        var truck = await _queue.GetTruckAsync(jobReference);
+        return truck == null ? Array.Empty<OperationalActionType>() : GetAllowedActions(truck.CurrentStatus);
+    }
+}
+
 public class QueueOptimizationService : IQueueOptimizationService
 {
     public QueueOptimizationResultDto Optimize(FleetTruckDto t, FleetQueueSummaryDto? context = null)

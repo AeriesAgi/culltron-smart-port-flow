@@ -112,7 +112,7 @@ See `docs/LIVE_API_SETUP.md` for exact Gemini and WhatsApp Cloud API environment
 
 ## Final judge demo codes
 
-When running locally or with `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`, `/demo-access` shows quick-fill cards for: Port Admin `culltron-admin-2026`, Fleet Owner `culltron-fleet-2026`, Driver `culltron-driver-2026`, and Judge `culltron-judge-2026`. Judge Demo is the recommended hackathon path.
+When running locally or with `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`, `/demo-access` shows quick-fill cards for: Port Admin `smartport2026`, Fleet Owner `smartport2026`, Driver `smartport2026`, and Judge `smartport2026`. Judge Demo is the recommended hackathon path.
 
 ## Driver/mobile companion story
 
@@ -124,10 +124,10 @@ Smart Port is designed so the only remaining production step is adding approved 
 
 ### Judge demo codes and path
 When the app runs in Development or `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`, `/demo-access` shows quick-fill role cards:
-- Port Admin: `culltron-admin-2026` → `/dashboard`
-- Fleet Owner: `culltron-fleet-2026` → `/fleet`
-- Driver: `culltron-driver-2026` → `/driver-app`
-- Judge: `culltron-judge-2026` → `/demo-tour`
+- Port Admin: `smartport2026` → `/dashboard`
+- Fleet Owner: `smartport2026` → `/fleet`
+- Driver: `smartport2026` → `/driver-app`
+- Judge: `smartport2026` → `/demo-tour`
 
 Recommended judging path: `/demo-access` → Judge quick-fill → `/demo-tour` → `/gemini-agent` → `/agent-governance` → `/ops-ingest` → `/execution/plans` → `/fleet/trucks/SPQ-2026-0042` → `/driver-app` → `/fleet/download-app` → `/fleet/notifications` → `/enterprise-readiness` → `/health/integrations`.
 
@@ -168,9 +168,9 @@ The primary driver channels are the Android Driver Companion, the driver app she
 - `POST /api/mobile/driver/location-checkin`
 - `POST /api/mobile/copilot/driver`
 
-The app has editable backend URL setup, quick-fill `culltron-driver-2026`, quick-fill `SPQ-2026-0042`, truck status, driver action buttons, notifications, Driver Copilot, and WhatsApp connector-readiness explanation. All Gemini and WhatsApp calls happen on the backend; the device stores no provider secrets.
+The app has editable backend URL setup, quick-fill `smartport2026`, quick-fill `SPQ-2026-0042`, truck status, driver action buttons, notifications, Driver Copilot, and WhatsApp connector-readiness explanation. All Gemini and WhatsApp calls happen on the backend; the device stores no provider secrets.
 
-GitHub Actions builds and uploads the debug APK artifact named `SmartPortDriverCompanion-debug.apk`. If a local Android SDK is available, build with `cd mobile/SmartPortDriverCompanion && gradle assembleDebug` (or `./gradlew assembleDebug` when a wrapper is present) and optionally copy the debug APK to `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk`.
+GitHub Actions builds and uploads the debug APK artifact named `SmartPortDriverCompanion-debug.apk`. If a local Android SDK is available, build with `cd mobile/SmartPortDriverCompanion && gradle assembleDebug` (or `./gradlew assembleDebug` when a wrapper is present) and optionally copy the debug APK to `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion-debug.apk`.
 
 ### WhatsApp connector-ready position
 WhatsApp Cloud API is implemented as a connector-ready sandbox/live-test integration with webhook verification, inbound parser, gated outbound sender, masked contacts, status labels, and safe failure when credentials/approval are missing. Production use requires WhatsApp Business setup, opt-in/templates, and billing. Smart Port does not depend on WhatsApp for the judge demo.
@@ -193,7 +193,7 @@ Control room / Port Admin → Gemini Operations Agent → execution plan → fle
 
 The current completion pass positions the Driver Companion App as the primary mobile operations channel. Driver GPS/manual check-ins flow through the driver app shell, Android app or mobile API into `/fleet/tracker`, truck detail timelines, ETA/queue state, impact metrics and audit history. WhatsApp remains optional connector-ready support only.
 
-For the Android APK path, use `cd mobile/SmartPortDriverCompanion && ./gradlew assembleDebug` or run `.github/workflows/build-android-apk.yml`. Publish the resulting APK to `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk` to enable the direct `/fleet/download-app` download button. See `docs/FINAL_WINNER_POLISH.md` for the recommended judge demo path and production caveats.
+For the Android APK path, use `cd mobile/SmartPortDriverCompanion && ./gradlew assembleDebug` or run `.github/workflows/build-android-apk.yml`. Publish the resulting APK to `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion-debug.apk` to enable the direct `/fleet/download-app` download button. See `docs/FINAL_WINNER_POLISH.md` for the recommended judge demo path and production caveats.
 
 ## Enterprise AI submission-ready flow
 

@@ -145,6 +145,7 @@ public class MobileApiController : ControllerBase
             _configuration["SMARTPORT_DRIVER_DEMO_CODE"],
             _configuration["SMARTPORT_DEMO_ACCESS_CODE"],
             _configuration["SMARTPORT_JUDGE_DEMO_CODE"],
+            "smartport2026",
             _environment.IsDevelopment() ? "culltron-driver-2026" : null,
             _environment.IsDevelopment() ? "culltron-demo-2026" : null,
             _environment.IsDevelopment() ? "culltron-judge-2026" : null

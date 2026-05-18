@@ -60,6 +60,35 @@
     var delayedTracked = trackedTrucks.Count(t => t.DelayRisk is SmartPort.Application.DTOs.QueueDelayRisk.High or SmartPort.Application.DTOs.QueueDelayRisk.Critical || t.CurrentStatus is SmartPort.Application.DTOs.QueueTruckStatus.Delayed or SmartPort.Application.DTOs.QueueTruckStatus.Rescheduled);
     var missingCheckIn = trackedTrucks.Count(t => t.LastLocationCheckIn == null && t.LastUpdated < DateTime.UtcNow.AddMinutes(-20));
 }
+
+<section class="sp-command-hero sp-command-hero--dashboard sp-mt">
+  <div>
+    <span class="sp-badge sp-badge--ai">Control Room Command Center · action-safe demo</span>
+    <h1>Port pressure, fleet movement, driver check-ins and emissions impact in one command loop.</h1>
+    <p>These controls mutate demo state visibly: execution plans are created, disruption simulation marks a truck delayed, recommendations move a truck toward staging, and check-in requests update notification/audit history. Gemini remains explicit-click only.</p>
+    <div class="sp-dashboard-actions">
+      <form method="post" action="/dashboard/generate-execution-plan"><button class="sp-btn sp-btn--primary">Generate execution plan</button></form>
+      <form method="post" action="/dashboard/simulate-disruption"><button class="sp-btn sp-btn--warning">Simulate disruption</button></form>
+      <form method="post" action="/dashboard/apply-recommendation"><button class="sp-btn sp-btn--success">Apply recommendation</button></form>
+      <form method="post" action="/dashboard/request-fleet-checkins"><button class="sp-btn sp-btn--outline">Request fleet check-ins</button></form>
+      <a class="sp-btn sp-btn--outline" href="/gemini-agent">Generate Gemini operations brief</a>
+    </div>
+  </div>
+  <div class="sp-radar-card">
+    <span>PORT HEALTH</span>
+    <strong>@(delayedTracked > 2 ? "WATCH" : "STABLE")</strong>
+    <small>@trackedTrucks.Count active trucks · @delayedTracked delayed/high-risk · @missingCheckIn stale check-ins</small>
+    <div class="sp-radar-ring"></div>
+  </div>
+</section>
+
+<section class="sp-grid sp-grid--4 sp-mt">
+  <article class="sp-card sp-metric-tile"><span>QUEUE</span><h2>@Model.TrucksInQueue trucks</h2><p>Gate pressure and staging availability are balanced before release.</p></article>
+  <article class="sp-card sp-metric-tile"><span>GATES</span><h2>@Model.GatesOperational open</h2><p>Congestion response uses fleet check-ins and sequence control.</p></article>
+  <article class="sp-card sp-metric-tile"><span>FLEET</span><h2>@trackedTrucks.Count tracked</h2><p>Driver Companion actions feed tracker, audit and ETA state.</p></article>
+  <article class="sp-card sp-metric-tile"><span>IMPACT</span><h2>@(trackedTrucks.Sum(t => t.EstimatedCo2KgAvoided).ToString("N0")) kg CO₂</h2><p>Idling and emissions impact are deterministic unless AI is requested.</p></article>
+</section>
+
 <div class="sp-card sp-mt">
     <div class="sp-card__header"><div><span class="sp-badge sp-badge--green">Control-room tracker</span><h2>Driver Companion App tracking summary</h2></div><a class="sp-btn sp-btn--primary" href="/fleet/tracker">Open Fleet / Driver Tracker</a></div>
     <p>Port Admin sees the full demo scenario: active trucks tracked through user-triggered Driver Companion App, web companion and Mobile API check-ins.</p>

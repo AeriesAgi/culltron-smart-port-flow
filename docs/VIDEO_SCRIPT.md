@@ -22,7 +22,7 @@ Ask SmartPort Copilot: “Which tracked drivers need attention?” or “Which d
 Open Agent Governance. Emphasize approvals, auditability, deterministic fallback, no automatic Gemini calls on page load, no secrets on device, and user-triggered location only.
 
 **3:20-3:35 — APK/download path**
-Open `/fleet/download-app`. Show APK status, driver app shell, fleet tracker, driver status page, backend URL instructions, demo code `culltron-driver-2026`, demo reference `SPQ-2026-0042`, and mobile API proof path.
+Open `/fleet/download-app`. Show APK status, driver app shell, fleet tracker, driver status page, backend URL instructions, demo code `smartport2026`, demo reference `SPQ-2026-0042`, and mobile API proof path.
 
 **3:35-3:45 — Optional WhatsApp connector**
 Mention WhatsApp only as: “Optional connector-ready WhatsApp Cloud API integration for future pilots/live-test messaging.” The judge demo does not depend on WhatsApp production approval.

@@ -21,3 +21,11 @@ Control room detects queue pressure or disruption, generates an execution plan, 
 ## Honest limitations
 
 Data is synthetic/demo. Port/TOS/IPMS/ERP/GIS/telematics integrations are connector-ready pilot architecture, not live production integration. WhatsApp requires approved Meta credentials and consented recipients. Driver GPS is tap-to-check-in only, not background surveillance.
+
+## Demo access and environment
+
+Safe fallback access code when no env code is configured: `smartport2026`.
+
+Environment overrides: `SMARTPORT_SHOW_DEMO_CREDENTIALS`, `SMARTPORT_DEMO_ACCESS_CODE`, `SMARTPORT_ADMIN_DEMO_CODE`, `SMARTPORT_PORT_ADMIN_DEMO_CODE`, `SMARTPORT_FLEET_DEMO_CODE`, `SMARTPORT_DRIVER_DEMO_CODE`, and `SMARTPORT_JUDGE_DEMO_CODE`.
+
+Role landings: Judge `/demo-tour`, Control Room `/dashboard`, Fleet Owner `/fleet`, Driver `/driver-app`.
