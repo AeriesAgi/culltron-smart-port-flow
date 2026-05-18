@@ -25,4 +25,4 @@ A local Android SDK is required (`ANDROID_HOME` or `local.properties` with `sdk.
 
 ## App target
 
-The native app defaults to `https://smartport.culltron.app` as the backend API base. It calls Smart Port mobile APIs directly and keeps the app in its own native shell; it is not a website wrapper and stores no Gemini, WhatsApp, database, or provider secrets.
+The native app defaults to `https://smartport.culltron.app` as the backend API base and starts at its own driver login screen. Web/App-shell entry is `https://smartport.culltron.app/driver-app/login`. It calls Smart Port mobile APIs directly and keeps the app in its own native shell; it is not a website wrapper and stores no Gemini, WhatsApp, database, or provider secrets.

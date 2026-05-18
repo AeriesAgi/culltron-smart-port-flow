@@ -51,10 +51,19 @@ public class HomeController : Controller
     [HttpGet("/demo")]
     public IActionResult Demo() => View();
 
+    // GET /driver-app-info or /download-app — public APK/install info route
+    [HttpGet("/driver-app-info")]
+    [HttpGet("/download-app")]
+    public IActionResult DriverAppInfo()
+    {
+        ViewBag.ApkExists = System.IO.File.Exists(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", "downloads", "SmartPortDriverCompanion-debug.apk"));
+        return View("~/Views/Home/DriverAppInfo.cshtml");
+    }
+
     // GET /Home/Mobile or /mobile-app — public install route
     [HttpGet("/Home/Mobile")]
     [HttpGet("/mobile-app")]
-    public IActionResult Mobile() => Redirect("/fleet/download-app");
+    public IActionResult Mobile() => Redirect("/driver-app-info");
 
     // GET /error
     [HttpGet("/error")]

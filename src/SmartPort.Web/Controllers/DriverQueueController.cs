@@ -26,15 +26,16 @@ public class DriverController : Controller
     }
 
     [HttpGet("/driver/demo")]
-    public async Task<IActionResult> Demo()
+    public Task<IActionResult> Demo()
     {
-        var reference = (await _queue.GetDemoReferencesAsync()).First();
-        return Redirect($"/driver-app/{reference}");
+        return Task.FromResult<IActionResult>(Redirect("/driver-app"));
     }
 
     [HttpGet("/driver/status/{reference}")]
     public async Task<IActionResult> Status(string reference)
     {
+        if (User.IsInRole(Roles.Driver) || string.Equals(Request.Cookies[DemoAccessController.RoleCookieName], "Driver Demo", StringComparison.OrdinalIgnoreCase))
+            return Redirect($"/driver-app/{reference}");
         var truck = await _queue.GetTruckAsync(reference);
         if (truck == null) return NotFound();
         truck.NotificationHistory = (await _notifications.GetHistoryAsync(reference)).ToList();
@@ -145,10 +146,7 @@ public class MobileApiController : ControllerBase
             _configuration["SMARTPORT_DRIVER_DEMO_CODE"],
             _configuration["SMARTPORT_DEMO_ACCESS_CODE"],
             _configuration["SMARTPORT_JUDGE_DEMO_CODE"],
-            "smartport2026",
-            _environment.IsDevelopment() ? "culltron-driver-2026" : null,
-            _environment.IsDevelopment() ? "culltron-demo-2026" : null,
-            _environment.IsDevelopment() ? "culltron-judge-2026" : null
+            "smartport2026"
         }.Where(c => !string.IsNullOrWhiteSpace(c));
         return candidates.Any(c => string.Equals(c, accessCode.Trim(), StringComparison.Ordinal));
     }

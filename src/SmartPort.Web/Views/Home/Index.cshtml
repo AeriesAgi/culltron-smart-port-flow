@@ -12,20 +12,22 @@
   </div>
 </section>
 <section class="container spx-section">
-  <span class="spx-kicker">Command centre modules</span>
-  <h2>Built for a 5-minute enterprise pilot walkthrough</h2>
+  <span class="spx-kicker">Complete operational loop</span>
+  <h2>Video-ready proof points from public story to audited execution</h2>
   <div class="spx-module-grid spx-module-grid--features">
   @foreach (var item in new[] {
-    ("Control Room Command Center", "Port health, queue pressure, gate congestion, incidents, tracker summaries and audit-ready next actions."),
-    ("Execution Plan Workflow", "Generate, approve, dispatch and complete multi-truck disruption plans with idling and CO₂ impact."),
-    ("Fleet Owner Dashboard", "Fleet summary, truck states, driver actions, notifications, exceptions and owner-facing Copilot."),
-    ("Driver Companion App", "App-only shell with job, queue status, action buttons, check-ins, Copilot and profile/safety context."),
-    ("GPS/Check-In Tracker", "Dark map-style tracker with pins, route line, coordinates, check-in age and status colors."),
-    ("Gemini Enterprise AI", "Server-side operations briefs, driver/fleet answers and recommendations after explicit user actions only."),
-    ("Emissions & Idling Impact", "Delay reduction, idling avoided, diesel saved and CO₂ avoided are visible in plans and dashboards."),
-    ("Audit Trail", "Every recommendation, dispatch, driver action and notification is tracked for review."),
-    ("Optional WhatsApp Connector", "Framed as connector-ready/live-test support only; Driver Companion App remains primary."),
-    ("Pilot-Ready Integrations", "Architecture prepared for TOS/IPMS, gate, fleet GPS, ERP, weather, energy and mobile API feeds.")
+    ("Public story", "Product landing explains the pilot-ready operating loop for control rooms, fleets and drivers."),
+    ("Demo login", "Role-based access separates judge, admin, fleet owner and driver demo paths."),
+    ("Port Admin command centre", "Control-room dashboard manages queue state, incidents, driver check-ins and execution plans."),
+    ("Gemini Operations Agent", "On-demand AI brief uses deterministic fallback and never runs on page load."),
+    ("Execution plan", "Disruption context becomes truck, fleet-owner and driver actions with impact estimates."),
+    ("Fleet owner action", "Fleet can request check-ins, send instructions, update status and review history."),
+    ("Driver Companion tracking", "Driver check-ins update tracker state, queue ETA and audit trail."),
+    ("Mobile API status", "Backend endpoints support APK, web companion and demo mobile workflows."),
+    ("Driver confirmation", "Driver actions feed back into queue state and fleet/control-room timelines."),
+    ("Updated queue state", "Dashboard reflects operational state changes after explicit actions."),
+    ("Audit trail", "Every action is timestamped, sourced and visible for review."),
+    ("Emissions report", "Idling and CO₂ impact stay linked to execution decisions.")
   }) { <article class="spx-module-card"><strong>@item.Item1</strong><p>@item.Item2</p></article> }
   </div>
 </section>

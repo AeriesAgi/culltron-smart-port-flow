@@ -26,7 +26,11 @@ public class DemoAccessController : Controller
     public IActionResult Index(string? next = null)
     {
         var safeNext = NormalizeNext(next);
-        if (User.Identity?.IsAuthenticated == true && Request.Cookies.ContainsKey(CookieName)) return Redirect(safeNext);
+        if (User.Identity?.IsAuthenticated == true && Request.Cookies.ContainsKey(CookieName))
+        {
+            var cookieRole = Request.Cookies.TryGetValue(RoleCookieName, out var value) ? value : "Judge Demo";
+            return Redirect(ResolveLanding(cookieRole, safeNext));
+        }
         PopulateView(safeNext, "Judge Demo");
         return View("~/Views/DemoAccess/Index.cshtml");
     }
@@ -68,6 +72,7 @@ public class DemoAccessController : Controller
         await _signInManager.SignOutAsync();
         Response.Cookies.Delete(CookieName);
         Response.Cookies.Delete(RoleCookieName);
+        Response.Cookies.Delete("SmartPort.DriverAppAccess");
         return Redirect("/");
     }
 
@@ -88,7 +93,7 @@ public class DemoAccessController : Controller
     {
         BuildCredential("Port Admin Demo", new[] { "SMARTPORT_ADMIN_DEMO_CODE", "SMARTPORT_PORT_ADMIN_DEMO_CODE" }, "smartport2026", "/dashboard", "Control room, Gemini agent, integrations and reports.", "admin@smartport.culltron.app"),
         BuildCredential("Fleet Owner Demo", new[] { "SMARTPORT_FLEET_DEMO_CODE" }, "smartport2026", "/fleet", "Fleet queue, trucks, notifications and execution plans.", "fleet.owner@smartport.culltron.app"),
-        BuildCredential("Driver Demo", new[] { "SMARTPORT_DRIVER_DEMO_CODE" }, "smartport2026", "/driver-app", "Mobile-first driver queue status and confirmations.", "driver@smartport.culltron.app"),
+        BuildCredential("Driver Demo", new[] { "SMARTPORT_DRIVER_DEMO_CODE" }, "smartport2026", "/driver-app/login", "Mobile-first driver queue status and confirmations.", "driver@smartport.culltron.app"),
         BuildCredential("Judge Demo", new[] { "SMARTPORT_JUDGE_DEMO_CODE" }, "smartport2026", "/demo-tour", "Guided end-to-end hackathon judging tour.", "judge@smartport.culltron.app"),
         BuildCredential("General Demo", new[] { "SMARTPORT_DEMO_ACCESS_CODE" }, "smartport2026", "/demo-tour", "General access for the full protected demo.", "judge@smartport.culltron.app")
     };
@@ -124,8 +129,33 @@ public class DemoAccessController : Controller
 
     private string ResolveLanding(string role, string? next)
     {
-        if (!string.IsNullOrWhiteSpace(next) && next.StartsWith('/') && !next.StartsWith("//") && !next.StartsWith("/auth", StringComparison.OrdinalIgnoreCase)) return NormalizeNext(next);
-        return BuildCredentials().FirstOrDefault(c => c.Role == role)?.LandingPath ?? "/demo-tour";
+        var safeNext = NormalizeNext(next);
+        var defaultLanding = BuildCredentials().FirstOrDefault(c => c.Role == role)?.LandingPath ?? "/demo-tour";
+        if (string.IsNullOrWhiteSpace(next)) return defaultLanding;
+        return IsNextAllowedForRole(role, safeNext) ? safeNext : defaultLanding;
+    }
+
+    private static bool IsNextAllowedForRole(string role, string next)
+    {
+        if (role == "Driver Demo")
+        {
+            return next.Equals("/driver-app", StringComparison.OrdinalIgnoreCase)
+                || next.Equals("/driver-app/login", StringComparison.OrdinalIgnoreCase)
+                || next.StartsWith("/driver-app/", StringComparison.OrdinalIgnoreCase)
+                || next.StartsWith("/api/mobile/", StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (role == "Fleet Owner Demo")
+        {
+            return next.Equals("/fleet", StringComparison.OrdinalIgnoreCase)
+                || next.StartsWith("/fleet/tracker", StringComparison.OrdinalIgnoreCase)
+                || next.StartsWith("/fleet/trucks", StringComparison.OrdinalIgnoreCase)
+                || next.StartsWith("/fleet/notifications", StringComparison.OrdinalIgnoreCase)
+                || next.StartsWith("/fleet/download-app", StringComparison.OrdinalIgnoreCase)
+                || next.StartsWith("/driver-app", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return role is "Port Admin Demo" or "Judge Demo" || next is "/demo-tour" or "/dashboard";
     }
 
     private static string NormalizeRole(string? role) => role switch
