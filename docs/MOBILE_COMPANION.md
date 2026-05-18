@@ -19,7 +19,7 @@ Smart Port’s primary driver communication and tracking channel is the Driver C
 - `POST /api/mobile/driver/location-checkin`
 - `POST /api/mobile/copilot/driver`
 
-Demo code: `culltron-driver-2026`
+Demo code: `smartport2026`
 Demo reference: `SPQ-2026-0042`
 
 ## Fleet and control-room tracking

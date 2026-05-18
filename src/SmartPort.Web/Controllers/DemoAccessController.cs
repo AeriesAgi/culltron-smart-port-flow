@@ -81,23 +81,23 @@ public class DemoAccessController : Controller
         ViewBag.ShowDemoCredentials = showCredentials;
         ViewBag.DemoCredentialMessage = showCredentials
             ? "Use a role card and quick-fill button for a guided judging path. Public product pages remain separate from operational demo screens."
-            : "Demo access code provided by the Smart Port team.";
+            : "Demo credentials hidden. Set SMARTPORT_SHOW_DEMO_CREDENTIALS=true for judging or use the private access code.";
     }
 
     private IReadOnlyList<DemoRoleCredential> BuildCredentials() => new[]
     {
-        BuildCredential("Port Admin Demo", "SMARTPORT_ADMIN_DEMO_CODE", "culltron-admin-2026", "/dashboard", "Control room, Gemini agent, integrations and reports.", "admin@smartport.culltron.app"),
-        BuildCredential("Fleet Owner Demo", "SMARTPORT_FLEET_DEMO_CODE", "culltron-fleet-2026", "/fleet", "Fleet queue, trucks, notifications and execution plans.", "fleet.owner@smartport.culltron.app"),
-        BuildCredential("Driver Demo", "SMARTPORT_DRIVER_DEMO_CODE", "culltron-driver-2026", "/driver-app", "Mobile-first driver queue status and confirmations.", "driver@smartport.culltron.app"),
-        BuildCredential("Judge Demo", "SMARTPORT_JUDGE_DEMO_CODE", "culltron-judge-2026", "/demo-tour", "Guided end-to-end hackathon judging tour.", "judge@smartport.culltron.app"),
-        BuildCredential("General Demo", "SMARTPORT_DEMO_ACCESS_CODE", "culltron-demo-2026", "/demo-tour", "General access for the full protected demo.", "judge@smartport.culltron.app")
+        BuildCredential("Port Admin Demo", new[] { "SMARTPORT_ADMIN_DEMO_CODE", "SMARTPORT_PORT_ADMIN_DEMO_CODE" }, "smartport2026", "/dashboard", "Control room, Gemini agent, integrations and reports.", "admin@smartport.culltron.app"),
+        BuildCredential("Fleet Owner Demo", new[] { "SMARTPORT_FLEET_DEMO_CODE" }, "smartport2026", "/fleet", "Fleet queue, trucks, notifications and execution plans.", "fleet.owner@smartport.culltron.app"),
+        BuildCredential("Driver Demo", new[] { "SMARTPORT_DRIVER_DEMO_CODE" }, "smartport2026", "/driver-app", "Mobile-first driver queue status and confirmations.", "driver@smartport.culltron.app"),
+        BuildCredential("Judge Demo", new[] { "SMARTPORT_JUDGE_DEMO_CODE" }, "smartport2026", "/demo-tour", "Guided end-to-end hackathon judging tour.", "judge@smartport.culltron.app"),
+        BuildCredential("General Demo", new[] { "SMARTPORT_DEMO_ACCESS_CODE" }, "smartport2026", "/demo-tour", "General access for the full protected demo.", "judge@smartport.culltron.app")
     };
 
-    private DemoRoleCredential BuildCredential(string role, string envName, string developmentDefault, string landingPath, string description, string identityEmail)
+    private DemoRoleCredential BuildCredential(string role, IReadOnlyList<string> envNames, string fallbackDemoCode, string landingPath, string description, string identityEmail)
     {
-        var configured = _configuration[envName];
-        var usingDefault = string.IsNullOrWhiteSpace(configured) && _environment.IsDevelopment();
-        return new DemoRoleCredential(role, envName, usingDefault ? developmentDefault : configured ?? string.Empty, landingPath, description, usingDefault, identityEmail);
+        var configured = envNames.Select(name => _configuration[name]).FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+        var usingFallback = string.IsNullOrWhiteSpace(configured);
+        return new DemoRoleCredential(role, string.Join(" / ", envNames), usingFallback ? fallbackDemoCode : configured ?? string.Empty, landingPath, description, usingFallback, identityEmail);
     }
 
     private bool ShouldShowCredentials(IReadOnlyList<DemoRoleCredential> credentials)
@@ -111,7 +111,9 @@ public class DemoAccessController : Controller
         matchedRole = null;
         if (string.IsNullOrWhiteSpace(accessCode)) return false;
         var candidate = accessCode.Trim();
-        foreach (var credential in BuildCredentials().Where(c => !string.IsNullOrWhiteSpace(c.Code)))
+        var credentials = BuildCredentials().Where(c => !string.IsNullOrWhiteSpace(c.Code)).ToList();
+        var preferred = credentials.Where(c => c.Role == selectedRole).Concat(credentials.Where(c => c.Role == "General Demo")).Concat(credentials.Where(c => c.Role != selectedRole && c.Role != "General Demo"));
+        foreach (var credential in preferred)
         {
             if (!SlowEquals(candidate, credential.Code.Trim())) continue;
             matchedRole = credential.Role == "General Demo" ? selectedRole : credential.Role;

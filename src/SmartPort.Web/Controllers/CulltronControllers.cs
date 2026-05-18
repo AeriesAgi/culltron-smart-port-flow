@@ -263,7 +263,7 @@ public class FleetController : Controller
 
     [HttpGet("/fleet/download-app")]
     [HttpGet("/mobile/download")]
-    public async Task<IActionResult> DownloadApp() { ViewBag.DemoReferences = await _queue.GetDemoReferencesAsync(); ViewBag.ApkExists = System.IO.File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "downloads", "SmartPortDriverCompanion.apk")); return View(); }
+    public async Task<IActionResult> DownloadApp() { ViewBag.DemoReferences = await _queue.GetDemoReferencesAsync(); ViewBag.ApkExists = System.IO.File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "downloads", "SmartPortDriverCompanion-debug.apk")); return View(); }
 
     [HttpGet("/fleet/data-sources")]
     public async Task<IActionResult> DataSources() { ViewBag.WhatsAppStatus = _queue.GetWhatsAppConnectorStatus(); return View(await _queue.GetDataSourcesAsync()); }

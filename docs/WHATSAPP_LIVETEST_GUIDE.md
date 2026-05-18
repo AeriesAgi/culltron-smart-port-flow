@@ -35,7 +35,7 @@ LiveTest sends are gated to approved test recipient/consented test drivers. Demo
 
 ## Demo and judge codes
 
-For hackathon judging, enable visible demo codes with `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`. Codes: Port Admin `culltron-admin-2026`, Fleet Owner `culltron-fleet-2026`, Driver `culltron-driver-2026`, Judge `culltron-judge-2026`. Do not commit real Gemini keys, WhatsApp tokens, `.env` files or private phone numbers.
+For hackathon judging, enable visible demo codes with `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`. Codes: Port Admin `smartport2026`, Fleet Owner `smartport2026`, Driver `smartport2026`, Judge `smartport2026`. Do not commit real Gemini keys, WhatsApp tokens, `.env` files or private phone numbers.
 
 ## Final enterprise hackathon pass — Gemini, mobile driver loop, and connector readiness
 
@@ -43,10 +43,10 @@ Smart Port is designed so the only remaining production step is adding approved 
 
 ### Judge demo codes and path
 When the app runs in Development or `SMARTPORT_SHOW_DEMO_CREDENTIALS=true`, `/demo-access` shows quick-fill role cards:
-- Port Admin: `culltron-admin-2026` → `/dashboard`
-- Fleet Owner: `culltron-fleet-2026` → `/fleet`
-- Driver: `culltron-driver-2026` → `/driver-app`
-- Judge: `culltron-judge-2026` → `/demo-tour`
+- Port Admin: `smartport2026` → `/dashboard`
+- Fleet Owner: `smartport2026` → `/fleet`
+- Driver: `smartport2026` → `/driver-app`
+- Judge: `smartport2026` → `/demo-tour`
 
 Recommended judging path: `/demo-access` → Judge quick-fill → `/demo-tour` → `/gemini-agent` → `/agent-governance` → `/ops-ingest` → `/execution/plans` → `/fleet/trucks/SPQ-2026-0042` → `/driver-app` → `/fleet/download-app` → `/fleet/notifications` → `/enterprise-readiness` → `/health/integrations`.
 
@@ -87,9 +87,9 @@ The primary driver channels are the Android Driver Companion, the web companion,
 - `POST /api/mobile/driver/location-checkin`
 - `POST /api/mobile/copilot/driver`
 
-The app has editable backend URL setup, quick-fill `culltron-driver-2026`, quick-fill `SPQ-2026-0042`, truck status, driver action buttons, notifications, Driver Copilot, and WhatsApp connector-readiness explanation. All Gemini and WhatsApp calls happen on the backend; the device stores no provider secrets.
+The app has editable backend URL setup, quick-fill `smartport2026`, quick-fill `SPQ-2026-0042`, truck status, driver action buttons, notifications, Driver Copilot, and WhatsApp connector-readiness explanation. All Gemini and WhatsApp calls happen on the backend; the device stores no provider secrets.
 
-GitHub Actions builds and uploads the debug APK artifact. If a local Android SDK is available, build with `cd mobile/SmartPortDriverCompanion && gradle assembleDebug` (or `./gradlew assembleDebug` when a wrapper is present) and optionally copy the debug APK to `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion.apk`.
+GitHub Actions builds and uploads the debug APK artifact. If a local Android SDK is available, build with `cd mobile/SmartPortDriverCompanion && gradle assembleDebug` (or `./gradlew assembleDebug` when a wrapper is present) and optionally copy the debug APK to `src/SmartPort.Web/wwwroot/downloads/SmartPortDriverCompanion-debug.apk`.
 
 ### WhatsApp connector-ready position
 WhatsApp Cloud API is implemented as a connector-ready sandbox/live-test integration with webhook verification, inbound parser, gated outbound sender, masked contacts, status labels, and safe failure when credentials/approval are missing. Production use requires WhatsApp Business setup, opt-in/templates, and billing. Smart Port does not depend on WhatsApp for the judge demo.

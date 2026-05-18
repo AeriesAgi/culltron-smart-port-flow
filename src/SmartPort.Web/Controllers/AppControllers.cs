@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using SmartPort.Application.DTOs;
 using SmartPort.Application.Interfaces;
 using SmartPort.Domain.Enums;
 using SmartPort.Infrastructure.Persistence;
@@ -16,12 +17,16 @@ public class DashboardController : Controller
     private readonly IDashboardService _dashboard;
     private readonly IAlertService _alerts;
     private readonly IFleetDriverQueueService _queue;
+    private readonly IExecutionPlanService _plans;
+    private readonly IOperationalActionService _actions;
 
-    public DashboardController(IDashboardService dashboard, IAlertService alerts, IFleetDriverQueueService queue)
+    public DashboardController(IDashboardService dashboard, IAlertService alerts, IFleetDriverQueueService queue, IExecutionPlanService plans, IOperationalActionService actions)
     {
         _dashboard = dashboard;
         _alerts = alerts;
         _queue = queue;
+        _plans = plans;
+        _actions = actions;
     }
 
     public async Task<IActionResult> Index()
@@ -30,7 +35,63 @@ public class DashboardController : Controller
         ViewBag.TrackedTrucks = await _queue.GetTrucksAsync();
         return View(summary);
     }
+
+    [HttpPost("/dashboard/generate-execution-plan")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> GenerateExecutionPlan()
+    {
+        var plan = await _plans.GeneratePlanAsync("Control-room gate pressure recovery plan");
+        TempData["Success"] = $"Execution plan {plan.PlanId[..8]} generated from current queue, tracker and emissions signals.";
+        return Redirect($"/execution/plans/{plan.PlanId}");
+    }
+
+    [HttpPost("/dashboard/simulate-disruption")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> SimulateDisruption()
+    {
+        var target = (await _queue.GetTrucksAsync()).OrderByDescending(t => t.DelayRisk).FirstOrDefault();
+        if (target == null)
+        {
+            TempData["Warning"] = "No demo trucks are available for disruption simulation.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        await _queue.RecordDriverEventAsync(target.BookingReference, DriverEventType.DriverDelayed, DataProvenanceType.ManualOperatorInput, "Control-room simulated gate disruption: delay risk raised and fleet tracker/audit state updated.", "Control room");
+        TempData["Success"] = $"Simulated disruption applied to {target.TruckRegistration}. Dashboard, tracker and audit state now reflect the delay.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("/dashboard/apply-recommendation")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> ApplyRecommendation()
+    {
+        var target = (await _queue.GetTrucksAsync()).FirstOrDefault(t => t.CurrentStatus is QueueTruckStatus.Holding or QueueTruckStatus.Waiting or QueueTruckStatus.LocationShared);
+        if (target == null)
+        {
+            TempData["Warning"] = "No eligible truck was found for the recommendation action.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await _actions.ExecuteAsync(new OperationalActionRequest(target.BookingReference, OperationalActionType.MoveToStaging, "Control room", DataProvenanceType.ManualOperatorInput, CommandText: "ARRIVED_STAGING"));
+        TempData[result.Success ? "Success" : "Warning"] = $"Recommendation applied to {target.TruckRegistration}: {result.Message}";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("/dashboard/request-fleet-checkins")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> RequestFleetCheckIns()
+    {
+        var references = (await _queue.GetDemoReferencesAsync()).Take(3).ToList();
+        foreach (var reference in references)
+        {
+            await _actions.ExecuteAsync(new OperationalActionRequest(reference, OperationalActionType.RequestLocation, "Control room", DataProvenanceType.ManualOperatorInput, NotificationChannel.InApp));
+        }
+
+        TempData["Success"] = $"Requested app check-ins for {references.Count} demo trucks. Fleet tracker notification history has been updated.";
+        return RedirectToAction(nameof(Index));
+    }
 }
+
 
 // ─── Vessels ──────────────────────────────────────────────────────────────────
 

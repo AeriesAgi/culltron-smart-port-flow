@@ -29,13 +29,12 @@
             <span class="sp-pub-logo__text">Culltron Smart Port Flow</span>
         </a>
         <ul class="sp-pub-nav__links">
-            <li><a href="/platform">Platform</a></li>
-            <li><a asp-controller="Home" asp-action="Features">Features</a></li>
-            <li><a asp-controller="Home" asp-action="About">About</a></li>
-            <li><a asp-controller="Home" asp-action="Pricing">Pricing</a></li>
-            <li><a href="/demo-tour">Demo Tour</a></li>
+            <li><a href="/product">Product</a></li>
+            <li><a href="/features">Features</a></li>
+            <li><a href="/demo-access">Demo Access</a></li>
             <li><a href="/fleet/download-app">Driver App</a></li>
-            <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
+            <li><a href="/gemini-agent">Enterprise AI</a></li>
+            <li><a href="/contact">Contact</a></li>
         </ul>
         <div class="sp-pub-nav__actions">
             @if (isSignedIn)
@@ -44,8 +43,8 @@
             }
             else
             {
-                <a href="/fleet/download-app" class="sp-btn sp-btn--outline">Install Driver App</a>
-                <a href="/demo-access" class="sp-btn sp-btn--primary">Request Demo</a>
+                <a href="/fleet/download-app" class="sp-btn sp-btn--outline">Driver App</a>
+                <a href="/demo-access" class="sp-btn sp-btn--primary">Demo Access</a>
             }
         </div>
         <button class="sp-pub-nav__hamburger" id="mobileMenuToggle" aria-label="Toggle menu">
@@ -79,7 +78,7 @@
                     <li><a asp-controller="Home" asp-action="Pricing">Pricing</a></li>
             <li><a href="/demo-tour">Demo Tour</a></li>
                     <li><a href="/fleet/download-app">Driver Companion</a></li>
-                    <li><a href="/demo-access">Request Demo</a></li>
+                    <li><a href="/demo-access">Demo Access</a></li>
                 </ul>
             </div>
             <div class="sp-pub-footer__links">
