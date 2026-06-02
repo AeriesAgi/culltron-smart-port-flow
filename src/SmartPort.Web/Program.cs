@@ -97,6 +97,8 @@ builder.Services.AddScoped<IEmissionsSummaryService,       EmissionsSummaryServi
 // ─── Enterprise demo features ────────────────────────────────────────────────
 builder.Services.AddScoped<IAiAgentService,         AiAgentService>();
 builder.Services.AddScoped<ISmartPortIntelligenceService, SmartPortIntelligenceService>();
+builder.Services.AddSingleton<IDecisionAuditService, InMemoryDecisionAuditService>();
+builder.Services.AddScoped<ICrossDomainReasoningService, CrossDomainReasoningService>();
 builder.Services.AddScoped<ISmartPortCopilotChatService, SmartPortCopilotChatService>();
 builder.Services.AddScoped<ITruckTrackingService, TruckTrackingService>();
 builder.Services.AddScoped<IScenarioSimulatorService, ScenarioSimulatorService>();

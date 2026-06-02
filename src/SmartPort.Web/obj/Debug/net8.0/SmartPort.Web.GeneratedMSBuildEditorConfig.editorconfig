@@ -114,6 +114,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvRGFzaGJvYXJkL0luZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/user/culltron-smart-port-flow/src/SmartPort.Web/Views/DecisionAudit/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvRGVjaXNpb25BdWRpdC9JbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/user/culltron-smart-port-flow/src/SmartPort.Web/Views/DemoAccess/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvRGVtb0FjY2Vzcy9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -384,6 +388,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/home/user/culltron-smart-port-flow/src/SmartPort.Web/Views/PilotReadiness/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUGlsb3RSZWFkaW5lc3MvSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/culltron-smart-port-flow/src/SmartPort.Web/Views/Reasoning/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUmVhc29uaW5nL0luZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/user/culltron-smart-port-flow/src/SmartPort.Web/Views/Reports/AgentReport.cshtml]
