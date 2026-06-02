@@ -33,6 +33,11 @@ public class HomeController : Controller
     [HttpGet("/pricing")]
     public IActionResult Pricing() => View();
 
+    // GET /pilot-to-production — honest "what a real deployment requires" page
+    [HttpGet("/pilot-to-production")]
+    [HttpGet("/production-readiness")]
+    public IActionResult PilotToProduction() => View();
+
     // GET /contact
     [HttpGet("/contact")]
     public IActionResult Contact() => View();

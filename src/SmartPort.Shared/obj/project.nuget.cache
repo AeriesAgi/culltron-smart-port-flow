@@ -1,11 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "wgABu9MNI40=",
+  "dgSpecHash": "gjFbv5v41GA=",
   "success": true,
-  "projectFilePath": "/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/SmartPort.Shared.csproj",
-  "expectedPackageFiles": [
-    "/home/codespace/.nuget/packages/microsoft.netcore.app.ref/8.0.25/microsoft.netcore.app.ref.8.0.25.nupkg.sha512",
-    "/home/codespace/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.25/microsoft.aspnetcore.app.ref.8.0.25.nupkg.sha512"
-  ],
+  "projectFilePath": "/home/user/culltron-smart-port-flow/src/SmartPort.Shared/SmartPort.Shared.csproj",
+  "expectedPackageFiles": [],
   "logs": []
 }

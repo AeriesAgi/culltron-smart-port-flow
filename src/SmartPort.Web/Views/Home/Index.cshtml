@@ -3,34 +3,65 @@
   <div class="container spx-hero__grid">
     <div>
       <span class="spx-kicker">Enterprise AI · port logistics · synthetic demo data</span>
-      <h1>Agentic AI for port logistics, queue execution, fleet coordination, and emissions-aware operations.</h1>
-      <p class="spx-lead">Smart Port connects control-room decisions, fleet owners, and drivers through AI-assisted execution plans, app-based check-ins, fleet tracking, audit trails, and Gemini-powered operational reasoning.</p>
+      <h1>One port. One plan. Every decision connected.</h1>
+      <p class="spx-altline">Control room, fleet owners and drivers, working off the same AI-prioritised execution plan.</p>
+      <p class="spx-lead">Port congestion is rarely a capacity problem — it is a coordination problem. The control room sees congestion, the fleet owner sees a late truck, and the driver sees a queue, but no one sees the same picture. Smart Port links those signals into a single prioritised execution recommendation with quantified impact, then drives it to the driver's phone and back to the fleet tracker.</p>
       <div class="spx-actions"><a class="sp-btn sp-btn--primary sp-btn--lg" href="/demo-access">Enter Demo</a><a class="sp-btn sp-btn--outline sp-btn--lg" href="/dashboard">Open Control Room</a><a class="sp-btn sp-btn--outline sp-btn--lg" href="/driver-app">View Driver App</a><a class="sp-btn sp-btn--outline sp-btn--lg" href="/fleet/tracker">View Fleet Tracker</a></div>
       <p class="spx-note">Gemini calls are action-triggered only; dashboard rendering uses deterministic calculations and cached demo state. Location is click-to-check-in only, not background tracking.</p>
     </div>
     <img src="/images/smart-port-hero.svg" alt="Smart Port AI control room original illustration" />
   </div>
 </section>
+
+<section class="container spx-section">
+  <div class="spx-section__head">
+    <span class="spx-kicker">The problem</span>
+    <h2>Congestion is a disconnect, not just a bottleneck</h2>
+    <p>The three people who could fix a queue never share a screen. Decisions are made on stale, partial information — so trucks idle, emissions climb, and demurrage risk grows.</p>
+  </div>
+  <div class="spx-module-grid">
+    <article class="spx-module-card"><strong>🛰️ Control room is blind to the road</strong><p>Operators see berth, gate and yard pressure but not where each truck actually is, or which fleet owner can move first.</p></article>
+    <article class="spx-module-card"><strong>📋 Fleet owners react late</strong><p>By the time a fleet owner learns a slot slipped, the truck is already idling at the gate and the appointment window is gone.</p></article>
+    <article class="spx-module-card"><strong>📱 Drivers guess</strong><p>Drivers join the longest queue because nobody told them to stage, hold, or re-route — fuel and hours burn in the cab.</p></article>
+  </div>
+</section>
+
+<section class="container spx-section spx-section--deep">
+  <div class="spx-section__head">
+    <span class="spx-kicker">The solution</span>
+    <h2>From scattered signals to one prioritised action</h2>
+    <p>Smart Port reads congestion, gate backlog, berth status, disruptions and emissions together, then issues one ranked recommendation with quantified impact — held behind a human approval gate, written to an immutable audit trail, and pushed to the driver and fleet tracker.</p>
+  </div>
+  <div class="spx-loop">
+    <div class="spx-loop-step"><span>1</span><h3>Sense</h3><p>Synthetic telematics, GPS check-ins, gate, berth, yard, disruption and emissions feeds land in one operational picture.</p></div>
+    <div class="spx-loop-step"><span>2</span><h3>Reason</h3><p>The cross-domain engine links the signals — congestion + gate backlog + berth + emissions — into one ranked execution recommendation with quantified impact.</p></div>
+    <div class="spx-loop-step"><span>3</span><h3>Approve</h3><p>An operator approves, modifies or rejects. Nothing dispatches without a human, and every decision is logged with its reasoning.</p></div>
+    <div class="spx-loop-step"><span>4</span><h3>Execute</h3><p>Drivers get a tap-to-check-in instruction; the fleet tracker updates from that check-in — never from the LLM.</p></div>
+  </div>
+</section>
+
 <section class="container spx-section">
   <span class="spx-kicker">Command centre modules</span>
   <h2>Built for a 5-minute enterprise pilot walkthrough</h2>
   <div class="spx-module-grid spx-module-grid--features">
   @foreach (var item in new[] {
     ("Control Room Command Center", "Port health, queue pressure, gate congestion, incidents, tracker summaries and audit-ready next actions."),
+    ("Cross-Domain Reasoning", "Links congestion, gate backlog, berth status, disruptions and emissions into ONE prioritised recommendation with quantified impact."),
     ("Execution Plan Workflow", "Generate, approve, dispatch and complete multi-truck disruption plans with idling and CO₂ impact."),
     ("Fleet Owner Dashboard", "Fleet summary, truck states, driver actions, notifications, exceptions and owner-facing Copilot."),
-    ("Driver Companion App", "App-only shell with job, queue status, action buttons, check-ins, Copilot and profile/safety context."),
-    ("GPS/Check-In Tracker", "Dark map-style tracker with pins, route line, coordinates, check-in age and status colors."),
+    ("Driver Companion App", "App-first shell with job, queue status, action buttons, tap-to-check-in, Copilot and profile/safety context."),
+    ("GPS/Check-In Tracker", "Dark map-style tracker rendered from check-in data — pins, coordinates, check-in age and status colours."),
     ("Gemini Enterprise AI", "Server-side operations briefs, driver/fleet answers and recommendations after explicit user actions only."),
     ("Emissions & Idling Impact", "Delay reduction, idling avoided, diesel saved and CO₂ avoided are visible in plans and dashboards."),
-    ("Audit Trail", "Every recommendation, dispatch, driver action and notification is tracked for review."),
-    ("Optional WhatsApp Connector", "Framed as connector-ready/live-test support only; Driver Companion App remains primary."),
+    ("Immutable Audit Trail", "Every recommendation, dispatch, driver action and notification is tracked — who, what, when and the reasoning."),
     ("Pilot-Ready Integrations", "Architecture prepared for TOS/IPMS, gate, fleet GPS, ERP, weather, energy and mobile API feeds.")
   }) { <article class="spx-module-card"><strong>@item.Item1</strong><p>@item.Item2</p></article> }
   </div>
 </section>
+
 <section class="container spx-section spx-visual-grid">
   <img src="/images/control-room-panel.svg" alt="AI control room visual"/>
-  <div><span class="spx-kicker">Gemini + deterministic fallback</span><h2>Useful AI without quota burn</h2><p>Smart Port never calls Gemini just to load a page. Operators, fleet owners, drivers and judges trigger AI through deliberate actions such as Generate operations brief, Ask Copilot, Explain execution plan, Analyze check-in or optional TTS/semantic retrieval.</p><div class="spx-actions"><a class="sp-btn sp-btn--primary" href="/gemini-agent">Enterprise AI</a><a class="sp-btn sp-btn--outline" href="/execution">Execution Plans</a></div></div>
+  <div><span class="spx-kicker">Gemini + deterministic fallback</span><h2>Useful AI without quota burn</h2><p>Smart Port never calls Gemini just to load a page. Operators, fleet owners, drivers and judges trigger AI through deliberate actions such as Generate operations brief, Ask Copilot, Explain execution plan, Analyze check-in or optional TTS/semantic retrieval. With no key configured, the deterministic engine produces the same prioritised, quantified recommendation shape — the platform never degrades to "AI unavailable".</p><div class="spx-actions"><a class="sp-btn sp-btn--primary" href="/gemini-agent">Enterprise AI</a><a class="sp-btn sp-btn--outline" href="/execution">Execution Plans</a><a class="sp-btn sp-btn--outline" href="/pilot-to-production">Pilot to production</a></div></div>
 </section>
-<section class="container spx-section spx-pilot"><span class="spx-kicker">Honest pilot integration path</span><h2>Connector-ready, not pretending to be live</h2><p>Smart Port uses synthetic demo data in this submission. It does not claim official port partnership, production WhatsApp approval, background tracking, or guaranteed preview Gemini features. TTS, embeddings, maps grounding and live connectors activate only when configured and quota allows.</p><a class="sp-btn sp-btn--outline" href="/enterprise-readiness">Enterprise readiness checklist</a></section>
+
+<section class="container spx-section spx-pilot"><span class="spx-kicker">Honest pilot integration path</span><h2>Connector-ready, not pretending to be live</h2><p>Smart Port uses synthetic demo data in this submission. It does not claim official port partnership, production WhatsApp approval, background tracking, or guaranteed preview Gemini features. TTS, embeddings, maps grounding and live connectors activate only when configured and quota allows.</p><div class="spx-actions"><a class="sp-btn sp-btn--outline" href="/enterprise-readiness">Enterprise readiness checklist</a><a class="sp-btn sp-btn--outline" href="/pricing">Pricing &amp; tiers</a><a class="sp-btn sp-btn--outline" href="/pilot-to-production">What production requires</a></div></section>

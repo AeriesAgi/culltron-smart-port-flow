@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/workspaces/culltron-smart-port-flow/src/SmartPort.Application/SmartPort.Application.csproj": {}
+    "/home/user/culltron-smart-port-flow/src/SmartPort.Application/SmartPort.Application.csproj": {}
   },
   "projects": {
-    "/workspaces/culltron-smart-port-flow/src/SmartPort.Application/SmartPort.Application.csproj": {
+    "/home/user/culltron-smart-port-flow/src/SmartPort.Application/SmartPort.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/workspaces/culltron-smart-port-flow/src/SmartPort.Application/SmartPort.Application.csproj",
+        "projectUniqueName": "/home/user/culltron-smart-port-flow/src/SmartPort.Application/SmartPort.Application.csproj",
         "projectName": "SmartPort.Application",
-        "projectPath": "/workspaces/culltron-smart-port-flow/src/SmartPort.Application/SmartPort.Application.csproj",
-        "packagesPath": "/home/codespace/.nuget/packages/",
-        "outputPath": "/workspaces/culltron-smart-port-flow/src/SmartPort.Application/obj/",
+        "projectPath": "/home/user/culltron-smart-port-flow/src/SmartPort.Application/SmartPort.Application.csproj",
+        "packagesPath": "/root/.nuget/packages/",
+        "outputPath": "/home/user/culltron-smart-port-flow/src/SmartPort.Application/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/codespace/.nuget/NuGet/NuGet.Config"
+          "/root/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -26,11 +26,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/workspaces/culltron-smart-port-flow/src/SmartPort.Domain/SmartPort.Domain.csproj": {
-                "projectPath": "/workspaces/culltron-smart-port-flow/src/SmartPort.Domain/SmartPort.Domain.csproj"
+              "/home/user/culltron-smart-port-flow/src/SmartPort.Domain/SmartPort.Domain.csproj": {
+                "projectPath": "/home/user/culltron-smart-port-flow/src/SmartPort.Domain/SmartPort.Domain.csproj"
               },
-              "/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/SmartPort.Shared.csproj": {
-                "projectPath": "/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/SmartPort.Shared.csproj"
+              "/home/user/culltron-smart-port-flow/src/SmartPort.Shared/SmartPort.Shared.csproj": {
+                "projectPath": "/home/user/culltron-smart-port-flow/src/SmartPort.Shared/SmartPort.Shared.csproj"
               }
             }
           }
@@ -44,8 +44,7 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "10.0.200"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -67,36 +66,26 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[8.0.25, 8.0.25]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Ref",
-              "version": "[8.0.25, 8.0.25]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.200/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/user/.dotnet/sdk/8.0.421/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/workspaces/culltron-smart-port-flow/src/SmartPort.Domain/SmartPort.Domain.csproj": {
+    "/home/user/culltron-smart-port-flow/src/SmartPort.Domain/SmartPort.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/workspaces/culltron-smart-port-flow/src/SmartPort.Domain/SmartPort.Domain.csproj",
+        "projectUniqueName": "/home/user/culltron-smart-port-flow/src/SmartPort.Domain/SmartPort.Domain.csproj",
         "projectName": "SmartPort.Domain",
-        "projectPath": "/workspaces/culltron-smart-port-flow/src/SmartPort.Domain/SmartPort.Domain.csproj",
-        "packagesPath": "/home/codespace/.nuget/packages/",
-        "outputPath": "/workspaces/culltron-smart-port-flow/src/SmartPort.Domain/obj/",
+        "projectPath": "/home/user/culltron-smart-port-flow/src/SmartPort.Domain/SmartPort.Domain.csproj",
+        "packagesPath": "/root/.nuget/packages/",
+        "outputPath": "/home/user/culltron-smart-port-flow/src/SmartPort.Domain/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/codespace/.nuget/NuGet/NuGet.Config"
+          "/root/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -119,8 +108,7 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "10.0.200"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -136,36 +124,26 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[8.0.25, 8.0.25]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Ref",
-              "version": "[8.0.25, 8.0.25]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.200/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/user/.dotnet/sdk/8.0.421/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/SmartPort.Shared.csproj": {
+    "/home/user/culltron-smart-port-flow/src/SmartPort.Shared/SmartPort.Shared.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/SmartPort.Shared.csproj",
+        "projectUniqueName": "/home/user/culltron-smart-port-flow/src/SmartPort.Shared/SmartPort.Shared.csproj",
         "projectName": "SmartPort.Shared",
-        "projectPath": "/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/SmartPort.Shared.csproj",
-        "packagesPath": "/home/codespace/.nuget/packages/",
-        "outputPath": "/workspaces/culltron-smart-port-flow/src/SmartPort.Shared/obj/",
+        "projectPath": "/home/user/culltron-smart-port-flow/src/SmartPort.Shared/SmartPort.Shared.csproj",
+        "packagesPath": "/root/.nuget/packages/",
+        "outputPath": "/home/user/culltron-smart-port-flow/src/SmartPort.Shared/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/codespace/.nuget/NuGet/NuGet.Config"
+          "/root/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -188,8 +166,7 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "10.0.200"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -205,22 +182,12 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[8.0.25, 8.0.25]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Ref",
-              "version": "[8.0.25, 8.0.25]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.200/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/user/.dotnet/sdk/8.0.421/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

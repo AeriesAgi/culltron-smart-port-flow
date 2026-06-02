@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SmartPort.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ffc27289d62ed0de10b3a96adb37cf2e18995b30")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+64add1417a728b92b50cd79d2a8332cf2922bd2f")]
 [assembly: System.Reflection.AssemblyProductAttribute("SmartPort.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SmartPort.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
