@@ -17,14 +17,16 @@ public class GeminiAgentController : Controller
     private readonly ISmartPortCopilotChatService _copilot;
     private readonly IExecutionPlanService _plans;
     private readonly IFleetDriverQueueService _queue;
+    private readonly IDecisionAuditService _audit;
 
-    public GeminiAgentController(IConfiguration configuration, IAgentNarrativeService narrative, ISmartPortCopilotChatService copilot, IExecutionPlanService plans, IFleetDriverQueueService queue)
+    public GeminiAgentController(IConfiguration configuration, IAgentNarrativeService narrative, ISmartPortCopilotChatService copilot, IExecutionPlanService plans, IFleetDriverQueueService queue, IDecisionAuditService audit)
     {
         _configuration = configuration;
         _narrative = narrative;
         _copilot = copilot;
         _plans = plans;
         _queue = queue;
+        _audit = audit;
     }
 
     [HttpGet("/gemini-agent")]
@@ -90,6 +92,16 @@ public class GeminiAgentController : Controller
             History.Add(item);
             if (History.Count > 50) History.RemoveRange(0, History.Count - 50);
         }
+
+        _audit.Record(
+            actor: User?.Identity?.Name ?? "Demo operator",
+            category: "AI Brief",
+            action: "Recommendation generated",
+            subject: plan.PlanId,
+            reasoning: recommendation,
+            source: generatedBy,
+            approvalState: "Pending",
+            impact: $"queue {summary.TotalTrucks} · waiting {summary.TrucksWaiting} · idling avoided {summary.TotalIdlingMinutesAvoided} min");
 
         TempData["Success"] = $"{item.BriefType} generated via {generatedBy}. Audit event saved for this demo session in {elapsed} ms.";
         return Redirect("/gemini-agent");

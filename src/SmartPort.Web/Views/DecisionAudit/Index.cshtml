@@ -1,0 +1,43 @@
+@model IReadOnlyList<DecisionAuditRecord>
+@{
+    ViewData["Title"] = "Decision Audit Trail";
+    var total = (int)(ViewBag.Total ?? Model.Count);
+    string Tone(string state) => state switch { "Approved" => "success", "Rejected" => "danger", "Modified" => "warning", _ => "info" };
+}
+
+<div class="sp-page-header">
+    <div>
+        <div class="sp-agent-badge"><span>🛡️</span> Traceability</div>
+        <h1>Decision Audit Trail</h1>
+        <p style="color:var(--sp-text-muted)">Immutable, append-only record of every AI recommendation and every state-changing decision — who, what, when, and the reasoning behind each suggestion. @total entr@(total == 1 ? "y" : "ies") in this session.</p>
+    </div>
+    <a href="/reasoning" class="sp-btn sp-btn--outline">← Cross-domain reasoning</a>
+</div>
+
+<div class="sp-alert sp-alert--info" style="margin-bottom:1.25rem">
+    <i data-feather="lock"></i> Records are append-only and are never edited or deleted in place. Synthetic demo data; a production deployment would persist this trail to durable, tamper-evident storage.
+</div>
+
+<div class="sp-card">
+    <table class="sp-table">
+        <thead>
+            <tr><th>#</th><th>When (UTC)</th><th>Actor</th><th>Category</th><th>Action</th><th>Subject</th><th>Reasoning</th><th>Source</th><th>Impact</th></tr>
+        </thead>
+        <tbody>
+        @foreach (var a in Model)
+        {
+            <tr>
+                <td class="sp-table__mono">@a.Sequence</td>
+                <td class="sp-table__mono">@a.TimestampUtc.ToString("dd MMM yyyy HH:mm:ss")</td>
+                <td>@a.Actor</td>
+                <td>@a.Category</td>
+                <td><span class="sp-badge sp-badge--@Tone(a.ApprovalState)">@a.Action</span></td>
+                <td class="sp-table__mono">@a.Subject</td>
+                <td style="color:var(--sp-text-muted);max-width:340px">@a.Reasoning</td>
+                <td>@a.Source</td>
+                <td style="color:var(--sp-text-muted)">@a.Impact</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

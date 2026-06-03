@@ -1,0 +1,131 @@
+@model CrossDomainRecommendation
+@{
+    ViewData["Title"] = "Cross-Domain Reasoning";
+    var audit = ViewBag.Audit as IReadOnlyList<DecisionAuditRecord> ?? new List<DecisionAuditRecord>();
+    string SevTone(string s) => s switch { "Critical" => "danger", "High" => "warning", "Low" => "success", _ => "info" };
+    var impact = CrossDomainReasoningService.ImpactSummary(Model);
+}
+
+<div class="sp-page-header">
+    <div>
+        <div class="sp-agent-badge"><span>🧠</span> Cross-Domain Reasoning</div>
+        <h1>One prioritised action from every signal</h1>
+        <p style="color:var(--sp-text-muted)">Congestion + gate backlog + berth + emissions + disruptions, linked into a single quantified recommendation. Deterministic by default; Gemini enhancement is optional and action-triggered.</p>
+    </div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+        <form asp-controller="Reasoning" asp-action="Generate" method="post" style="margin:0">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="sp-btn sp-btn--primary">✦ Re-run with Gemini</button>
+        </form>
+        <a href="/decision-audit" class="sp-btn sp-btn--outline">View audit trail</a>
+    </div>
+</div>
+
+<div class="sp-alert sp-alert--info" style="margin-bottom:1.25rem">
+    <i data-feather="info"></i> @Model.DataNote
+</div>
+
+<!-- Headline recommendation -->
+<div class="sp-card" style="margin-bottom:1.5rem;border-left:4px solid var(--sp-@(SevTone(Model.Severity)))">
+    <div class="sp-card__header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+        <h3 class="sp-card__title">@Model.Id · Prioritised execution recommendation</h3>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+            <span class="sp-badge sp-badge--@SevTone(Model.Severity)">@Model.Severity</span>
+            <span class="sp-badge sp-badge--muted">Confidence @Model.Confidence%</span>
+            <span class="sp-badge sp-badge--@(Model.UsedGemini ? "success" : "info")">@(Model.UsedGemini ? "Gemini + deterministic" : "Deterministic engine")</span>
+            <span class="sp-badge sp-badge--warning">@Model.ApprovalState</span>
+        </div>
+    </div>
+    <div style="padding:1rem 1.25rem">
+        <p style="font-size:1.0625rem;line-height:1.6;color:var(--sp-text);font-weight:600;margin:0 0 .5rem">@Model.Headline</p>
+        <p style="margin:0;color:var(--sp-text-muted)"><strong>Linked drivers:</strong> @Model.PrimaryDriverA <span style="color:var(--sp-info)">+</span> @Model.PrimaryDriverB</p>
+        @if (Model.UsedGemini && !string.IsNullOrWhiteSpace(Model.GeminiNarrative))
+        {
+            <div class="sp-alert sp-alert--info" style="margin-top:1rem"><strong>Gemini reasoning:</strong> @Model.GeminiNarrative</div>
+        }
+    </div>
+</div>
+
+<!-- Quantified impact -->
+<div class="sp-kpi-grid" style="margin-bottom:1.5rem">
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--blue"><i data-feather="truck"></i></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.TrucksAffected</div><div class="sp-kpi-card__label">Trucks affected</div></div>
+    </div>
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--orange"><i data-feather="clock"></i></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.AvgIdlingMinutes min</div><div class="sp-kpi-card__label">Avg idling / truck</div></div>
+    </div>
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--green"><i data-feather="wind"></i></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">@Model.Co2Display</div><div class="sp-kpi-card__label">Avoidable emissions</div></div>
+    </div>
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--purple"><i data-feather="dollar-sign"></i></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">~R@Model.DemurrageRiskRand.ToString("#,0")</div><div class="sp-kpi-card__label">Demurrage / delay risk</div></div>
+    </div>
+    <div class="sp-kpi-card">
+        <div class="sp-kpi-card__icon sp-kpi-card__icon--teal"><i data-feather="droplet"></i></div>
+        <div class="sp-kpi-card__body"><div class="sp-kpi-card__value">~R@Model.FuelCostRand.ToString("#,0")</div><div class="sp-kpi-card__label">Avoidable fuel cost</div></div>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:1.5rem;align-items:start">
+    <!-- Recommended action + approval gate -->
+    <div class="sp-card">
+        <div class="sp-card__header"><h3 class="sp-card__title">Recommended execution</h3></div>
+        <div style="padding:1rem 1.25rem">
+            <p style="font-weight:600;color:var(--sp-text)">@Model.RecommendedAction</p>
+            <ol style="color:var(--sp-text-muted);line-height:1.8;padding-left:1.2rem;margin:0 0 1rem">
+                @foreach (var step in Model.ActionSteps) { <li>@step</li> }
+            </ol>
+            <form asp-controller="Reasoning" asp-action="Decide" method="post" style="margin:0">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="recId" value="@Model.Id" />
+                <input type="hidden" name="headline" value="@Model.Headline" />
+                <input type="hidden" name="impact" value="@impact" />
+                <input type="text" name="note" class="sp-form__input" placeholder="Optional approval note / modification" style="margin-bottom:.75rem" />
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                    <button type="submit" name="decision" value="Approved" class="sp-btn sp-btn--primary">✓ Approve</button>
+                    <button type="submit" name="decision" value="Modified" class="sp-btn sp-btn--outline">✎ Modify</button>
+                    <button type="submit" name="decision" value="Rejected" class="sp-btn sp-btn--outline">✕ Reject</button>
+                </div>
+            </form>
+            <p style="margin:1rem 0 0;color:var(--sp-text-subtle);font-size:.8125rem">Human approval required · not automatically executed · every decision is written to the audit trail.</p>
+        </div>
+    </div>
+
+    <!-- Linked signals -->
+    <div class="sp-card">
+        <div class="sp-card__header"><h3 class="sp-card__title">Linked signals</h3></div>
+        <ul style="list-style:none;margin:0;padding:.5rem 0">
+            @foreach (var sig in Model.LinkedSignals)
+            {
+                <li style="padding:.625rem 1.25rem;border-bottom:1px solid var(--sp-border);color:var(--sp-text-muted)">@sig</li>
+            }
+        </ul>
+        <p style="padding:.75rem 1.25rem;margin:0;color:var(--sp-text-subtle);font-size:.8125rem">Source: @Model.Source · generated @Model.GeneratedAtUtc.ToString("HH:mm:ss") UTC</p>
+    </div>
+</div>
+
+<!-- Recent decision audit -->
+<div class="sp-card" style="margin-top:1.5rem">
+    <div class="sp-card__header"><h3 class="sp-card__title">Recent decisions (audit trail)</h3></div>
+    <table class="sp-table">
+        <thead><tr><th>When (UTC)</th><th>Actor</th><th>Action</th><th>Subject</th><th>Source</th><th>Impact</th></tr></thead>
+        <tbody>
+        @foreach (var a in audit)
+        {
+            <tr>
+                <td class="sp-table__mono">@a.TimestampUtc.ToString("dd MMM HH:mm:ss")</td>
+                <td>@a.Actor</td>
+                <td><span class="sp-badge sp-badge--@(a.ApprovalState == "Rejected" ? "danger" : a.ApprovalState == "Approved" ? "success" : "info")">@a.Action</span></td>
+                <td class="sp-table__mono">@a.Subject</td>
+                <td>@a.Source</td>
+                <td style="color:var(--sp-text-muted)">@a.Impact</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    <p style="padding:.75rem 1.25rem;margin:0"><a href="/decision-audit" class="sp-btn sp-btn--outline sp-btn--sm">Open full audit trail →</a></p>
+</div>

@@ -63,11 +63,13 @@
                 }
                 @if (isOpsStaff || isFleetOwner || isJudge)
                 {
+                    <a href="/reasoning" class="sp-nav__item @(IsActive("Reasoning", "/reasoning"))"><span class="sp-nav__icon">🧠</span><span>Reasoning</span></a>
                     <a href="/gemini-agent" class="sp-nav__item @(IsActive("GeminiAgent", "/gemini-agent"))"><span class="sp-nav__icon">💎</span><span>Gemini</span></a>
                 }
                 @if (isOpsStaff || isJudge)
                 {
-                    <a href="/agent-governance" class="sp-nav__item @(IsActive("AgentGovernance", "/agent-governance"))"><span class="sp-nav__icon">🛡️</span><span>Audit</span></a>
+                    <a href="/decision-audit" class="sp-nav__item @(IsActive("DecisionAudit", "/decision-audit"))"><span class="sp-nav__icon">🛡️</span><span>Audit Trail</span></a>
+                    <a href="/agent-governance" class="sp-nav__item @(IsActive("AgentGovernance", "/agent-governance"))"><span class="sp-nav__icon">⚖️</span><span>Governance</span></a>
                     <a href="/ops-ingest" class="sp-nav__item @(IsActive("OpsIngest", "/ops-ingest"))"><span class="sp-nav__icon">📄</span><span>Reports</span></a>
                 }
                 <a href="/demo-tour" class="sp-nav__item @(IsActive("DemoTour", "/demo-tour"))"><span class="sp-nav__icon">🎬</span><span>Tour</span></a>

@@ -1,15 +1,129 @@
-@{ Layout = "_LayoutPublic"; ViewData["Title"] = "Pricing"; }
-<section class="spx-page-hero"><div class="container"><span class="spx-kicker">Enterprise pilot pricing</span><h1>Pricing is scoped around pilot goals</h1><p>Smart Port is presented as a pilot-ready enterprise AI operations prototype. Commercial terms depend on deployment, integrations, security review and support needs.</p></div></section>
-<section class="spx-section spx-section--deep"><div class="container"><div class="spx-card-grid spx-card-grid--three">
-@foreach (var tier in new[]{("Demo Evaluation","For judges and stakeholders reviewing the protected demo.","Role-based access, synthetic data, Gemini fallback, WhatsApp Demo Mode, Android source preview"),("Pilot Readiness","For a controlled port/fleet pilot with approved test drivers.","Environment-driven Gemini, WhatsApp LiveTest, data mapping, readiness scoring, audit review"),("Enterprise Deployment","For production-grade private cloud or port environment rollout.","Security review, custom integrations, support model, governance and operational SLAs")}){<article class="spx-product"><span></span><h3>@tier.Item1</h3><p>@tier.Item2</p><p>@tier.Item3</p></article>}
-</div><div class="spx-actions spx-center"><a href="/demo-access" class="sp-btn sp-btn--primary sp-btn--lg">Request Demo</a><a href="/contact" class="sp-btn sp-btn--outline sp-btn--lg">Contact: available on request</a></div></div></section>
+@{ Layout = "_LayoutPublic"; ViewData["Title"] = "Pricing & Commercial Model"; }
+<section class="spx-page-hero"><div class="container">
+  <span class="spx-kicker">Enterprise SaaS · pilot-scoped pricing</span>
+  <h1>Pricing that maps to how a port actually scales</h1>
+  <p>Smart Port is licensed against the three things that drive value and cost: berths under management, fleet vehicles coordinated, and ports deployed. Figures below are <strong>indicative ranges for a synthetic-data prototype</strong> — final commercial terms depend on deployment scope, integrations, security review and support. No live pricing, customer or partnership is implied.</p>
+</div></section>
 
-<section class="container spx-section enterprise-ai-refresh">
-  <div class="spx-pilot">
-    <span class="spx-kicker">Enterprise AI logistics demo</span>
-    <h2>Pricing: Gemini Agent operations loop</h2>
-    <p>Smart Port is presented as a prototype and pilot-ready architecture using synthetic demo data, connector-ready integrations, human-approved AI recommendations, mobile driver status, WhatsApp/demo notifications, audit trail and idling/emissions impact.</p>
-    <a class="sp-btn sp-btn--primary" href="/demo-access">Try role-based demo</a>
-    <a class="sp-btn sp-btn--outline" href="/demo-tour">Judge demo tour</a>
+<!-- Licensing dimensions -->
+<section class="spx-section spx-section--deep"><div class="container">
+  <div class="spx-section__head"><span class="spx-kicker">How it's licensed</span><h2>Three pricing dimensions</h2><p>Most deployments combine a per-port platform fee with per-berth and per-vehicle metering — so a small fleet pilot and a multi-terminal rollout both have a clean line item.</p></div>
+  <div class="spx-card-grid spx-card-grid--three">
+    <article class="spx-product"><span></span><h3>Per berth</h3><p><strong>Indicative: R6k–R12k / berth / month.</strong> Control-room reasoning, execution plans, berth/gate/yard signals and emissions impact for each berth under management.</p></article>
+    <article class="spx-product"><span></span><h3>Per fleet vehicle</h3><p><strong>Indicative: R180–R350 / vehicle / month.</strong> Driver companion seat, queue position, tap-to-check-in, fleet tracker presence and notifications for each coordinated truck.</p></article>
+    <article class="spx-product"><span></span><h3>Per port (platform)</h3><p><strong>Indicative: from R45k / port / month.</strong> Tenant, SSO, RBAC, audit retention, connector framework and support baseline for each port environment.</p></article>
   </div>
-</section>
+</div></section>
+
+<!-- Packaged tiers -->
+<section class="spx-section"><div class="container">
+  <div class="spx-section__head"><span class="spx-kicker">Packaged tiers</span><h2>From evaluation to production</h2></div>
+  <div class="sp-pricing-grid">
+    <div class="sp-pricing-card">
+      <div class="sp-pricing-card__tier">Demo Evaluation</div>
+      <div class="sp-pricing-card__price">R0</div>
+      <div class="sp-pricing-card__desc">For judges and stakeholders reviewing the protected demo on synthetic data.</div>
+      <ul class="sp-checklist">
+        <li>Role-based demo access</li>
+        <li>Synthetic operational data</li>
+        <li>Deterministic + Gemini fallback AI</li>
+        <li>Cross-domain reasoning &amp; audit trail</li>
+        <li>WhatsApp Demo Mode &amp; Android source preview</li>
+      </ul>
+      <a href="/demo-access" class="sp-btn sp-btn--outline sp-btn--full">Enter demo</a>
+    </div>
+    <div class="sp-pricing-card sp-pricing-card--featured">
+      <div class="sp-pricing-card__tier">Pilot Readiness</div>
+      <div class="sp-pricing-card__price">Scoped pilot fee</div>
+      <div class="sp-pricing-card__desc">A controlled port/fleet pilot with approved test drivers and a defined success metric.</div>
+      <ul class="sp-checklist">
+        <li>Up to ~3 berths + ~25 vehicles</li>
+        <li>Environment-driven Gemini, WhatsApp LiveTest</li>
+        <li>Data mapping &amp; connector configuration</li>
+        <li>Baseline-vs-current readiness scoring</li>
+        <li>Audit review &amp; onboarding workshops</li>
+      </ul>
+      <a href="/contact" class="sp-btn sp-btn--primary sp-btn--full">Scope a pilot</a>
+    </div>
+    <div class="sp-pricing-card">
+      <div class="sp-pricing-card__tier">Enterprise Deployment</div>
+      <div class="sp-pricing-card__price">Custom</div>
+      <div class="sp-pricing-card__desc">Production-grade private-cloud or in-port rollout across berths, fleets and terminals.</div>
+      <ul class="sp-checklist">
+        <li>Per-berth + per-vehicle + per-port pricing</li>
+        <li>Independent security review &amp; SSO federation</li>
+        <li>Custom TOS/SCADA/telematics integrations</li>
+        <li>Governance, SLAs &amp; incident runbook</li>
+        <li>Multi-tenant or dedicated tenancy</li>
+      </ul>
+      <a href="/pilot-to-production" class="sp-btn sp-btn--outline sp-btn--full">What production requires</a>
+    </div>
+  </div>
+</div></section>
+
+<!-- Onboarding model -->
+<section class="spx-section spx-section--deep"><div class="container">
+  <div class="spx-section__head"><span class="spx-kicker">Implementation &amp; onboarding</span><h2>A four-stage onboarding model</h2></div>
+  <div class="spx-loop">
+    <div class="spx-loop-step"><span>1</span><h3>Discovery</h3><p>Map berths, gates, yards and fleet operators; agree the pilot success metric (idling, turnaround or reliability) and data-sharing scope.</p></div>
+    <div class="spx-loop-step"><span>2</span><h3>Connect</h3><p>Configure connectors (TOS/IPMS, gate/SCADA, telematics, mobile API) against the existing adapter interfaces; validate field mappings.</p></div>
+    <div class="spx-loop-step"><span>3</span><h3>Pilot</h3><p>Run with approved test drivers on a bounded scope; compare against baseline; tune deterministic thresholds and approval workflow.</p></div>
+    <div class="spx-loop-step"><span>4</span><h3>Scale</h3><p>Security sign-off, operator training, SLA and runbook, then expand berth-by-berth and fleet-by-fleet.</p></div>
+  </div>
+</div></section>
+
+<!-- Integration narrative -->
+<section class="spx-section"><div class="container">
+  <div class="spx-section__head"><span class="spx-kicker">Connector-ready integration</span><h2>Built to ingest real port feeds</h2><p>The engine reads a normalised operational picture, so demo connectors swap for live adapters without rewriting the reasoning layer.</p></div>
+  <div class="spx-feature-matrix">
+    <article><h3>TOS / IPMS</h3><p>Berth schedules, yard occupancy, container dwell and appointment windows.</p></article>
+    <article><h3>Gate / SCADA</h3><p>Gate throughput, lane status and weighbridge events for real backlog metering.</p></article>
+    <article><h3>Telematics</h3><p>Fleet GPS and idling data complementing explicit driver check-ins.</p></article>
+    <article><h3>AMI / energy</h3><p>Advanced metering and load-shedding signals for energy-driven disruption.</p></article>
+  </div>
+</div></section>
+
+<!-- Security posture -->
+<section class="spx-section spx-section--deep"><div class="container">
+  <div class="spx-section__head"><span class="spx-kicker">Security posture</span><h2>RBAC today, hardening roadmap to production</h2></div>
+  <div class="sp-split">
+    <div class="sp-split__text">
+      <h2>What's in place now</h2>
+      <ul class="sp-checklist">
+        <li>ASP.NET Identity with 8 roles &amp; 12 fine-grained authorization policies</li>
+        <li>Least-privilege surfaces: control room, fleet, driver and judge each see only their scope</li>
+        <li>Account lockout (5 attempts / 15 min), 8-bit+ password policy, secure session cookie</li>
+        <li>Security headers (nosniff, X-Frame-Options DENY, Referrer-Policy, locked-down Permissions-Policy)</li>
+        <li>Server-side AI only · human-approval gates · immutable decision audit trail</li>
+        <li>Driver location captured on explicit check-in only — no background tracking</li>
+      </ul>
+    </div>
+    <div class="sp-split__text">
+      <h2>Hardening roadmap</h2>
+      <ul class="sp-checklist">
+        <li>SSO / identity federation (OIDC / SAML) and MFA enforcement</li>
+        <li>Durable, tamper-evident audit-log storage with retention policy</li>
+        <li>Independent penetration test &amp; security review before production</li>
+        <li>Data-residency confirmation and a driver-location privacy assessment</li>
+        <li>Secrets management (key vault) and per-tenant encryption</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- Multi-tenant roadmap -->
+<section class="spx-section"><div class="container">
+  <div class="spx-section__head"><span class="spx-kicker">Multi-tenant readiness</span><h2>From single-tenant demo to multi-port SaaS</h2></div>
+  <div class="spx-loop">
+    <div class="spx-loop-step"><span>A</span><h3>Today</h3><p>Single-tenant demo: one synthetic port, role-based access, in-session audit trail.</p></div>
+    <div class="spx-loop-step"><span>B</span><h3>Tenant isolation</h3><p>Per-port tenant boundary, scoped data, per-tenant configuration and branding.</p></div>
+    <div class="spx-loop-step"><span>C</span><h3>Shared platform</h3><p>Pooled control plane with isolated tenant data, per-tenant connectors and audit retention.</p></div>
+    <div class="spx-loop-step"><span>D</span><h3>Federated ports</h3><p>Multiple ports and fleet networks with cross-tenant analytics where data-sharing agreements allow.</p></div>
+  </div>
+</div></section>
+
+<section class="spx-section spx-final"><div class="container">
+  <span class="spx-kicker">Pilot-scoped, honestly framed</span>
+  <h2>Run the demo. Then price a pilot to your scope.</h2>
+  <div class="spx-actions"><a class="sp-btn sp-btn--primary sp-btn--lg" href="/demo-access">Try role-based demo</a><a class="sp-btn sp-btn--outline sp-btn--lg" href="/pilot-to-production">Pilot to production</a><a class="sp-btn sp-btn--outline sp-btn--lg" href="/contact">Contact: available on request</a></div>
+</div></section>
